@@ -1,5 +1,5 @@
 
-#include "win32displaywindow.h"
+#include "win32_display_window.h"
 #include <windowsx.h>
 #include <stdexcept>
 #include <cmath>
@@ -27,34 +27,6 @@
 #ifndef RIDEV_INPUTSINK
 #define RIDEV_INPUTSINK	(0x100)
 #endif
-
-static std::string from_utf16(const std::wstring& str)
-{
-	if (str.empty()) return {};
-	int needed = WideCharToMultiByte(CP_UTF8, 0, str.data(), (int)str.size(), nullptr, 0, nullptr, nullptr);
-	if (needed == 0)
-		throw std::runtime_error("WideCharToMultiByte failed");
-	std::string result;
-	result.resize(needed);
-	needed = WideCharToMultiByte(CP_UTF8, 0, str.data(), (int)str.size(), &result[0], (int)result.size(), nullptr, nullptr);
-	if (needed == 0)
-		throw std::runtime_error("WideCharToMultiByte failed");
-	return result;
-}
-
-static std::wstring to_utf16(const std::string& str)
-{
-	if (str.empty()) return {};
-	int needed = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), nullptr, 0);
-	if (needed == 0)
-		throw std::runtime_error("MultiByteToWideChar failed");
-	std::wstring result;
-	result.resize(needed);
-	needed = MultiByteToWideChar(CP_UTF8, 0, str.data(), (int)str.size(), &result[0], (int)result.size());
-	if (needed == 0)
-		throw std::runtime_error("MultiByteToWideChar failed");
-	return result;
-}
 
 Win32DisplayWindow::Win32DisplayWindow(DisplayWindowHost* windowHost, bool popupWindow, Win32DisplayWindow* owner) : WindowHost(windowHost), PopupWindow(popupWindow)
 {
@@ -87,15 +59,6 @@ Win32DisplayWindow::Win32DisplayWindow(DisplayWindowHost* windowHost, bool popup
 		style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 	}
 	CreateWindowEx(exstyle, L"ZWidgetWindow", L"", style, 0, 0, 100, 100, owner ? owner->WindowHandle : 0, 0, GetModuleHandle(0), this);
-
-	/*
-	RAWINPUTDEVICE rid;
-	rid.usUsagePage = HID_USAGE_PAGE_GENERIC;
-	rid.usUsage = HID_USAGE_GENERIC_MOUSE;
-	rid.dwFlags = RIDEV_INPUTSINK;
-	rid.hwndTarget = WindowHandle;
-	BOOL result = RegisterRawInputDevices(&rid, 1, sizeof(RAWINPUTDEVICE));
-	*/
 }
 
 Win32DisplayWindow::~Win32DisplayWindow()
@@ -209,6 +172,13 @@ void Win32DisplayWindow::LockCursor()
 		MouseLocked = true;
 		GetCursorPos(&MouseLockPos);
 		::ShowCursor(FALSE);
+
+		RAWINPUTDEVICE rid = {};
+		rid.usUsagePage = HID_USAGE_PAGE_GENERIC;
+		rid.usUsage = HID_USAGE_GENERIC_MOUSE;
+		rid.dwFlags = RIDEV_INPUTSINK;
+		rid.hwndTarget = WindowHandle;
+		RegisterRawInputDevices(&rid, 1, sizeof(RAWINPUTDEVICE));
 	}
 }
 
@@ -216,6 +186,13 @@ void Win32DisplayWindow::UnlockCursor()
 {
 	if (MouseLocked)
 	{
+		RAWINPUTDEVICE rid = {};
+		rid.usUsagePage = HID_USAGE_PAGE_GENERIC;
+		rid.usUsage = HID_USAGE_GENERIC_MOUSE;
+		rid.dwFlags = RIDEV_REMOVE;
+		rid.hwndTarget = 0;
+		RegisterRawInputDevices(&rid, 1, sizeof(rid));
+
 		MouseLocked = false;
 		SetCursorPos(MouseLockPos.x, MouseLockPos.y);
 		::ShowCursor(TRUE);

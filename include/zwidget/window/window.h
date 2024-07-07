@@ -4,9 +4,13 @@
 #include <string>
 #include <functional>
 #include <cstdint>
+#include <cstdlib>
 #include "../core/rect.h"
 
-class Engine;
+class Widget;
+class OpenFileDialog;
+class SaveFileDialog;
+class OpenFolderDialog;
 
 enum class StandardCursor
 {
@@ -184,7 +188,14 @@ public:
 	static std::unique_ptr<DisplayBackend> TryCreateX11();
 	static std::unique_ptr<DisplayBackend> TryCreateWayland();
 
+	static std::unique_ptr<DisplayBackend> TryCreateBackend();
+
 	virtual ~DisplayBackend() = default;
+
+	virtual bool IsWin32() { return false; }
+	virtual bool IsSDL2() { return false; }
+	virtual bool IsX11() { return false; }
+	virtual bool IsWayland() { return false; }
 
 	virtual std::unique_ptr<DisplayWindow> Create(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner) = 0;
 	virtual void ProcessEvents() = 0;
@@ -195,4 +206,8 @@ public:
 	virtual void StopTimer(void* timerID) = 0;
 
 	virtual Size GetScreenSize() = 0;
+
+	virtual std::unique_ptr<OpenFileDialog> CreateOpenFileDialog(DisplayWindow* owner);
+	virtual std::unique_ptr<SaveFileDialog> CreateSaveFileDialog(DisplayWindow* owner);
+	virtual std::unique_ptr<OpenFolderDialog> CreateOpenFolderDialog(DisplayWindow* owner);
 };

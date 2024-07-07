@@ -149,7 +149,10 @@ public:
 
 	static Size GetScreenSize();
 
+	void SetCanvas(std::unique_ptr<Canvas> canvas);
 	void* GetNativeHandle();
+	int GetNativePixelWidth();
+	int GetNativePixelHeight();
 
 protected:
 	virtual void OnPaintFrame(Canvas* canvas);
@@ -227,4 +230,7 @@ private:
 	Widget& operator=(const Widget&) = delete;
 
 	friend class Timer;
+	friend class OpenFileDialog;
+	friend class OpenFolderDialog;
+	friend class SaveFileDialog;
 };
