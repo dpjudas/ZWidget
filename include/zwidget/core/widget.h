@@ -154,6 +154,10 @@ public:
 	int GetNativePixelWidth();
 	int GetNativePixelHeight();
 
+	// Vulkan support:
+	std::vector<std::string> GetVulkanInstanceExtensions() { return Window()->DispWindow->GetVulkanInstanceExtensions(); }
+	VkSurfaceKHR CreateVulkanSurface(VkInstance instance) { return Window()->DispWindow->CreateVulkanSurface(instance); }
+
 protected:
 	virtual void OnPaintFrame(Canvas* canvas);
 	virtual void OnPaint(Canvas* canvas) { }

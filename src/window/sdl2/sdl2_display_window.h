@@ -51,6 +51,9 @@ public:
 
 	void* GetNativeHandle() override { return &Handle; }
 
+	std::vector<std::string> GetVulkanInstanceExtensions() override;
+	VkSurfaceKHR CreateVulkanSurface(VkInstance instance) override;
+
 	static void DispatchEvent(const SDL_Event& event);
 	static SDL2DisplayWindow* FindEventWindow(const SDL_Event& event);
 

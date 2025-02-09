@@ -125,8 +125,12 @@ public:
 	Point MapFromGlobal(const Point& pos) const override;
 	Point MapToGlobal(const Point& pos) const override;
 
-    void* GetNativeHandle() override { return (void*)&m_NativeHandle; }
-    wayland::surface_t GetWindowSurface() { return m_AppSurface; }
+	void* GetNativeHandle() override { return (void*)&m_NativeHandle; }
+
+	std::vector<std::string> GetVulkanInstanceExtensions() override;
+	VkSurfaceKHR CreateVulkanSurface(VkInstance instance) override;
+
+	wayland::surface_t GetWindowSurface() { return m_AppSurface; }
 
 private:
     // Event handlers as otherwise linking DisplayWindowHost On...() functions with Wayland events directly crashes the app

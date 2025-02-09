@@ -55,6 +55,9 @@ public:
 
 	void* GetNativeHandle() override;
 
+	std::vector<std::string> GetVulkanInstanceExtensions() override;
+	VkSurfaceKHR CreateVulkanSurface(VkInstance instance) override;
+
 	static void ProcessEvents();
 	static void RunLoop();
 	static void ExitLoop();

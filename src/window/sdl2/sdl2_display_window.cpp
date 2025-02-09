@@ -1,6 +1,7 @@
 
 #include "sdl2_display_window.h"
 #include <stdexcept>
+#include <SDL2/SDL_vulkan.h>
 
 Uint32 SDL2DisplayWindow::PaintEventNumber = 0xffffffff;
 bool SDL2DisplayWindow::ExitRunLoop;
@@ -71,6 +72,29 @@ SDL2DisplayWindow::~SDL2DisplayWindow()
 	SDL_DestroyWindow(Handle.window);
 	RendererHandle = nullptr;
 	Handle.window = nullptr;
+}
+
+std::vector<std::string> SDL2DisplayWindow::GetVulkanInstanceExtensions()
+{
+	unsigned int extCount = 0;
+	SDL_Vulkan_GetInstanceExtensions(window, &extCount, nullptr);
+	std::vector<const char*> extNames(extCount);
+	SDL_Vulkan_GetInstanceExtensions(window, &extCount, extNames.data());
+
+	std::vector<std::string> result;
+	result.reserve(extNames.size());
+	for (const char* ext : extNames)
+		result.emplace_back(ext);
+	return result;
+}
+
+VkSurfaceKHR SDL2DisplayWindow::CreateVulkanSurface(VkInstance instance)
+{
+	VkSurfaceKHR surfaceHandle = {};
+	SDL_Vulkan_CreateSurface(window, instance, &surfaceHandle);
+	if (surfaceHandle)
+		throw std::runtime_error("Could not create vulkan surface");
+	return surfaceHandle;
 }
 
 void SDL2DisplayWindow::SetWindowTitle(const std::string& text)
