@@ -13,8 +13,11 @@ Widget::Widget(Widget* parent, WidgetType type, RenderAPI renderAPI) : Type(type
 	{
 		Widget* owner = parent ? parent->Window() : nullptr;
 		DispWindow = DisplayWindow::Create(this, type == WidgetType::Popup, owner ? owner->DispWindow.get() : nullptr, renderAPI);
-		DispCanvas = Canvas::create();
-		DispCanvas->attach(DispWindow.get());
+		if (renderAPI == RenderAPI::Unspecified || renderAPI == RenderAPI::Bitmap)
+		{
+			DispCanvas = Canvas::create();
+			DispCanvas->attach(DispWindow.get());
+		}
 		SetStyleState("root");
 
 		SetWindowBackground(GetStyleColor("window-background"));
@@ -321,9 +324,12 @@ void Widget::Update()
 void Widget::Repaint()
 {
 	Widget* w = Window();
-	w->DispCanvas->begin(WindowBackground);
-	w->Paint(w->DispCanvas.get());
-	w->DispCanvas->end();
+	if (w->DispCanvas)
+	{
+		w->DispCanvas->begin(WindowBackground);
+		w->Paint(w->DispCanvas.get());
+		w->DispCanvas->end();
+	}
 }
 
 void Widget::Paint(Canvas* canvas)
