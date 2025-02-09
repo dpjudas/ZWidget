@@ -34,8 +34,10 @@ SDL2DisplayWindow::SDL2DisplayWindow(DisplayWindowHost* windowHost, bool popupWi
 		flags |= SDL_WINDOW_VULKAN;
 	else if (renderAPI == RenderAPI::OpenGL)
 		flags |= SDL_WINDOW_OPENGL;
+#if defined(__APPLE__)
 	else if (renderAPI == RenderAPI::Metal)
 		flags |= SDL_WINDOW_METAL;
+#endif
 	if (popupWindow)
 		flags |= SDL_WINDOW_BORDERLESS;
 
@@ -77,9 +79,9 @@ SDL2DisplayWindow::~SDL2DisplayWindow()
 std::vector<std::string> SDL2DisplayWindow::GetVulkanInstanceExtensions()
 {
 	unsigned int extCount = 0;
-	SDL_Vulkan_GetInstanceExtensions(window, &extCount, nullptr);
+	SDL_Vulkan_GetInstanceExtensions(Handle.window, &extCount, nullptr);
 	std::vector<const char*> extNames(extCount);
-	SDL_Vulkan_GetInstanceExtensions(window, &extCount, extNames.data());
+	SDL_Vulkan_GetInstanceExtensions(Handle.window, &extCount, extNames.data());
 
 	std::vector<std::string> result;
 	result.reserve(extNames.size());
