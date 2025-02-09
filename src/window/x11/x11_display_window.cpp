@@ -1080,11 +1080,11 @@ typedef PFN_vkVoidFunction(VKAPI_PTR* PFN_vkGetInstanceProcAddr)(VkInstance inst
 typedef VkFlags VkXlibSurfaceCreateFlagsKHR;
 typedef struct VkXlibSurfaceCreateInfoKHR
 {
-    VkStructureType                   sType;
-    const void*                       pNext;
+    VkStructureType                sType;
+    const void*                    pNext;
     VkXlibSurfaceCreateFlagsKHR    flags;
-    struct wl_display*                display;
-    struct wl_surface*                surface;
+    Display*                       dpy;
+    Window                         window;
 } VkXlibSurfaceCreateInfoKHR;
 
 typedef VkResult(VKAPI_PTR* PFN_vkCreateXlibSurfaceKHR)(VkInstance instance, const VkXlibSurfaceCreateInfoKHR* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkSurfaceKHR* pSurface);
@@ -1138,8 +1138,8 @@ VkSurfaceKHR X11DisplayWindow::CreateVulkanSurface(VkInstance instance)
 		throw std::runtime_error("Could not create vulkan surface");
 
 	VkXlibSurfaceCreateInfoKHR createInfo = { VK_STRUCTURE_TYPE_XLIB_SURFACE_CREATE_INFO_KHR };
-	createInfo.display = m_NativeHandle.display;
-	createInfo.surface = m_NativeHandle.surface;
+	createInfo.dpy = display;
+	createInfo.window = window;
 
 	VkSurfaceKHR surface = {};
 	VkResult result = vkCreateXlibSurfaceKHR(Instance->Instance, &createInfo, nullptr, &surface);
