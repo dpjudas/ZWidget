@@ -3,12 +3,13 @@
 #include "window/stub/stub_open_folder_dialog.h"
 #include "window/stub/stub_open_file_dialog.h"
 #include "window/stub/stub_save_file_dialog.h"
+#include "window/sdl2nativehandle.h"
 #include "core/widget.h"
 #include <stdexcept>
 
-std::unique_ptr<DisplayWindow> DisplayWindow::Create(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner)
+std::unique_ptr<DisplayWindow> DisplayWindow::Create(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI)
 {
-	return DisplayBackend::Get()->Create(windowHost, popupWindow, owner);
+	return DisplayBackend::Get()->Create(windowHost, popupWindow, owner, renderAPI);
 }
 
 void DisplayWindow::ProcessEvents()
@@ -134,10 +135,32 @@ std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateWin32()
 #ifdef USE_SDL2
 
 #include "sdl2/sdl2_display_backend.h"
+#include <SDL2/SDL_vulkan.h>
 
 std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateSDL2()
 {
 	return std::make_unique<SDL2DisplayBackend>();
+}
+
+std::vector<std::string> SDL2NativeHandle::VulkanGetInstanceExtensions()
+{
+	unsigned int extCount = 0;
+	SDL_Vulkan_GetInstanceExtensions(window, &extCount, nullptr);
+	std::vector<const char*> extNames(extCount);
+	SDL_Vulkan_GetInstanceExtensions(window, &extCount, extNames.data());
+
+	std::vector<std::string> result;
+	result.reserve(extNames.size());
+	for (const char* ext : extNames)
+		result.emplace_back(ext);
+	return result;
+}
+
+VkSurfaceKHR SDL2NativeHandle::VulkanCreateSurface(VkInstance instance)
+{
+	VkSurfaceKHR surfaceHandle = {};
+	SDL_Vulkan_CreateSurface(window, instance, &surfaceHandle);
+	return surfaceHandle;
 }
 
 #else
@@ -145,6 +168,16 @@ std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateSDL2()
 std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateSDL2()
 {
 	return nullptr;
+}
+
+std::vector<std::string> SDL2NativeHandle::VulkanGetInstanceExtensions()
+{
+	return {};
+}
+
+VkSurfaceKHR SDL2NativeHandle::VulkanCreateSurface(VkInstance instance)
+{
+	return {};
 }
 
 #endif
@@ -155,7 +188,14 @@ std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateSDL2()
 
 std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateX11()
 {
-	return std::make_unique<X11DisplayBackend>();
+	try
+	{
+		return std::make_unique<X11DisplayBackend>();
+	}
+	catch (...)
+	{
+		return nullptr;
+	}
 }
 
 #else
@@ -173,7 +213,14 @@ std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateX11()
 
 std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateWayland()
 {
-	return std::make_unique<WaylandDisplayBackend>();
+	try
+	{
+		return std::make_unique<WaylandDisplayBackend>();
+	}
+	catch (...)
+	{
+		return nullptr;
+	}
 }
 
 #else

@@ -5,6 +5,7 @@ if (UNIX AND NOT APPLE)
 	include(FindPkgConfig)
 	pkg_check_modules(DBUS REQUIRED dbus-1)
 	pkg_check_modules(WAYLANDPP
+		wayland-client
 		wayland-client++
 		wayland-client-extra++
 		wayland-client-unstable++
@@ -86,6 +87,11 @@ set(ZWIDGET_INCLUDES
 	include/zwidget/widgets/listview/listview.h
 	include/zwidget/widgets/tabwidget/tabwidget.h
 	include/zwidget/window/window.h
+	include/zwidget/window/x11nativehandle.h
+	include/zwidget/window/waylandnativehandle.h
+	include/zwidget/window/win32nativehandle.h
+	include/zwidget/window/sdl2nativehandle.h
+	include/zwidget/window/zvulkanwidget.h
 	include/zwidget/systemdialogs/open_folder_dialog.h
 	include/zwidget/systemdialogs/open_file_dialog.h
 	include/zwidget/systemdialogs/save_file_dialog.h
@@ -136,6 +142,8 @@ set(ZWIDGET_WAYLAND_SOURCES
 	src/window/wayland/wayland_display_backend.h
 	src/window/wayland/wayland_display_window.cpp
 	src/window/wayland/wayland_display_window.h
+	src/window/wayland/wl_fractional_scaling_protocol.cpp
+	src/window/wayland/wl_fractional_scaling_protocol.hpp
 )
 
 source_group("src" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/src/.+")

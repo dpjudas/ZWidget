@@ -5,6 +5,7 @@
 #include <unordered_map>
 #include "image.h"
 #include "rect.h"
+#include <vector>
 
 class Font;
 class Point;
@@ -75,6 +76,7 @@ public:
 	int getCharacterIndex(const std::shared_ptr<Font>& font, const std::string& text, const Point& hitPoint);
 
 	void drawImage(const std::shared_ptr<Image>& image, const Point& pos);
+	void drawImage(const std::shared_ptr<Image>& image, const Rect& box);
 
 protected:
 	virtual std::unique_ptr<CanvasTexture> createTexture(int width, int height, const void* pixels, ImageFormat format = ImageFormat::B8G8R8A8) = 0;
