@@ -1142,7 +1142,7 @@ VkSurfaceKHR X11DisplayWindow::CreateVulkanSurface(VkInstance instance)
 	createInfo.window = window;
 
 	VkSurfaceKHR surface = {};
-	VkResult result = vkCreateXlibSurfaceKHR(Instance->Instance, &createInfo, nullptr, &surface);
+	VkResult result = vkCreateXlibSurfaceKHR(instance, &createInfo, nullptr, &surface);
 	if (result != VK_SUCCESS)
 		throw std::runtime_error("Could not create vulkan surface");
 	return surface;

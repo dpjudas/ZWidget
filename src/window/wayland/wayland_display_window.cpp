@@ -452,7 +452,7 @@ VkSurfaceKHR WaylandDisplayWindow::CreateVulkanSurface(VkInstance instance)
 	createInfo.surface = m_NativeHandle.surface;
 
 	VkSurfaceKHR surface = {};
-	VkResult result = vkCreateWaylandSurfaceKHR(Instance->Instance, &createInfo, nullptr, &surface);
+	VkResult result = vkCreateWaylandSurfaceKHR(instance, &createInfo, nullptr, &surface);
 	if (result != VK_SUCCESS)
 		throw std::runtime_error("Could not create vulkan surface");
 	return surface;
