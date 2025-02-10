@@ -50,7 +50,8 @@ void Widget::SetCanvas(std::unique_ptr<Canvas> canvas)
 {
 	if (DispWindow)
 	{
-		DispCanvas->detach();
+		if (DispCanvas)
+			DispCanvas->detach();
 		DispCanvas = std::move(canvas);
 		DispCanvas->attach(DispWindow.get());
 	}
