@@ -20,6 +20,7 @@ public:
 	void ShowMaximized() override;
 	void ShowMinimized() override;
 	void ShowNormal() override;
+	bool IsWindowFullscreen() override;
 	void Hide() override;
 	void Activate() override;
 	void ShowCursor(bool enable) override;
@@ -95,6 +96,7 @@ public:
 	int BackBufferHeight = 0;
 
 	bool CursorLocked = false;
+	bool isFullscreen = false;
 
 	static bool ExitRunLoop;
 	static Uint32 PaintEventNumber;

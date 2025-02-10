@@ -104,6 +104,7 @@ public:
 	bool IsEnabled();
 	bool IsVisible();
 	bool IsHidden();
+	bool IsFullscreen();
 
 	void SetFocus();
 	void SetEnabled(bool value);

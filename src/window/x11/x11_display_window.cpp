@@ -230,7 +230,13 @@ void X11DisplayWindow::ShowFullscreen()
 	{
 		Atom state = GetAtom("_NET_WM_STATE_FULLSCREEN");
 		XChangeProperty(display, window, GetAtom("_NET_WM_STATE"), XA_ATOM, 32, PropModeReplace, (unsigned char *)&state, 1);
+		isFullscreen = true;
 	}
+}
+
+bool X11DisplayWindow::IsWindowFullscreen()
+{
+	return isFullscreen;
 }
 
 void X11DisplayWindow::ShowMaximized()
@@ -251,6 +257,7 @@ void X11DisplayWindow::ShowMinimized()
 void X11DisplayWindow::ShowNormal()
 {
 	Show();
+	isFullscreen = false;
 }
 
 void X11DisplayWindow::Hide()

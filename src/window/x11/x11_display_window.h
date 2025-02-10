@@ -23,6 +23,7 @@ public:
 	void ShowMaximized() override;
 	void ShowMinimized() override;
 	void ShowNormal() override;
+	bool IsWindowFullscreen() override;
 	void Hide() override;
 	void Activate() override;
 	void ShowCursor(bool enable) override;
@@ -111,6 +112,7 @@ private:
 	bool isCursorEnabled = true;
 	bool isMapped = false;
 	bool isMinimized = false;
+	bool isFullscreen = false;
 	double dpiScale = 1.0;
 
 	Pixmap cursor_bitmap = None;

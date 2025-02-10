@@ -129,8 +129,9 @@ void Win32DisplayWindow::ShowFullscreen()
 	int width = GetDeviceCaps(screenDC, HORZRES);
 	int height = GetDeviceCaps(screenDC, VERTRES);
 	ReleaseDC(0, screenDC);
+	DWORD dwStyle = GetWindowLong(WindowHandle.hwnd, GWL_STYLE);
 	SetWindowLongPtr(WindowHandle.hwnd, GWL_EXSTYLE, WS_EX_APPWINDOW);
-	SetWindowLongPtr(WindowHandle.hwnd, GWL_STYLE, WS_OVERLAPPED);
+	SetWindowLongPtr(WindowHandle.hwnd, GWL_STYLE, dwStyle & ~WS_OVERLAPPEDWINDOW);
 	SetWindowPos(WindowHandle.hwnd, HWND_TOP, 0, 0, width, height, SWP_FRAMECHANGED | SWP_SHOWWINDOW);
 	Fullscreen = true;
 }
@@ -147,7 +148,17 @@ void Win32DisplayWindow::ShowMinimized()
 
 void Win32DisplayWindow::ShowNormal()
 {
+	if (Fullscreen)
+	{
+		SetWindowLongPtr(WindowHandle.hwnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
+		Fullscreen = false;
+	}
 	ShowWindow(WindowHandle.hwnd, SW_NORMAL);
+}
+
+bool Win32DisplayWindow::IsWindowFullscreen()
+{
+	return Fullscreen;
 }
 
 void Win32DisplayWindow::Hide()

@@ -134,6 +134,7 @@ void SDL2DisplayWindow::ShowFullscreen()
 {
 	SDL_ShowWindow(Handle.window);
 	SDL_SetWindowFullscreen(Handle.window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+	isFullscreen = true;
 }
 
 void SDL2DisplayWindow::ShowMaximized()
@@ -152,6 +153,12 @@ void SDL2DisplayWindow::ShowNormal()
 {
 	SDL_ShowWindow(Handle.window);
 	SDL_SetWindowFullscreen(Handle.window, 0);
+	isFullscreen = false;
+}
+
+bool SDL2DisplayWindow::IsWindowFullscreen()
+{
+	return isFullscreen;
 }
 
 void SDL2DisplayWindow::Hide()

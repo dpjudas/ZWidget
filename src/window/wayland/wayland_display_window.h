@@ -186,6 +186,8 @@ private:
 
     std::shared_ptr<SharedMemHelper> shared_mem;
 
+    bool isFullscreen = false;
+
     // Helper functions
     void CreateBuffers(int32_t width, int32_t height);
     std::string GetWaylandWindowID();
