@@ -1,7 +1,7 @@
 #include "wayland_display_window.h"
 
 #include <cstring>
-
+#include <dlfcn.h>
 
 WaylandDisplayWindow::WaylandDisplayWindow(WaylandDisplayBackend* backend, DisplayWindowHost* windowHost, bool popupWindow, WaylandDisplayWindow* owner, RenderAPI renderAPI)
     : backend(backend), m_owner(owner), windowHost(windowHost), m_PopupWindow(popupWindow), m_renderAPI(renderAPI)
