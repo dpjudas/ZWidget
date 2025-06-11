@@ -95,19 +95,6 @@ void ListView::RemoveItem(int index)
 	Update();
 }
 
-void ListView::RemoveItem(int index)
-{
-	if (index >= 0 && index < items.size())
-	{
-		items.erase(items.begin() + index);
-	}
-
-	if (selectedItem == items.size())
-	{
-		selectedItem = !items.empty() ? (int)items.size() - 1 : 0;
-	}
-}
-
 void ListView::Activate()
 {
 	if (OnActivated)
