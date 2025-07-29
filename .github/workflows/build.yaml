@@ -9,8 +9,8 @@ env:
 
 jobs:
   linux:
-    runs-on: ubuntu-20.04
-    name: 🐧 Ubuntu 20.04
+    runs-on: ubuntu-latest
+    name: 🐧 Ubuntu x64
     steps:
       - name: 🧰 Checkout
         uses: actions/checkout@v2
@@ -19,31 +19,25 @@ jobs:
           submodules: true
 
       - name: ⬇️ Install dependencies
+        env:
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo apt-get update
-          sudo apt-get install -y \
-            build-essential       \
-            gcc-10                \
-            g++-10                \
-            libsdl2-dev           \
+          sudo apt-get -qq update
+          sudo apt-get -qq install \
+            build-essential        \
+            libsdl2-dev            \
             libsdl2-mixer-dev
       - name: Create Build Environment
         run: cmake -E make_directory ${{runner.workspace}}/build
 
       - name: Configure CMake
         shell: bash
-        env:
-          CC: gcc-10
-          CXX: g++-10
         working-directory: ${{runner.workspace}}/build
         run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
 
       - name: Build
         working-directory: ${{runner.workspace}}/build
         shell: bash
-        env:
-          CC: gcc-10
-          CXX: g++-10
         run: cmake --build . --config $BUILD_TYPE
 
   win:
