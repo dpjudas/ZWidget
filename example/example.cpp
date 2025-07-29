@@ -1,7 +1,7 @@
-
 #include <zwidget/core/widget.h>
 #include <zwidget/core/resourcedata.h>
 #include <zwidget/core/image.h>
+#include <zwidget/core/theme.h>
 #include <zwidget/window/window.h>
 #include <zwidget/widgets/textedit/textedit.h>
 #include <zwidget/widgets/mainwindow/mainwindow.h>
@@ -47,6 +47,10 @@ public:
 		PlayButton->SetText("Play Game");
 		ExitButton->SetText("Exit");
 
+		ExitButton->OnClick = []{
+			DisplayWindow::ExitLoop();
+		};
+
 		GeneralLabel->SetText("General");
 		ExtrasLabel->SetText("Extra Graphics");
 		FullscreenCheckbox->SetText("Fullscreen");
@@ -58,7 +62,7 @@ public:
 
 		try
 		{
-			auto filedata = ReadAllBytes("C:/Development/ZWidget/example/banner.png");
+			auto filedata = ReadAllBytes("banner.png");
 			std::vector<unsigned char> pixels;
 			unsigned long width = 0, height = 0;
 			int result = decodePNG(pixels, width, height, (const unsigned char*)filedata.data(), filedata.size(), true);
@@ -138,6 +142,60 @@ public:
 	ListView* GamesList = nullptr;
 };
 
+static std::vector<uint8_t> ReadAllBytes(const std::string& filename);
+
+std::vector<SingleFontData> LoadWidgetFontData(const std::string& name)
+{
+	return {
+		{std::move(ReadAllBytes("OpenSans.ttf")), ""}
+	};
+}
+
+std::vector<uint8_t> LoadWidgetData(const std::string& name)
+{
+	return ReadAllBytes(name);
+}
+
+int example()
+{
+	WidgetTheme::SetTheme(std::make_unique<DarkWidgetTheme>());
+
+	// DisplayBackend::Set(DisplayBackend::TryCreateWin32());
+	// DisplayBackend::Set(DisplayBackend::TryCreateSDL2());
+	DisplayBackend::Set(DisplayBackend::TryCreateBackend());
+
+#if 1
+	auto launcher = new LauncherWindow();
+	launcher->SetFrameGeometry(100.0, 100.0, 615.0, 668.0);
+	launcher->Show();
+#else
+	auto mainwindow = new MainWindow();
+	auto textedit = new TextEdit(mainwindow);
+	textedit->SetText(R"(
+#version 460
+
+in vec4 AttrPos;
+in vec4 AttrColor;
+out vec4 Color;
+
+void main()
+{
+	gl_Position = AttrPos;
+	Color = AttrColor;
+}
+)");
+	mainwindow->SetWindowTitle("ZWidget Example");
+	mainwindow->SetFrameGeometry(100.0, 100.0, 1700.0, 900.0);
+	mainwindow->SetCentralWidget(textedit);
+	textedit->SetFocus();
+	mainwindow->Show();
+#endif
+
+	DisplayWindow::RunLoop();
+
+	return 0;
+}
+
 #ifdef WIN32
 
 #include <Windows.h>
@@ -188,54 +246,38 @@ static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
 	return buffer;
 }
 
-std::vector<uint8_t> LoadWidgetFontData(const std::string& name)
-{
-	return ReadAllBytes("C:\\Windows\\Fonts\\segoeui.ttf");
-}
 
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 {
-#if 1
-
-	SetProcessDpiAwarenessContext(DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2);
-
-	auto launcher = new LauncherWindow();
-	launcher->SetFrameGeometry(100.0, 100.0, 615.0, 668.0);
-	launcher->Show();
+	example();
+}
 
 #else
-	auto mainwindow = new MainWindow();
-	auto textedit = new TextEdit(mainwindow);
-	textedit->SetText(R"(
-#version 460
 
-in vec4 AttrPos;
-in vec4 AttrColor;
-out vec4 Color;
+#include <fstream>
+#include <vector>
+#include <string>
+#include <stdexcept>
 
-void main()
+static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
 {
-    gl_Position = AttrPos;
-    Color = AttrColor;
+	std::ifstream file(filename, std::ios::binary | std::ios::ate);
+	if (!file)
+		throw std::runtime_error("ReadFile failed");
+
+	std::streamsize size = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	std::vector<uint8_t> buffer(size);
+	if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
+		throw std::runtime_error("ReadFile failed ");
+
+	return buffer;
 }
-)");
-	mainwindow->SetWindowTitle("ZWidget Example");
-	mainwindow->SetFrameGeometry(100.0, 100.0, 1700.0, 900.0);
-	mainwindow->SetCentralWidget(textedit);
-	textedit->SetFocus();
-	mainwindow->Show();
-#endif
-
-	DisplayWindow::RunLoop();
-
-	return 0;
-}
-
-#else
 
 int main()
 {
-	return 0;
+	example();
 }
 
 #endif
