@@ -36,6 +36,7 @@ protected:
 	void OnKeyDown(InputKey key) override;
 	void OnGeometryChanged() override;
 	void OnLostFocus() override;
+	void Notify(Widget* source, const WidgetEvent type) override;
 
 private:
 	void OpenDropdown();
