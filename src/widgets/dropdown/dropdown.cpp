@@ -200,7 +200,7 @@ void Dropdown::OnGeometryChanged()
 {
 	if (dropdownOpen)
 	{
-		Point pos = MapToGlobal(Point(0.0, 0.0));
+		Point pos = MapTo(Window(), Point(0,0));
 
 		double width = GetWidth() + GetNoncontentLeft() + GetNoncontentRight();
 		double innerH = GetDisplayItems() * 25.0 + 10.0;
