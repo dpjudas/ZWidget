@@ -63,9 +63,13 @@ public:
 		BrightmapsCheckbox->SetText("Brightmaps");
 		WidescreenCheckbox->SetText("Widescreen");
 
+		Choices->SetMaxDisplayItems(2);
 		Choices->AddItem("First");
 		Choices->AddItem("Second");
 		Choices->AddItem("Third");
+		Choices->AddItem("Fourth");
+		Choices->AddItem("Fifth");
+		Choices->AddItem("Sixth");
 
 		try
 		{
