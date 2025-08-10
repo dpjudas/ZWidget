@@ -7,6 +7,15 @@
 #include "../../core/widget.h"
 #include "../../widgets/listview/listview.h"
 
+class DropdownList : public ListView
+{
+public:
+	DropdownList(Widget* parent, Dropdown* owner);
+protected:
+	void OnKeyDown(InputKey key) override;
+	Dropdown* owner;
+};
+
 class Dropdown : public Widget
 {
 public:
@@ -51,8 +60,10 @@ private:
 
 	bool dropdownOpen = false;
 	Widget* dropdown = nullptr;
-	ListView* listView = nullptr;
+	DropdownList* listView = nullptr;
 
 	int maxDisplayItems = 0;
 	bool dropdownDirection = true;
+
+	friend DropdownList;
 };

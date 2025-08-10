@@ -13,6 +13,14 @@ Dropdown::Dropdown(Widget* parent) : Widget(parent)
 		p->Subscribe(this);
 }
 
+DropdownList::DropdownList(Widget* parent, Dropdown* owner) : ListView(parent), owner(owner)
+{}
+
+void DropdownList::OnKeyDown(InputKey key)
+{
+	owner->OnKeyDown(key);
+}
+
 void Dropdown::Notify(Widget* source, const WidgetEvent type)
 {
 	if (type != WidgetEvent::VisibilityChange) return;
@@ -69,19 +77,19 @@ void Dropdown::ClearItems()
 
 void Dropdown::SetSelectedItem(int index)
 {
-	if (index >= (int)items.size())
-		index = (int)items.size() - 1;
+	if (index < 0) index = 0;
+	if (index >= items.size()) index = items.size() - 1;
 
-	if (selectedItem != index)
-	{
-		selectedItem = index;
-		text = (selectedItem != -1) ? items[selectedItem] : "";
+	if (selectedItem == index) return;
 
-		if (OnChanged)
-			OnChanged(selectedItem);
+	selectedItem = index;
+	text = (selectedItem != -1) ? items[selectedItem] : "";
 
-		Update();
-	}
+	if (OnChanged) OnChanged(selectedItem);
+
+	if (dropdownOpen) listView->ScrollToItem(listView->selectedItem = selectedItem);
+
+	Update();
 }
 
 std::string Dropdown::GetSelectedText() const
@@ -160,28 +168,48 @@ bool Dropdown::OnMouseDown(const Point& pos, InputKey key)
 
 void Dropdown::OnKeyDown(InputKey key)
 {
-	if (key == InputKey::Down)
+	switch (key)
 	{
-		if (selectedItem + 1 < (int)items.size())
-			SetSelectedItem(selectedItem + 1);
-	}
-	else if (key == InputKey::Up)
-	{
-		if (selectedItem > 0)
-			SetSelectedItem(selectedItem - 1);
-	}
-	else if (key == InputKey::Enter || key == InputKey::Space)
-	{
+	case InputKey::Enter:
+	case InputKey::Space:
 		if (dropdownOpen)
 			CloseDropdown();
 		else
 			OpenDropdown();
+		break;
+
+	case InputKey::Up:
+		SetSelectedItem(selectedItem - 1);
+		break;
+
+	case InputKey::Down:
+		SetSelectedItem(selectedItem + 1);
+		break;
+
+	case InputKey::Home:
+		SetSelectedItem(0);
+		break;
+
+	case InputKey::End:
+		SetSelectedItem((int)items.size());
+		break;
+
+	case InputKey::PageUp:
+		SetSelectedItem(selectedItem - (maxDisplayItems? maxDisplayItems: (int)items.size()));
+		break;
+
+	case InputKey::PageDown:
+		SetSelectedItem(selectedItem + (maxDisplayItems? maxDisplayItems: (int)items.size()));
+		break;
+
+	default:
+		break;
 	}
 }
 
 void Dropdown::SetMaxDisplayItems(int items)
 {
-	maxDisplayItems = items;
+	maxDisplayItems = std::max<int>(0, items);
 }
 
 size_t Dropdown::GetDisplayItems()
@@ -236,7 +264,7 @@ void Dropdown::OpenDropdown()
 	dropdownOpen = true;
 
 	dropdown = new Widget(Window());
-	listView = new ListView(dropdown);
+	listView = new DropdownList(dropdown, this);
 	for (const auto& item : items)
 	{
 		listView->AddItem(item);
