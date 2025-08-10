@@ -144,7 +144,7 @@ bool Dropdown::OnMouseDown(const Point& pos, InputKey key)
 	{
 		if (dropdownOpen)
 		{
-			// this set focus call will close the popup
+			CloseDropdown();
 			SetFocus();
 			return true;
 		}
