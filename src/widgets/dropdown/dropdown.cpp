@@ -36,20 +36,63 @@ void Dropdown::Notify(Widget* source, const WidgetEvent type)
 	}
 }
 
-void Dropdown::AddItem(const std::string& text)
+void Dropdown::ItemsChanged()
 {
-	items.push_back(text);
-	if (selectedItem == -1 && !items.empty())
+	if (!CloseDropdown())
 	{
-		SetSelectedItem(0);
+		Update();
 	}
-	Update();
 }
 
-void Dropdown::RemoveItem(int index)
+void Dropdown::AddItem(const std::string& text, int index)
 {
-	if (index < 0 || (size_t)index >= items.size())
-		return;
+	if (index < 0)
+	{
+		items.push_back(text);
+	}
+	else
+	{
+		items.insert(items.begin() + index, text);
+	}
+
+	if (selectedItem == -1 && !items.empty())
+		SetSelectedItem(0);
+
+	ItemsChanged();
+}
+
+bool Dropdown::UpdateItem(const std::string& text, int index)
+{
+	if (!items.size() || index >= (int)items.size())
+		return false;
+
+	if (index < 0)
+		index = static_cast<int>(items.size()) - 1;
+
+	items[index] = text;
+
+	if (selectedItem == index)
+	{
+		this->text = text;
+	}
+
+	ItemsChanged();
+
+	return true;
+}
+
+const std::string & Dropdown::GetItem(int index)
+{
+	return items[index];
+}
+
+bool Dropdown::RemoveItem(int index)
+{
+	if (!items.size() || index >= (int)items.size())
+		return false;
+
+	if (index < 0)
+		index = static_cast<int>(items.size()) - 1;
 
 	items.erase(items.begin() + index);
 
@@ -65,20 +108,23 @@ void Dropdown::RemoveItem(int index)
 	{
 		SetSelectedItem(selectedItem - 1);
 	}
-	Update();
+
+	ItemsChanged();
+
+	return true;
 }
 
 void Dropdown::ClearItems()
 {
 	items.clear();
 	SetSelectedItem(-1);
-	Update();
+	ItemsChanged();
 }
 
 void Dropdown::SetSelectedItem(int index)
 {
 	if (index < 0) index = 0;
-	if (index >= items.size()) index = items.size() - 1;
+	if (index >= (int)items.size()) index = items.size() - 1;
 
 	if (selectedItem == index) return;
 
@@ -90,13 +136,6 @@ void Dropdown::SetSelectedItem(int index)
 	if (dropdownOpen) listView->ScrollToItem(listView->selectedItem = selectedItem);
 
 	Update();
-}
-
-std::string Dropdown::GetSelectedText() const
-{
-	if (selectedItem >= 0 && (size_t)selectedItem < items.size())
-		return items[selectedItem];
-	return {};
 }
 
 double Dropdown::GetPreferredHeight() const
@@ -257,9 +296,9 @@ void Dropdown::OnLostFocus()
 	CloseDropdown();
 }
 
-void Dropdown::OpenDropdown()
+bool Dropdown::OpenDropdown()
 {
-	if (dropdownOpen || items.empty()) return;
+	if (dropdownOpen || items.empty()) return false;
 
 	dropdownOpen = true;
 
@@ -286,11 +325,13 @@ void Dropdown::OpenDropdown()
 	dropdown->Show();
 
 	listView->ScrollToItem(selectedItem);
+
+	return true;
 }
 
-void Dropdown::CloseDropdown()
+bool Dropdown::CloseDropdown()
 {
-	if (!dropdownOpen || !dropdown) return;
+	if (!dropdownOpen || !dropdown) return false;
 
 	dropdown->Close();
 	dropdown = nullptr;
@@ -298,6 +339,8 @@ void Dropdown::CloseDropdown()
 	dropdownOpen = false;
 
 	Update();
+
+	return true;
 }
 
 void Dropdown::OnDropdownActivated()
