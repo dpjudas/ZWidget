@@ -71,6 +71,10 @@ public:
 		Choices->AddItem("Fifth");
 		Choices->AddItem("Sixth");
 
+		Choices->OnChanged = [this](int index) {
+			std::cout << "Selected " << index << ":" << Choices->GetItem(index) << std::endl;
+		};
+
 		try
 		{
 			auto filedata = ReadAllBytes("banner.png");

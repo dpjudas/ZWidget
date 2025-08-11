@@ -21,18 +21,17 @@ class Dropdown : public Widget
 public:
 	Dropdown(Widget* parent);
 
-	void AddItem(const std::string& text);
-	void RemoveItem(int index);
+	void AddItem(const std::string& text, int index = -1);
+	bool UpdateItem(const std::string& text, int index);
+	bool RemoveItem(int index = -1);
 	void ClearItems();
+	const std::string& GetItem(int index);
 
 	void SetMaxDisplayItems(int items);
 	void SetDropdownDirection(bool below);
 
 	int GetSelectedItem() const { return selectedItem; }
 	void SetSelectedItem(int index);
-
-	std::string GetSelectedText() const;
-	std::string GetText() const { return text; }
 
 	double GetPreferredHeight() const;
 	double GetPreferredWidth() const;
@@ -48,8 +47,9 @@ protected:
 	void Notify(Widget* source, const WidgetEvent type) override;
 
 private:
-	void OpenDropdown();
-	void CloseDropdown();
+	void ItemsChanged();
+	bool OpenDropdown();
+	bool CloseDropdown();
 	void OnDropdownActivated();
 
 	size_t GetDisplayItems();
