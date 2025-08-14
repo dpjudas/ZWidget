@@ -124,7 +124,7 @@ void Dropdown::ClearItems()
 void Dropdown::SetSelectedItem(int index)
 {
 	if (index < 0) index = 0;
-	if (index >= (int)items.size()) index = items.size() - 1;
+	if (index >= (int)items.size()) index = (int)items.size() - 1;
 
 	if (selectedItem == index) return;
 
