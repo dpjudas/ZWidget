@@ -15,8 +15,8 @@ class X11Connection
 public:
 	X11Connection()
 	{
-		// If we ever want to support windows on multiple threads:
-		// XInitThreads();
+		// This is required by vulkan
+		XInitThreads();
 
 		display = XOpenDisplay(nullptr);
 		if (!display)
