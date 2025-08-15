@@ -82,11 +82,14 @@ X11DisplayWindow::X11DisplayWindow(DisplayWindowHost* windowHost, bool popupWind
 	visual = XDefaultVisual(display, screen);
 	colormap = XDefaultColormap(display, screen);
 
-	int disp_width_px = XDisplayWidth(display, screen);
-	//int disp_height_px = XDisplayHeight(display, screen);
-	int disp_width_mm = XDisplayWidthMM(display, screen);
-	double ppi = (disp_width_mm < 24) ? 96.0 : (25.4 * static_cast<double>(disp_width_px) / static_cast<double>(disp_width_mm));
-	dpiScale = std::round(ppi / 96.0 * 4.0) / 4.0; // 100%, 125%, 150%, 175%, 200%, etc.
+	if (char* value = XGetDefault(display, "Xft", "dpi"))
+	{
+		int dpi = std::atoi(value);
+		if (dpi != 0)
+		{
+			dpiScale = dpi / 96.0;
+		}
+	}
 
 	XSetWindowAttributes attributes = {};
 	attributes.backing_store = Always;
