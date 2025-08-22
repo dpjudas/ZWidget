@@ -38,10 +38,6 @@ public:
 		GamesList = new ListView(this);
 		Choices = new Dropdown(this);
 
-		SetWindowBackground(Colorf::fromRgba8(51, 51, 51));
-		SetWindowBorderColor(Colorf::fromRgba8(51, 51, 51));
-		SetWindowCaptionColor(Colorf::fromRgba8(33, 33, 33));
-		SetWindowCaptionTextColor(Colorf::fromRgba8(226, 223, 219));
 		SetWindowTitle("VKDoom Launcher");
 
 		WelcomeLabel->SetText("Welcome to VKDoom");
