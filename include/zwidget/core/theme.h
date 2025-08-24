@@ -56,13 +56,18 @@ public:
 class WidgetTheme
 {
 	struct SimpleTheme {
-		const Colorf bg0;     // Deepest background headers/inputs
-		const Colorf bg1;     // Main background
-		const Colorf base0;   // Interactive elements
-		const Colorf base1;   // Hover states
-		const Colorf base2;   // Borders
-		const Colorf base3;   // Main text
-		const Colorf accent;  // Highlight
+		const Colorf bgMain;   // background
+		const Colorf fgMain;   //
+		const Colorf bgLight;  // headers / inputs
+		const Colorf fgLight;  //
+		const Colorf bgAction; // interactive elements
+		const Colorf fgAction; //
+		const Colorf bgHover;  // hover / highlight
+		const Colorf fgHover;  //
+		const Colorf bgActive; // click
+		const Colorf fgActive; //
+		const Colorf border;   // around elements
+		const Colorf divider;  // between elements
 	};
 public:
 	WidgetTheme() {}
