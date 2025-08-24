@@ -303,23 +303,23 @@ WidgetTheme::WidgetTheme(const struct SimpleTheme &theme)
 /////////////////////////////////////////////////////////////////////////////
 
 DarkWidgetTheme::DarkWidgetTheme(): WidgetTheme({
-	Colorf::fromRgba8( 33,  33,  33), // Deepest background headers/inputs
-	Colorf::fromRgba8( 42,  42,  42), // Main background
-	Colorf::fromRgba8( 68,  68,  68), // Interactive elements
-	Colorf::fromRgba8( 85,  85,  85), // Hover states
-	Colorf::fromRgba8(100, 100, 100), // Borders
-	Colorf::fromRgba8(226, 223, 219), // Main text
-	Colorf::fromRgba8(200,  60,   0)  // Highlight
+	Colorf::fromRgb(0x212121), // Deepest background headers/inputs
+	Colorf::fromRgb(0x2A2A2A), // Main background
+	Colorf::fromRgb(0x444444), // Interactive elements
+	Colorf::fromRgb(0x555555), // Hover states
+	Colorf::fromRgb(0x646464), // Borders
+	Colorf::fromRgb(0xE2DFDB), // Main text
+	Colorf::fromRgb(0xC83C00)  // Highlight
 }) {};
 
 /////////////////////////////////////////////////////////////////////////////
 
 LightWidgetTheme::LightWidgetTheme(): WidgetTheme({
-	Colorf::fromRgba8(250, 250, 250), // Deepest background headers/inputs
-	Colorf::fromRgba8(240, 240, 240), // Main background
-	Colorf::fromRgba8(200, 200, 200), // Interactive elements
-	Colorf::fromRgba8(185, 185, 185), // Hover states
-	Colorf::fromRgba8(160, 160, 160), // Borders
-	Colorf::fromRgba8(25,   25,  25), // Main text
-	Colorf::fromRgba8(210, 210, 255)  // Highlight
+	Colorf::fromRgb(0xFAFAFA), // Deepest background headers/inputs
+	Colorf::fromRgb(0xF0F0F0), // Main background
+	Colorf::fromRgb(0xC8C8C8), // Interactive elements
+	Colorf::fromRgb(0xB9B9B9), // Hover states
+	Colorf::fromRgb(0xA0A0A0), // Borders
+	Colorf::fromRgb(0x191919), // Main text
+	Colorf::fromRgb(0xD2D2FF)  // Highlight
 }) {};
