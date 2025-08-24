@@ -213,6 +213,7 @@ WidgetTheme::WidgetTheme(const struct SimpleTheme &theme)
 	textedit->SetColor("border-top-color", base2);
 	textedit->SetColor("border-right-color", base2);
 	textedit->SetColor("border-bottom-color", base2);
+	textedit->SetColor("selection-color", accent);
 
 	listview->SetDouble("noncontent-left", 10.0);
 	listview->SetDouble("noncontent-top", 10.0);
