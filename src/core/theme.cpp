@@ -143,13 +143,20 @@ WidgetTheme* WidgetTheme::GetTheme()
 
 WidgetTheme::WidgetTheme(const struct SimpleTheme &theme)
 {
-	auto bg0    = theme.bg0;    // Deepest background headers/inputs
-	auto bg1    = theme.bg1;    // Main background
-	auto base0  = theme.base0;  // Interactive elements
-	auto base1  = theme.base1;  // Hover states
-	auto base2  = theme.base2;  // Borders
-	auto base3  = theme.base3;  // Main text
-	auto accent = theme.accent; // Highlight
+
+	auto bgMain   = theme.bgMain;   // background
+	auto fgMain   = theme.fgMain;   //
+	auto bgLight  = theme.bgLight;  // headers / inputs
+	auto fgLight  = theme.fgLight;  //
+	auto bgAction = theme.bgAction; // interactive elements
+	auto fgAction = theme.fgAction; //
+	auto bgHover  = theme.bgHover;  // hover / highlight
+	auto fgHover  = theme.fgHover;  //
+	auto bgActive = theme.bgActive; // click
+	auto fgActive = theme.fgActive; //
+	auto border   = theme.border;   // around elements
+	auto divider  = theme.divider;  // between elements
+
 	auto none   = Colorf::transparent();
 
 	auto widget = RegisterStyle(std::make_unique<BasicWidgetStyle>(), "widget");
@@ -174,153 +181,177 @@ WidgetTheme::WidgetTheme(const struct SimpleTheme &theme)
 	auto statusbar = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "statusbar");
 
 	widget->SetString("font-family", "NotoSans");
-	widget->SetColor("color", base3);
-	widget->SetColor("window-background", bg1);
-	widget->SetColor("window-border", bg1);
-	widget->SetColor("window-caption-color", bg0);
-	widget->SetColor("window-caption-text-color", base3);
+	widget->SetColor("color", fgMain);
+	widget->SetColor("window-background", bgMain);
+	widget->SetColor("window-border", bgMain);
+	widget->SetColor("window-caption-color", bgLight);
+	widget->SetColor("window-caption-text-color", fgLight);
 
 	pushbutton->SetDouble("noncontent-left", 10.0);
 	pushbutton->SetDouble("noncontent-top", 5.0);
 	pushbutton->SetDouble("noncontent-right", 10.0);
 	pushbutton->SetDouble("noncontent-bottom", 5.0);
-	pushbutton->SetColor("background-color", base0);
-	pushbutton->SetColor("border-left-color", base2);
-	pushbutton->SetColor("border-top-color", base2);
-	pushbutton->SetColor("border-right-color", base2);
-	pushbutton->SetColor("border-bottom-color", base2);
-	pushbutton->SetColor("hover", "background-color", base1);
-	pushbutton->SetColor("down", "background-color", base1);
+	pushbutton->SetColor("color", fgAction);
+	pushbutton->SetColor("background-color", bgAction);
+	pushbutton->SetColor("border-left-color", border);
+	pushbutton->SetColor("border-top-color", border);
+	pushbutton->SetColor("border-right-color", border);
+	pushbutton->SetColor("border-bottom-color", border);
+	pushbutton->SetColor("hover", "color", fgHover);
+	pushbutton->SetColor("hover", "background-color", bgHover);
+	pushbutton->SetColor("down", "color", fgActive);
+	pushbutton->SetColor("down", "background-color", bgActive);
 
 	lineedit->SetDouble("noncontent-left", 5.0);
 	lineedit->SetDouble("noncontent-top", 3.0);
 	lineedit->SetDouble("noncontent-right", 5.0);
 	lineedit->SetDouble("noncontent-bottom", 3.0);
-	lineedit->SetColor("background-color", bg0);
-	lineedit->SetColor("border-left-color", base2);
-	lineedit->SetColor("border-top-color", base2);
-	lineedit->SetColor("border-right-color", base2);
-	lineedit->SetColor("border-bottom-color", base2);
-	lineedit->SetColor("selection-color", accent);
-	lineedit->SetColor("no-focus-selection-color", accent);
+	lineedit->SetColor("color", fgLight);
+	lineedit->SetColor("background-color", bgLight);
+	lineedit->SetColor("border-left-color", border);
+	lineedit->SetColor("border-top-color", border);
+	lineedit->SetColor("border-right-color", border);
+	lineedit->SetColor("border-bottom-color", border);
+	lineedit->SetColor("selection-color", bgHover);
+	lineedit->SetColor("no-focus-selection-color", bgHover);
 
 	textedit->SetDouble("noncontent-left", 8.0);
 	textedit->SetDouble("noncontent-top", 8.0);
 	textedit->SetDouble("noncontent-right", 8.0);
 	textedit->SetDouble("noncontent-bottom", 8.0);
-	textedit->SetColor("background-color", bg0);
-	textedit->SetColor("border-left-color", base2);
-	textedit->SetColor("border-top-color", base2);
-	textedit->SetColor("border-right-color", base2);
-	textedit->SetColor("border-bottom-color", base2);
-	textedit->SetColor("selection-color", accent);
+	textedit->SetColor("color", fgLight);
+	textedit->SetColor("background-color", bgLight);
+	textedit->SetColor("border-left-color", border);
+	textedit->SetColor("border-top-color", border);
+	textedit->SetColor("border-right-color", border);
+	textedit->SetColor("border-bottom-color", border);
+	textedit->SetColor("selection-color", bgHover);
 
 	listview->SetDouble("noncontent-left", 10.0);
 	listview->SetDouble("noncontent-top", 10.0);
 	listview->SetDouble("noncontent-right", 3.0);
 	listview->SetDouble("noncontent-bottom", 10.0);
-	listview->SetColor("background-color", bg0);
-	listview->SetColor("border-left-color", base2);
-	listview->SetColor("border-top-color", base2);
-	listview->SetColor("border-right-color", base2);
-	listview->SetColor("border-bottom-color", base2);
-	listview->SetColor("selection-color", accent);
+	listview->SetColor("color", fgLight);
+	listview->SetColor("background-color", bgLight);
+	listview->SetColor("border-left-color", border);
+	listview->SetColor("border-top-color", border);
+	listview->SetColor("border-right-color", border);
+	listview->SetColor("border-bottom-color", border);
+	listview->SetColor("selection-color", bgHover);
 
 	dropdown->SetDouble("noncontent-left", 5.0);
 	dropdown->SetDouble("noncontent-top", 5.0);
 	dropdown->SetDouble("noncontent-right", 5.0);
 	dropdown->SetDouble("noncontent-bottom", 5.0);
-	dropdown->SetColor("background-color", bg0);
-	dropdown->SetColor("border-left-color", base2);
-	dropdown->SetColor("border-top-color", base2);
-	dropdown->SetColor("border-right-color", base2);
-	dropdown->SetColor("border-bottom-color", base2);
-	dropdown->SetColor("arrow-color", base2);
+	dropdown->SetColor("color", fgLight);
+	dropdown->SetColor("background-color", bgLight);
+	dropdown->SetColor("border-left-color", border);
+	dropdown->SetColor("border-top-color", border);
+	dropdown->SetColor("border-right-color", border);
+	dropdown->SetColor("border-bottom-color", border);
+	dropdown->SetColor("arrow-color", border);
 
-	scrollbar->SetColor("track-color", bg0);
-	scrollbar->SetColor("thumb-color", base0);
+	scrollbar->SetColor("track-color", divider);
+	scrollbar->SetColor("thumb-color", border);
 
 	tabbar->SetDouble("spacer-left", 20.0);
 	tabbar->SetDouble("spacer-right", 20.0);
-	tabbar->SetColor("background-color", bg0);
+	tabbar->SetColor("background-color", bgLight);
 
 	tabbar_tab->SetDouble("noncontent-left", 15.0);
 	tabbar_tab->SetDouble("noncontent-right", 15.0);
 	tabbar_tab->SetDouble("noncontent-top", 1.0);
 	tabbar_tab->SetDouble("noncontent-bottom", 1.0);
-	tabbar_tab->SetColor("background-color", bg1);
-	tabbar_tab->SetColor("border-left-color", base0);
-	tabbar_tab->SetColor("border-top-color", base0);
-	tabbar_tab->SetColor("border-right-color", base0);
-	tabbar_tab->SetColor("border-bottom-color", base2);
-	tabbar_tab->SetColor("hover", "background-color", base0);
-	tabbar_tab->SetColor("active", "background-color", bg1);
-	tabbar_tab->SetColor("active", "border-left-color", base2);
-	tabbar_tab->SetColor("active", "border-top-color", base2);
-	tabbar_tab->SetColor("active", "border-right-color", base2);
+	tabbar_tab->SetColor("color", fgMain);
+	tabbar_tab->SetColor("background-color", bgMain);
+	tabbar_tab->SetColor("border-left-color", divider);
+	tabbar_tab->SetColor("border-top-color", divider);
+	tabbar_tab->SetColor("border-right-color", divider);
+	tabbar_tab->SetColor("border-bottom-color", border);
+	tabbar_tab->SetColor("hover", "color", fgAction);
+	tabbar_tab->SetColor("hover", "background-color", bgAction);
+	tabbar_tab->SetColor("active", "background-color", bgMain);
+	tabbar_tab->SetColor("active", "border-left-color", border);
+	tabbar_tab->SetColor("active", "border-top-color", border);
+	tabbar_tab->SetColor("active", "border-right-color", border);
 	tabbar_tab->SetColor("active", "border-bottom-color", none);
 
 	tabbar_spacer->SetDouble("noncontent-bottom", 1.0);
-	tabbar_spacer->SetColor("border-bottom-color", base2);
+	tabbar_spacer->SetColor("border-bottom-color", border);
 
 	tabwidget_stack->SetDouble("noncontent-left", 20.0);
 	tabwidget_stack->SetDouble("noncontent-top", 5.0);
 	tabwidget_stack->SetDouble("noncontent-right", 20.0);
 	tabwidget_stack->SetDouble("noncontent-bottom", 5.0);
 
-	checkbox_label->SetColor("checked-outer-border-color", base2);
-	checkbox_label->SetColor("checked-inner-border-color", bg1);
-	checkbox_label->SetColor("checked-color", base3);
-	checkbox_label->SetColor("unchecked-outer-border-color", base2);
-	checkbox_label->SetColor("unchecked-inner-border-color", bg1);
+	checkbox_label->SetColor("checked-outer-border-color", border);
+	checkbox_label->SetColor("checked-inner-border-color", bgMain);
+	checkbox_label->SetColor("checked-color", fgMain);
+	checkbox_label->SetColor("unchecked-outer-border-color", border);
+	checkbox_label->SetColor("unchecked-inner-border-color", bgMain);
 
-	menubar->SetColor("background-color", bg0);
-	toolbar->SetColor("background-color", bg0);
-	statusbar->SetColor("background-color", bg0);
+	menubar->SetColor("background-color", bgLight);
+	toolbar->SetColor("background-color", bgLight);
+	statusbar->SetColor("background-color", bgLight);
 
-	toolbarbutton->SetColor("hover", "background-color", base1);
-	toolbarbutton->SetColor("down", "background-color", base1);
+	toolbarbutton->SetColor("hover", "color", fgHover);
+	toolbarbutton->SetColor("hover", "background-color", bgHover);
+	toolbarbutton->SetColor("down", "color", fgActive);
+	toolbarbutton->SetColor("down", "background-color", bgActive);
 
-	menubaritem->SetColor("color", base3);
-	menubaritem->SetColor("hover", "background-color", base1);
-	menubaritem->SetColor("hover", "color", base3);
-	menubaritem->SetColor("down", "background-color", base1);
-	menubaritem->SetColor("down", "color", base3);
+	menubaritem->SetColor("color", fgMain);
+	menubaritem->SetColor("hover", "color", fgHover);
+	menubaritem->SetColor("hover", "background-color", bgHover);
+	menubaritem->SetColor("down", "color", fgActive);
+	menubaritem->SetColor("down", "background-color", bgActive);
 
 	menu->SetDouble("noncontent-left", 5.0);
 	menu->SetDouble("noncontent-top", 5.0);
 	menu->SetDouble("noncontent-right", 5.0);
 	menu->SetDouble("noncontent-bottom", 5.0);
-	menu->SetColor("background-color", bg1);
-	menu->SetColor("border-left-color", base2);
-	menu->SetColor("border-top-color", base2);
-	menu->SetColor("border-right-color", base2);
-	menu->SetColor("border-bottom-color", base2);
+	menu->SetColor("color", fgMain);
+	menu->SetColor("background-color", bgMain);
+	menu->SetColor("border-left-color", border);
+	menu->SetColor("border-top-color", border);
+	menu->SetColor("border-right-color", border);
+	menu->SetColor("border-bottom-color", border);
 
-	menuitem->SetColor("hover", "background-color", base1);
-	menuitem->SetColor("down", "background-color", base1);
+	menuitem->SetColor("hover", "color", fgHover);
+	menuitem->SetColor("hover", "background-color", bgHover);
+	menuitem->SetColor("down", "color", fgActive);
+	menuitem->SetColor("down", "background-color", bgActive);
 }
 
 /////////////////////////////////////////////////////////////////////////////
 
 DarkWidgetTheme::DarkWidgetTheme(): WidgetTheme({
-	Colorf::fromRgb(0x212121), // Deepest background headers/inputs
-	Colorf::fromRgb(0x2A2A2A), // Main background
-	Colorf::fromRgb(0x444444), // Interactive elements
-	Colorf::fromRgb(0x555555), // Hover states
-	Colorf::fromRgb(0x646464), // Borders
-	Colorf::fromRgb(0xE2DFDB), // Main text
-	Colorf::fromRgb(0xC83C00)  // Highlight
+	Colorf::fromRgb(0x2A2A2A), // background
+	Colorf::fromRgb(0xE2DFDB), //
+	Colorf::fromRgb(0x212121), // headers / inputs
+	Colorf::fromRgb(0xE2DFDB), //
+	Colorf::fromRgb(0x444444), // interactive elements
+	Colorf::fromRgb(0xFFFFFF), //
+	Colorf::fromRgb(0xC83C00), // hover / highlight
+	Colorf::fromRgb(0xFFFFFF), //
+	Colorf::fromRgb(0xBBBBBB), // click
+	Colorf::fromRgb(0x000000), //
+	Colorf::fromRgb(0x646464), // around elements
+	Colorf::fromRgb(0x555555)  // between elements
 }) {};
 
 /////////////////////////////////////////////////////////////////////////////
 
 LightWidgetTheme::LightWidgetTheme(): WidgetTheme({
-	Colorf::fromRgb(0xFAFAFA), // Deepest background headers/inputs
-	Colorf::fromRgb(0xF0F0F0), // Main background
-	Colorf::fromRgb(0xC8C8C8), // Interactive elements
-	Colorf::fromRgb(0xB9B9B9), // Hover states
-	Colorf::fromRgb(0xA0A0A0), // Borders
-	Colorf::fromRgb(0x191919), // Main text
-	Colorf::fromRgb(0xD2D2FF)  // Highlight
+	Colorf::fromRgb(0xF0F0F0), // background
+	Colorf::fromRgb(0x191919), //
+	Colorf::fromRgb(0xFAFAFA), // headers / inputs
+	Colorf::fromRgb(0x191919), //
+	Colorf::fromRgb(0xC8C8C8), // interactive elements
+	Colorf::fromRgb(0x000000), //
+	Colorf::fromRgb(0xD2D2FF), // hover / highlight
+	Colorf::fromRgb(0x000000), //
+	Colorf::fromRgb(0xC7B4FF), // click
+	Colorf::fromRgb(0x000000), //
+	Colorf::fromRgb(0xA0A0A0), // around elements
+	Colorf::fromRgb(0xB9B9B9)  // between elements
 }) {};
