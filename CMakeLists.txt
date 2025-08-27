@@ -311,7 +311,7 @@ if(ZWIDGET_BUILD_EXAMPLE)
 	elseif(APPLE)
 		target_link_libraries(zwidget_example PRIVATE "-framework Cocoa -framework OpenGL")
 	else()
-		target_link_libraries(zwidget_example PRIVATE ${ZWIDGET_LIBS} SDL2::SDL2)
+		target_link_libraries(zwidget_example PRIVATE ${ZWIDGET_LIBS})
 	endif()
 
 	set_target_properties(zwidget_example PROPERTIES CXX_STANDARD 20)
