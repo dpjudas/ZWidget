@@ -65,7 +65,7 @@ jobs:
         run: cmake --build . --config $BUILD_TYPE
 
   macos-build:
-     runs-on: macos-10.15
+     runs-on: macos-latest
      name: 🍎 macOS 10.15
      steps:
 
