@@ -66,7 +66,7 @@ jobs:
 
   macos-build:
      runs-on: macos-latest
-     name: 🍎 macOS 10.15
+     name: 🍎 macOS arm64
      steps:
 
        - name: 🧰 Checkout
