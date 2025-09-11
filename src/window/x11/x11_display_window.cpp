@@ -258,7 +258,7 @@ void X11DisplayWindow::SetWindowTitle(const std::string& text)
 void X11DisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>& images)
 {
 	if (images.empty())
-		return 0;
+		return;
 
 	double dpiscale = GetDpiScale();
 	int desiredSize = (int)std::round(32 * dpiscale);
