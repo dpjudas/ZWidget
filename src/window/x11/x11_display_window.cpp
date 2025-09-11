@@ -1,5 +1,6 @@
 
 #include "x11_display_window.h"
+#include <zwidget/core/image.h>
 #include <stdexcept>
 #include <vector>
 #include <cmath>
