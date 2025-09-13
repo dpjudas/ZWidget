@@ -191,5 +191,5 @@ private:
 
 	WaylandPointerEvent currentPointerEvent = {0};
 
-	std::vector<std::shared_ptr<X11Timer>> m_timers;
+	std::vector<std::shared_ptr<WaylandTimer>> m_timers;
 };
