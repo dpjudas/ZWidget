@@ -1,5 +1,4 @@
 #include "sdl2_display_window.h"
-#include <iostream>
 #include <stdexcept>
 #include <SDL2/SDL_vulkan.h>
 
@@ -394,9 +393,6 @@ Uint32 SDL2DisplayWindow::ExecTimer(Uint32 interval, void* execID)
 
 void* SDL2DisplayWindow::StartTimer(int timeoutMilliseconds, std::function<void()> onTimer)
 {
-	// is this guard needed?
-	// CheckInitSDL();
-
 	void* execID = (void*)(uintptr_t)++TimerIDs;
 	void* id = (void*)(uintptr_t)SDL_AddTimer(timeoutMilliseconds, SDL2DisplayWindow::ExecTimer, execID);
 
@@ -410,9 +406,6 @@ void* SDL2DisplayWindow::StartTimer(int timeoutMilliseconds, std::function<void(
 
 void SDL2DisplayWindow::StopTimer(void* timerID)
 {
-	// is this guard needed?
-	// CheckInitSDL();
-
 	SDL_RemoveTimer((SDL_TimerID)(uintptr_t)timerID);
 
 	auto execID = TimerHandles.find(timerID);
@@ -450,14 +443,28 @@ SDL2DisplayWindow* SDL2DisplayWindow::FindEventWindow(const SDL_Event& event)
 
 void SDL2DisplayWindow::DispatchEvent(const SDL_Event& event)
 {
-	std::cout << event.type << std::endl;
-
 	// timers are created in a non-window context
 	if (event.type == TimerEventID)
 		return OnTimerEvent(event.user);
 
 	SDL2DisplayWindow* window = FindEventWindow(event);
 	if (!window) return;
+
+	static bool dropJoyDown, joyDown, keyDown;
+	static unsigned long eventFrame = 0;
+
+	if (eventFrame != event.common.timestamp / 10) // millis / 10
+	{
+		eventFrame = event.common.timestamp / 10;
+		joyDown = keyDown = false;
+	}
+
+	if (event.type == SDL_CONTROLLERBUTTONDOWN) joyDown = true;
+	if (event.type == SDL_KEYDOWN) keyDown = true;
+	if (joyDown && keyDown) dropJoyDown = true;
+
+	// steamdeck desktop mode fires double events
+	if (dropJoyDown && event.type == SDL_CONTROLLERBUTTONDOWN) return;
 
 	switch (event.type)
 	{
