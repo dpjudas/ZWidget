@@ -128,6 +128,8 @@ public:
 	void SetDisabled(bool value) { SetEnabled(!value); }
 	void SetHidden(bool value) { if (value) Hide(); else Show(); }
 
+	void LockKeyboard();
+	void UnlockKeyboard();
 	void LockCursor();
 	void UnlockCursor();
 	void SetCursor(StandardCursor cursor);
@@ -187,6 +189,7 @@ protected:
 	virtual bool OnMouseWheel(const Point& pos, InputKey key) { return false; }
 	virtual void OnMouseMove(const Point& pos) { }
 	virtual void OnMouseLeave() { }
+	virtual void OnRawKey(RawKeycode keycode, bool down) { }
 	virtual void OnRawMouseMove(int dx, int dy) { }
 	virtual void OnKeyChar(std::string chars) { }
 	virtual void OnKeyDown(InputKey key) { }
@@ -212,6 +215,7 @@ private:
 	void OnWindowMouseDoubleclick(const Point& pos, InputKey key) override;
 	void OnWindowMouseUp(const Point& pos, InputKey key) override;
 	void OnWindowMouseWheel(const Point& pos, InputKey key) override;
+	void OnWindowRawKey(RawKeycode keycode, bool down) override;
 	void OnWindowRawMouseMove(int dx, int dy) override;
 	void OnWindowKeyChar(std::string chars) override;
 	void OnWindowKeyDown(InputKey key) override;
@@ -244,7 +248,8 @@ private:
 	std::unique_ptr<DisplayWindow> DispWindow;
 	std::unique_ptr<Canvas> DispCanvas;
 	Widget* FocusWidget = nullptr;
-	Widget* CaptureWidget = nullptr;
+	Widget* KeyboardLockWidget = nullptr;
+	Widget* CursorLockWidget = nullptr;
 	Widget* HoverWidget = nullptr;
 	bool HiddenFlag = false;
 

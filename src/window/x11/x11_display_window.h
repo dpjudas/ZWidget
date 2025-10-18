@@ -29,6 +29,8 @@ public:
 	void Hide() override;
 	void Activate() override;
 	void ShowCursor(bool enable) override;
+	void LockKeyboard() override;
+	void UnlockKeyboard() override;
 	void LockCursor() override;
 	void UnlockCursor() override;
 	void CaptureMouse() override;

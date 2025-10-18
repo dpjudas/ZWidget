@@ -326,6 +326,16 @@ void X11DisplayWindow::ShowCursor(bool enable)
 	}
 }
 
+void X11DisplayWindow::LockKeyboard()
+{
+	// Enables raw keyboard scancode events (OnRawKeyboard should be called for keyboard input)
+}
+
+void X11DisplayWindow::UnlockKeyboard()
+{
+	// Disable raw keyboard scancode events (OnKeyDown/OnKeyUp/OnKeyChar should be called for keyboard input)
+}
+
 void X11DisplayWindow::LockCursor()
 {
 	ShowCursor(false);

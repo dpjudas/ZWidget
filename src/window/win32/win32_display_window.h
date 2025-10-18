@@ -26,6 +26,8 @@ public:
 	void Hide() override;
 	void Activate() override;
 	void ShowCursor(bool enable) override;
+	void LockKeyboard() override;
+	void UnlockKeyboard() override;
 	void LockCursor() override;
 	void UnlockCursor() override;
 	void CaptureMouse() override;
@@ -56,6 +58,8 @@ public:
 
 	Point GetLParamPos(LPARAM lparam) const;
 
+	RawKeycode ToDirectInputKeycode(RAWINPUT* rawinput);
+
 	void* GetNativeHandle() override { return &WindowHandle; }
 
 	std::vector<std::string> GetVulkanInstanceExtensions() override;
@@ -84,6 +88,8 @@ public:
 	Win32NativeHandle WindowHandle;
 	bool Fullscreen = false;
 
+	bool KeyboardLocked = false;
+
 	bool MouseLocked = false;
 	POINT MouseLockPos = {};
 
@@ -95,4 +101,6 @@ public:
 	HICON LargeIcon = {};
 
 	StandardCursor CurrentCursor = StandardCursor::arrow;
+
+	uint16_t E1Prefix = 0;
 };

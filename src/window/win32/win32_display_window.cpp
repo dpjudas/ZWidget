@@ -7,6 +7,9 @@
 #include <vector>
 #include <dwmapi.h>
 
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>
+
 #pragma comment(lib, "dwmapi.lib")
 
 #ifndef HID_USAGE_PAGE_GENERIC
@@ -23,6 +26,10 @@
 
 #ifndef HID_USAGE_GENERIC_GAMEPAD
 #define HID_USAGE_GENERIC_GAMEPAD	((USHORT) 0x05)
+#endif
+
+#ifndef HID_USAGE_GENERIC_KEYBOARD
+#define HID_USAGE_GENERIC_KEYBOARD	((USHORT) 0x06)
 #endif
 
 #ifndef RIDEV_INPUTSINK
@@ -322,6 +329,37 @@ void Win32DisplayWindow::Activate()
 
 void Win32DisplayWindow::ShowCursor(bool enable)
 {
+	::ShowCursor(enable ? TRUE : FALSE);
+}
+
+void Win32DisplayWindow::LockKeyboard()
+{
+	if (!KeyboardLocked)
+	{
+		KeyboardLocked = true;
+
+		RAWINPUTDEVICE rid = {};
+		rid.usUsagePage = HID_USAGE_PAGE_GENERIC;
+		rid.usUsage = HID_USAGE_GENERIC_KEYBOARD;
+		rid.dwFlags = RIDEV_INPUTSINK;
+		rid.hwndTarget = WindowHandle.hwnd;
+		RegisterRawInputDevices(&rid, 1, sizeof(RAWINPUTDEVICE));
+	}
+}
+
+void Win32DisplayWindow::UnlockKeyboard()
+{
+	if (KeyboardLocked)
+	{
+		RAWINPUTDEVICE rid;
+		rid.usUsagePage = HID_USAGE_PAGE_GENERIC;
+		rid.usUsage = HID_USAGE_GENERIC_KEYBOARD;
+		rid.dwFlags = RIDEV_REMOVE;
+		rid.hwndTarget = 0;
+		RegisterRawInputDevices(&rid, 1, sizeof(RAWINPUTDEVICE));
+
+		KeyboardLocked = false;
+	}
 }
 
 void Win32DisplayWindow::LockCursor()
@@ -536,6 +574,104 @@ void Win32DisplayWindow::PresentBitmap(int width, int height, const uint32_t* pi
 	}
 }
 
+RawKeycode Win32DisplayWindow::ToDirectInputKeycode(RAWINPUT* raw)
+{
+	// Convert scan codes to DirectInput key codes. For the most part, this is
+	// straight forward: Scan codes without any prefix are passed unmodified.
+	// Scan codes with an 0xE0 prefix byte are generally passed by ORing them
+	// with 0x80. And scan codes with an 0xE1 prefix are the annoying Pause key
+	// which will generate another scan code that looks like Num Lock.
+	//
+	// This is a bit complicated only because the state of PC key codes is a bit
+	// of a mess. Keyboards may use simpler codes internally, but for the sake
+	// of compatibility, programs are presented with XT-compatible codes. This
+	// means that keys which were originally a shifted form of another key and
+	// were split off into a separate key all their own, or which were formerly
+	// a separate key and are now part of another key (most notable PrtScn and
+	// SysRq), will still generate code sequences that XT-era software will
+	// still perceive as the original sequences to use those keys.
+
+	if (raw->header.dwType != RIM_TYPEKEYBOARD)
+	{
+		return RawKeycode::None;
+	}
+	int keycode = raw->data.keyboard.MakeCode;
+	if (keycode == 0 && (raw->data.keyboard.Flags & RI_KEY_E0))
+	{
+		// Even if the make code is 0, we might still be able to extract a useful key from the message.
+		if (raw->data.keyboard.VKey >= VK_BROWSER_BACK && raw->data.keyboard.VKey <= VK_LAUNCH_APP2)
+		{
+			static const uint8_t MediaKeys[VK_LAUNCH_APP2 - VK_BROWSER_BACK + 1] =
+			{
+				DIK_WEBBACK, DIK_WEBFORWARD, DIK_WEBREFRESH, DIK_WEBSTOP,
+				DIK_WEBSEARCH, DIK_WEBFAVORITES, DIK_WEBHOME,
+
+				DIK_MUTE, DIK_VOLUMEDOWN, DIK_VOLUMEUP,
+				DIK_NEXTTRACK, DIK_PREVTRACK, DIK_MEDIASTOP, DIK_PLAYPAUSE,
+
+				DIK_MAIL, DIK_MEDIASELECT, DIK_MYCOMPUTER, DIK_CALCULATOR
+			};
+			keycode = MediaKeys[raw->data.keyboard.VKey - VK_BROWSER_BACK];
+		}
+	}
+	if (keycode < 1 || keycode > 0xFF)
+	{
+		return RawKeycode::None;
+	}
+	if (raw->data.keyboard.Flags & RI_KEY_E1)
+	{
+		E1Prefix = raw->data.keyboard.MakeCode;
+		return RawKeycode::None;
+	}
+	if (raw->data.keyboard.Flags & RI_KEY_E0)
+	{
+		if (keycode == DIK_LSHIFT || keycode == DIK_RSHIFT)
+		{
+			// Ignore fake shifts.
+			return RawKeycode::None;
+		}
+		keycode |= 0x80;
+	}
+	// The sequence for an unshifted pause is E1 1D 45 (E1 Prefix +
+	// Control + Num Lock).
+	if (E1Prefix)
+	{
+		if (E1Prefix == 0x1D && keycode == DIK_NUMLOCK)
+		{
+			keycode = DIK_PAUSE;
+			E1Prefix = 0;
+		}
+		else
+		{
+			E1Prefix = 0;
+			return RawKeycode::None;
+		}
+	}
+	// If you press Ctrl+Pause, the keyboard sends the Break make code
+	// E0 46 instead of the Pause make code.
+	if (keycode == 0xC6)
+	{
+		keycode = DIK_PAUSE;
+	}
+	// If you press Ctrl+PrtScn (to get SysRq), the keyboard sends
+	// the make code E0 37. If you press PrtScn without any modifiers,
+	// it sends E0 2A E0 37. And if you press Alt+PrtScn, it sends 54
+	// (which is undefined in the charts I can find.)
+	if (keycode == 0x54)
+	{
+		keycode = DIK_SYSRQ;
+	}
+	// If you press any keys in the island between the main keyboard
+	// and the numeric keypad with Num Lock turned on, they generate
+	// a fake shift before their actual codes. They do not generate this
+	// fake shift if Num Lock is off. We unconditionally discard fake
+	// shifts above, so we don't need to do anything special for these,
+	// since they are also prefixed by E0 so we can tell them apart from
+	// their keypad counterparts.
+
+	return (RawKeycode)keycode;
+}
+
 LRESULT Win32DisplayWindow::OnWindowMessage(UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	LPARAM result = 0;
@@ -561,6 +697,15 @@ LRESULT Win32DisplayWindow::OnWindowMessage(UINT msg, WPARAM wparam, LPARAM lpar
 				{
 					if (hasFocus)
 						WindowHost->OnWindowRawMouseMove(rawinput->data.mouse.lLastX, rawinput->data.mouse.lLastY);
+				}
+				else if (rawinput->header.dwType == RIM_TYPEKEYBOARD)
+				{
+					RawKeycode keycode = ToDirectInputKeycode(rawinput);
+					if (keycode != RawKeycode::None)
+					{
+						bool keyDown = !(rawinput->data.keyboard.Flags & RI_KEY_BREAK);
+						WindowHost->OnWindowRawKey((RawKeycode)keycode, keyDown);
+					}
 				}
 			}
 		}
