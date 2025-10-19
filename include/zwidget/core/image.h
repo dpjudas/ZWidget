@@ -29,9 +29,9 @@ class CustomCursorFrame
 {
 public:
 	CustomCursorFrame() = default;
-	CustomCursorFrame(std::shared_ptr<Image> image, double frameDuration = 1.0) : Image(std::move(image)), FrameDuration(frameDuration) { }
+	CustomCursorFrame(std::shared_ptr<Image> image, double frameDuration = 1.0) : FrameImage(std::move(image)), FrameDuration(frameDuration) { }
 
-	std::shared_ptr<Image> Image;
+	std::shared_ptr<Image> FrameImage;
 	double FrameDuration = 1.0; // the duration this frame is displayed, in seconds
 };
 

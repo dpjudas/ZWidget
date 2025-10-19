@@ -1125,8 +1125,8 @@ HCURSOR Win32CustomCursor::create_cursor(const std::shared_ptr<CustomCursor>& cu
 	if (cursor_description->GetFrames().empty())
 		throw std::runtime_error("Cannot create cursor with no image frames");
 	std::vector<uint8_t> ani_file = create_ani_file(cursor_description);
-	int desired_width = (int)std::round(cursor_description->GetFrames().front().Image->GetWidth() * dpiscale);
-	int desired_height = (int)std::round(cursor_description->GetFrames().front().Image->GetHeight() * dpiscale);
+	int desired_width = (int)std::round(cursor_description->GetFrames().front().FrameImage->GetWidth() * dpiscale);
+	int desired_height = (int)std::round(cursor_description->GetFrames().front().FrameImage->GetHeight() * dpiscale);
 	HICON icon = CreateIconFromResourceEx((PBYTE)ani_file.data(), (DWORD)ani_file.size(), FALSE, 0x00030000, desired_width, desired_height, LR_DEFAULTCOLOR);
 	return (HCURSOR)icon;
 }
@@ -1283,7 +1283,7 @@ std::vector<uint8_t> Win32CustomCursor::create_ani_file(const std::shared_ptr<Cu
 	const std::vector<CustomCursorFrame>& frames = cursor_description->GetFrames();
 	for (std::vector<CustomCursorFrame>::size_type i = 0; i < frames.size(); i++)
 	{
-		ani_frames.icons.push_back(create_cur_file(frames[i].Image, cursor_description->GetHotspot()));
+		ani_frames.icons.push_back(create_cur_file(frames[i].FrameImage, cursor_description->GetHotspot()));
 		DWORD rate = static_cast<DWORD>(std::round(frames[i].FrameDuration * 60.0));
 		if (rate == 0)
 			rate = 1;
