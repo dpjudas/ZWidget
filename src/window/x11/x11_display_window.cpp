@@ -367,7 +367,7 @@ bool X11DisplayWindow::GetKeyState(InputKey key)
 	return it != keyState.end() ? it->second : false;
 }
 
-void X11DisplayWindow::SetCursor(StandardCursor newcursor)
+void X11DisplayWindow::SetCursor(StandardCursor newcursor, std::shared_ptr<CustomCursor> newcustom)
 {
 	if (cursor != newcursor)
 	{

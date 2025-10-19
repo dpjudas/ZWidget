@@ -532,7 +532,23 @@ void Widget::SetCursor(StandardCursor cursor)
 			Widget* w = Window();
 			if (w)
 			{
-				w->DispWindow->SetCursor(CurrentCursor);
+				w->DispWindow->SetCursor(CurrentCursor, CurrentCustomCursor);
+			}
+		}
+	}
+}
+
+void Widget::SetCursor(std::shared_ptr<CustomCursor> cursor)
+{
+	if (CurrentCustomCursor != cursor)
+	{
+		CurrentCustomCursor = cursor;
+		if (HoverWidget == this || CursorLockWidget == this)
+		{
+			Widget* w = Window();
+			if (w)
+			{
+				w->DispWindow->SetCursor(CurrentCursor, CurrentCustomCursor);
 			}
 		}
 	}
@@ -716,7 +732,7 @@ void Widget::OnWindowMouseMove(const Point& pos)
 {
 	if (CursorLockWidget)
 	{
-		DispWindow->SetCursor(CursorLockWidget->CurrentCursor);
+		DispWindow->SetCursor(CursorLockWidget->CurrentCursor, CursorLockWidget->CurrentCustomCursor);
 		CursorLockWidget->OnMouseMove(CursorLockWidget->MapFrom(this, pos));
 	}
 	else
@@ -741,7 +757,7 @@ void Widget::OnWindowMouseMove(const Point& pos)
 			HoverWidget = widget;
 		}
 
-		DispWindow->SetCursor(widget->CurrentCursor);
+		DispWindow->SetCursor(widget->CurrentCursor, widget->CurrentCustomCursor);
 
 		do
 		{

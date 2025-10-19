@@ -196,7 +196,7 @@ void SDL2DisplayWindow::ReleaseMouseCapture()
 {
 }
 
-void SDL2DisplayWindow::SetCursor(StandardCursor cursor)
+void SDL2DisplayWindow::SetCursor(StandardCursor cursor, std::shared_ptr<CustomCursor> custom)
 {
 }
 

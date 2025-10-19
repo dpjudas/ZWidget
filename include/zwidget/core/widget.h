@@ -133,6 +133,7 @@ public:
 	void LockCursor();
 	void UnlockCursor();
 	void SetCursor(StandardCursor cursor);
+	void SetCursor(std::shared_ptr<CustomCursor> cursor);
 
 	void SetPointerCapture();
 	void ReleasePointerCapture();
@@ -254,6 +255,7 @@ private:
 	bool HiddenFlag = false;
 
 	StandardCursor CurrentCursor = StandardCursor::arrow;
+	std::shared_ptr<CustomCursor> CurrentCustomCursor;
 
 	std::string StyleClass = "widget";
 	std::string StyleState;

@@ -27,6 +27,7 @@ class OpenFileDialog;
 class SaveFileDialog;
 class OpenFolderDialog;
 class Image;
+class CustomCursor;
 
 enum class StandardCursor
 {
@@ -336,7 +337,7 @@ public:
 	virtual void Update() = 0;
 	virtual bool GetKeyState(InputKey key) = 0;
 
-	virtual void SetCursor(StandardCursor cursor) = 0;
+	virtual void SetCursor(StandardCursor cursor, std::shared_ptr<CustomCursor> custom) = 0;
 
 	virtual Rect GetWindowFrame() const = 0;
 	virtual Size GetClientSize() const = 0;
