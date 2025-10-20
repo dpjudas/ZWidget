@@ -473,7 +473,5 @@ void CocoaDisplayWindow::SetClipboardText(const std::string& text) {}
 
 void* CocoaDisplayWindow::GetNativeHandle() { return nullptr; }
 
-#ifdef HAVE_VULKAN
 std::vector<std::string> CocoaDisplayWindow::GetVulkanInstanceExtensions() { return {}; }
 VkSurfaceKHR CocoaDisplayWindow::CreateVulkanSurface(VkInstance instance) { return nullptr; }
-#endif

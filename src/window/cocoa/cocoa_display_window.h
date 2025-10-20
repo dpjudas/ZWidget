@@ -68,10 +68,8 @@ public:
 
     void* GetNativeHandle() override;
 
-#ifdef HAVE_VULKAN
     std::vector<std::string> GetVulkanInstanceExtensions() override;
     VkSurfaceKHR CreateVulkanSurface(VkInstance instance) override;
-#endif
 
 #ifdef HAVE_METAL
     // Placeholder for Metal-specific methods
