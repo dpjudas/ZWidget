@@ -58,6 +58,8 @@ set(ZWIDGET_SOURCES
 	src/widgets/dropdown/dropdown.cpp
 	src/widgets/listview/listview.cpp
 	src/widgets/tabwidget/tabwidget.cpp
+	src/widgets/layout/hboxlayout.cpp
+	src/widgets/layout/vboxlayout.cpp
 	src/window/window.cpp
 	src/window/stub/stub_open_folder_dialog.cpp
 	src/window/stub/stub_open_folder_dialog.h
@@ -99,6 +101,8 @@ set(ZWIDGET_INCLUDES
 	include/zwidget/widgets/checkboxlabel/checkboxlabel.h
 	include/zwidget/widgets/listview/listview.h
 	include/zwidget/widgets/tabwidget/tabwidget.h
+	include/zwidget/widgets/layout/hboxlayout.h
+	include/zwidget/widgets/layout/vboxlayout.h
 	include/zwidget/window/window.h
 	include/zwidget/window/x11nativehandle.h
 	include/zwidget/window/waylandnativehandle.h

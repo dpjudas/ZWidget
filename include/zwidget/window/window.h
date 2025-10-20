@@ -280,12 +280,12 @@ class DisplayWindowHost
 {
 public:
 	virtual void OnWindowPaint() = 0;
-    virtual void OnWindowMouseMove(const Point& pos) = 0;
-    virtual void OnWindowMouseLeave() = 0;
-    virtual void OnWindowMouseDown(const Point& pos, InputKey key) = 0;
-    virtual void OnWindowMouseDoubleclick(const Point& pos, InputKey key) = 0;
-    virtual void OnWindowMouseUp(const Point& pos, InputKey key) = 0;
-    virtual void OnWindowMouseWheel(const Point& pos, InputKey key) = 0;
+	virtual void OnWindowMouseMove(const Point& pos) = 0;
+	virtual void OnWindowMouseLeave() = 0;
+	virtual void OnWindowMouseDown(const Point& pos, InputKey key) = 0;
+	virtual void OnWindowMouseDoubleclick(const Point& pos, InputKey key) = 0;
+	virtual void OnWindowMouseUp(const Point& pos, InputKey key) = 0;
+	virtual void OnWindowMouseWheel(const Point& pos, InputKey key) = 0;
 	virtual void OnWindowRawMouseMove(int dx, int dy) = 0;
 	virtual void OnWindowRawKey(RawKeycode keycode, bool down) = 0;
 	virtual void OnWindowKeyChar(std::string chars) = 0;
