@@ -451,7 +451,7 @@ void CocoaDisplayWindow::Update() {}
 
 bool CocoaDisplayWindow::GetKeyState(InputKey key) { return false; }
 
-void CocoaDisplayWindow::SetCursor(StandardCursor cursor) {}
+void CocoaDisplayWindow::SetCursor(StandardCursor cursor, std::shared_ptr<CustomCursor> custom) {}
 
 Rect CocoaDisplayWindow::GetWindowFrame() const { return {}; }
 Size CocoaDisplayWindow::GetClientSize() const { return {}; }

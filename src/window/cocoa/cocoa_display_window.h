@@ -46,7 +46,7 @@ public:
 
     bool GetKeyState(InputKey key) override;
 
-    void SetCursor(StandardCursor cursor) override;
+    void SetCursor(StandardCursor cursor, std::shared_ptr<CustomCursor> custom) override;
 
     Rect GetWindowFrame() const override;
     Size GetClientSize() const override;
