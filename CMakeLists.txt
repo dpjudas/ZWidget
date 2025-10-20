@@ -30,6 +30,7 @@ set(ZWIDGET_SOURCES
 	src/core/canvas.cpp
 	src/core/font.cpp
 	src/core/image.cpp
+	src/core/layout.cpp
 	src/core/span_layout.cpp
 	src/core/timer.cpp
 	src/core/widget.cpp
