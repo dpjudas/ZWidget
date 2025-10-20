@@ -25,8 +25,8 @@ public:
     std::vector<std::string> Filenames() const override;
 
 private:
-    DisplayWindow* _owner = nullptr;
-    bool _multiselect = false;
+    // DisplayWindow* _owner = nullptr;
+    // bool _multiselect = false;
     std::vector<std::pair<std::string, std::string>> _filters;
     std::string _initialDirectory;
     std::string _filename;

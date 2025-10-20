@@ -39,10 +39,6 @@ std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateCocoa()
     return std::make_unique<CocoaDisplayBackend>();
 }
 
-std::unique_ptr<DisplayBackend> CocoaDisplayBackend::TryCreateCocoa()
-{
-    return std::make_unique<CocoaDisplayBackend>();
-}
 
 CocoaDisplayBackend::CocoaDisplayBackend()
 {

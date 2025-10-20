@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 project(zwidget)
+message(STATUS "HAVE_METAL is ${HAVE_METAL}")
 
 if (UNIX AND NOT APPLE)
 	include(FindPkgConfig)

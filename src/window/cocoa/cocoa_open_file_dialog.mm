@@ -67,7 +67,6 @@ bool CocoaOpenFileDialog::Show()
 {
     if (!_filters.empty())
     {
-        NSArray* fileTypes = [[NSString stringWithUTF8String:_filters[_filterIndex].second.c_str()] componentsSeparatedByString:@";"];
         NSArray* fileTypeStrings = [[NSString stringWithUTF8String:_filters[_filterIndex].second.c_str()] componentsSeparatedByString:@";"];
         NSMutableArray<UTType*>* utTypes = [NSMutableArray array];
         for (NSString* typeString in fileTypeStrings) {

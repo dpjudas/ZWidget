@@ -18,7 +18,7 @@ public:
     std::string SelectedPath() const override;
 
 private:
-    DisplayWindow* _owner = nullptr;
+    // DisplayWindow* _owner = nullptr;
     std::string _initialDirectory;
     std::string _title;
     std::string _selectedPath;

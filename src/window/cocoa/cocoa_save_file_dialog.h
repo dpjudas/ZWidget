@@ -23,12 +23,12 @@ public:
     std::string Filename() const override;
 
 private:
-    DisplayWindow* _owner = nullptr;
+    // DisplayWindow* _owner = nullptr;
     std::vector<std::pair<std::string, std::string>> _filters;
     std::string _initialDirectory;
     std::string _filename;
     std::string _defaultExtension;
-    int _filterIndex = 0;
+    // int _filterIndex = 0;
     std::string _title;
     void* panel = nullptr;
 };
