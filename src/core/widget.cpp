@@ -199,6 +199,16 @@ void Widget::SetWindowIcon(const std::vector<std::shared_ptr<Image>>& images)
 		DispWindow->SetWindowIcon(WindowIcon);
 }
 
+double Widget::GetPreferredWidth()
+{
+	return LayoutWidget ? LayoutWidget->GetPreferredWidth() : 0.0;
+}
+
+double Widget::GetPreferredHeight()
+{
+	return LayoutWidget ? LayoutWidget->GetPreferredHeight() : 0.0;
+}
+
 Size Widget::GetSize() const
 {
 	return ContentGeometry.size();

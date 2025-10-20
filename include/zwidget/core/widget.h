@@ -50,8 +50,8 @@ public:
 	double GetWidth() const { return GetSize().width; }
 	double GetHeight() const { return GetSize().height; }
 
-	virtual double GetPreferredWidth() const { return /*LayoutWidget ? LayoutWidget->GetPreferredWidth() :*/ 0.0; }
-	virtual double GetPreferredHeight() const { return /*LayoutWidget ? LayoutWidget->GetPreferredHeight() :*/ 0.0; }
+	virtual double GetPreferredWidth();
+	virtual double GetPreferredHeight();
 
 	// Widget noncontent area
 	void SetNoncontentSizes(double left, double top, double right, double bottom);
