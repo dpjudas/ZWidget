@@ -34,6 +34,12 @@ bool CheckboxLabel::GetChecked() const
 	return checked;
 }
 
+double CheckboxLabel::GetPreferredWidth()
+{
+	const auto canvas = GetCanvas();
+	return 20.0 + canvas->measureText(text).width;
+}
+
 double CheckboxLabel::GetPreferredHeight()
 {
 	return 20.0;
@@ -42,7 +48,7 @@ double CheckboxLabel::GetPreferredHeight()
 void CheckboxLabel::OnPaint(Canvas* canvas)
 {
 	// To do: add and use GetStyleImage for the checkbox
-	
+
 	double center = GridFitPoint(GetHeight() * 0.5);
 	double borderwidth = GridFitSize(1.0);
 	double outerboxsize = GridFitSize(10.0);
