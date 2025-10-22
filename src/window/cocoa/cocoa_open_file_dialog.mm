@@ -36,7 +36,7 @@ void CocoaOpenFileDialog::SetDefaultExtension(const std::string& extension)
         [((__bridge NSOpenPanel*)panel) setAllowedContentTypes:@[utType]];
     } else {
         // Fallback for unknown extensions or older macOS versions if UTType is not available
-        [((__bridge NSOpenPanel*)panel) setAllowedFileTypes:@[extensionString]];
+        [((__bridge NSOpenPanel*)panel) setAllowedContentTypes:@[]];
     }
 }
 
@@ -79,12 +79,12 @@ bool CocoaOpenFileDialog::Show()
             [((__bridge NSOpenPanel*)panel) setAllowedContentTypes:utTypes];
         } else {
             // Fallback if no valid UTTypes could be created
-            [((__bridge NSOpenPanel*)panel) setAllowedFileTypes:fileTypeStrings];
+            [((__bridge NSOpenPanel*)panel) setAllowedContentTypes:@[]];
         }
     }
     else
     {
-        [((__bridge NSOpenPanel*)panel) setAllowedContentTypes:nil]; // No filters
+        [((__bridge NSOpenPanel*)panel) setAllowedContentTypes:@[]]; // No filters
     }
 
     if ([((__bridge NSOpenPanel*)panel) runModal] == NSModalResponseOK)

@@ -346,7 +346,7 @@ void LauncherWindowTab3::OnGeometryChanged()
 std::vector<SingleFontData> LoadWidgetFontData(const std::string& name)
 {
 	return {
-		{std::move(ReadAllBytes("OpenSans.ttf")), ""}
+		{ReadAllBytes("OpenSans.ttf"), ""}
 	};
 }
 

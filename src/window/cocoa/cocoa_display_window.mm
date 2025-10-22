@@ -4,6 +4,7 @@
 #include <map>
 #include <dlfcn.h>
 #include <zwidget/core/image.h>
+#include "zwidget/window/cocoanativehandle.h"
 
 
 
@@ -18,6 +19,8 @@
 #ifdef HAVE_OPENGL
 #import <OpenGL/gl.h>
 #import <OpenGL/glu.h>
+
+#define GL_SILENCE_DEPRECATION
 #endif
 
 // Forward declarations
@@ -50,13 +53,13 @@ InputKey keycode_to_inputkey(unsigned short keycode)
         {49, InputKey::Space},
         {51, InputKey::Backspace},
         {53, InputKey::Escape},
-        {55, InputKey::LShift}, // Command
+        {55, InputKey::LCommand}, // Command key
         {56, InputKey::LShift},
         {57, InputKey::CapsLock},
-        {58, InputKey::Alt},
+        {58, InputKey::LAlt}, // Left Alt (Option)
         {59, InputKey::LControl},
         {60, InputKey::RShift},
-        {61, InputKey::Alt}, // Right Alt
+        {61, InputKey::RAlt}, // Right Alt (Option)
         {62, InputKey::RControl},
         {115, InputKey::Home},
         {116, InputKey::PageUp},
@@ -100,6 +103,12 @@ public:
     bool mouseCaptured = false;
     RenderAPI renderAPI = RenderAPI::Unspecified;
 
+    CGColorSpaceRef colorSpace = nullptr;
+    CGContextRef bitmapContext = nullptr;
+    std::vector<uint32_t> pixelBuffer;
+    int bitmapWidth = 0;
+    int bitmapHeight = 0;
+
 #ifdef HAVE_METAL
     id<MTLDevice> metalDevice = nil;
     id<MTLCommandQueue> commandQueue = nil;
@@ -113,6 +122,12 @@ public:
     // Declare methods, but implement them outside the struct
     void initMetal(ZWidgetView* view);
     void initOpenGL(ZWidgetView* view);
+
+    ~CocoaDisplayWindowImpl()
+    {
+        if (bitmapContext) CGContextRelease(bitmapContext);
+        if (colorSpace) CGColorSpaceRelease(colorSpace);
+    }
 };
 
 @interface ZWidgetView : NSView
@@ -194,7 +209,15 @@ public:
     if (impl && impl->windowHost)
     {
         NSPoint p = [theEvent locationInWindow];
-        impl->windowHost->OnWindowMouseDown(Point(p.x, [self frame].size.height - p.y), InputKey::LeftMouse);
+        InputKey mouseKey = InputKey::None;
+        if ([theEvent buttonNumber] == 0) mouseKey = InputKey::LeftMouse;
+        else if ([theEvent buttonNumber] == 1) mouseKey = InputKey::RightMouse;
+        else if ([theEvent buttonNumber] == 2) mouseKey = InputKey::MiddleMouse;
+
+        if (mouseKey != InputKey::None)
+        {
+            impl->windowHost->OnWindowMouseDown(Point(p.x, [self frame].size.height - p.y), mouseKey);
+        }
     }
 }
 
@@ -203,7 +226,15 @@ public:
     if (impl && impl->windowHost)
     {
         NSPoint p = [theEvent locationInWindow];
-        impl->windowHost->OnWindowMouseUp(Point(p.x, [self frame].size.height - p.y), InputKey::LeftMouse);
+        InputKey mouseKey = InputKey::None;
+        if ([theEvent buttonNumber] == 0) mouseKey = InputKey::LeftMouse;
+        else if ([theEvent buttonNumber] == 1) mouseKey = InputKey::RightMouse;
+        else if ([theEvent buttonNumber] == 2) mouseKey = InputKey::MiddleMouse;
+
+        if (mouseKey != InputKey::None)
+        {
+            impl->windowHost->OnWindowMouseUp(Point(p.x, [self frame].size.height - p.y), mouseKey);
+        }
     }
 }
 
@@ -288,32 +319,56 @@ public:
         bool shiftPressed = ([theEvent modifierFlags] & NSEventModifierFlagShift) != 0;
         bool ctrlPressed = ([theEvent modifierFlags] & NSEventModifierFlagControl) != 0;
         bool altPressed = ([theEvent modifierFlags] & NSEventModifierFlagOption) != 0;
+        bool commandPressed = ([theEvent modifierFlags] & NSEventModifierFlagCommand) != 0;
 
-        if (impl->keyState[InputKey::Shift] != shiftPressed)
+        // Update Shift keys
+        if (impl->keyState[InputKey::LShift] != shiftPressed)
         {
-            impl->keyState[InputKey::Shift] = shiftPressed;
-            if (shiftPressed)
-                impl->windowHost->OnWindowKeyDown(InputKey::Shift);
-            else
-                impl->windowHost->OnWindowKeyUp(InputKey::Shift);
+            impl->keyState[InputKey::LShift] = shiftPressed;
+            if (shiftPressed) impl->windowHost->OnWindowKeyDown(InputKey::LShift);
+            else impl->windowHost->OnWindowKeyUp(InputKey::LShift);
+        }
+        if (impl->keyState[InputKey::RShift] != shiftPressed) // Also update RShift
+        {
+            impl->keyState[InputKey::RShift] = shiftPressed;
+            if (shiftPressed) impl->windowHost->OnWindowKeyDown(InputKey::RShift);
+            else impl->windowHost->OnWindowKeyUp(InputKey::RShift);
         }
 
-        if (impl->keyState[InputKey::Ctrl] != ctrlPressed)
+        // Update Control keys
+        if (impl->keyState[InputKey::LControl] != ctrlPressed)
         {
-            impl->keyState[InputKey::Ctrl] = ctrlPressed;
-            if (ctrlPressed)
-                impl->windowHost->OnWindowKeyDown(InputKey::Ctrl);
-            else
-                impl->windowHost->OnWindowKeyUp(InputKey::Ctrl);
+            impl->keyState[InputKey::LControl] = ctrlPressed;
+            if (ctrlPressed) impl->windowHost->OnWindowKeyDown(InputKey::LControl);
+            else impl->windowHost->OnWindowKeyUp(InputKey::LControl);
+        }
+        if (impl->keyState[InputKey::RControl] != ctrlPressed) // Also update RControl
+        {
+            impl->keyState[InputKey::RControl] = ctrlPressed;
+            if (ctrlPressed) impl->windowHost->OnWindowKeyDown(InputKey::RControl);
+            else impl->windowHost->OnWindowKeyUp(InputKey::RControl);
         }
 
-        if (impl->keyState[InputKey::Alt] != altPressed)
+        // Update Alt keys
+        if (impl->keyState[InputKey::LAlt] != altPressed)
         {
-            impl->keyState[InputKey::Alt] = altPressed;
-            if (altPressed)
-                impl->windowHost->OnWindowKeyDown(InputKey::Alt);
-            else
-                impl->windowHost->OnWindowKeyUp(InputKey::Alt);
+            impl->keyState[InputKey::LAlt] = altPressed;
+            if (altPressed) impl->windowHost->OnWindowKeyDown(InputKey::LAlt);
+            else impl->windowHost->OnWindowKeyUp(InputKey::LAlt);
+        }
+        if (impl->keyState[InputKey::RAlt] != altPressed) // Also update RAlt
+        {
+            impl->keyState[InputKey::RAlt] = altPressed;
+            if (altPressed) impl->windowHost->OnWindowKeyDown(InputKey::RAlt);
+            else impl->windowHost->OnWindowKeyUp(InputKey::RAlt);
+        }
+
+        // Update Command key (mapped to LCommand)
+        if (impl->keyState[InputKey::LCommand] != commandPressed)
+        {
+            impl->keyState[InputKey::LCommand] = commandPressed;
+            if (commandPressed) impl->windowHost->OnWindowKeyDown(InputKey::LCommand);
+            else impl->windowHost->OnWindowKeyUp(InputKey::LCommand);
         }
     }
 }
@@ -421,57 +476,451 @@ void CocoaDisplayWindowImpl::initOpenGL(ZWidgetView* view)
 }
 
 
-CocoaDisplayWindow::CocoaDisplayWindow(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI) : impl(std::make_unique<CocoaDisplayWindowImpl>()) {}
+CocoaDisplayWindow::CocoaDisplayWindow(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI) : impl(std::make_unique<CocoaDisplayWindowImpl>())
+{
+    impl->windowHost = windowHost;
+    impl->renderAPI = renderAPI;
 
-CocoaDisplayWindow::~CocoaDisplayWindow() = default;
+    NSRect contentRect = NSMakeRect(0, 0, 800, 600); // Default size
+    NSWindowStyleMask style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
+    if (!popupWindow)
+    {
+        style |= NSWindowStyleMaskMiniaturizable;
+    }
 
-void CocoaDisplayWindow::SetWindowTitle(const std::string& text) {}
-void CocoaDisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>& images) {}
-void CocoaDisplayWindow::SetWindowFrame(const Rect& box) {}
-void CocoaDisplayWindow::SetClientFrame(const Rect& box) {}
+    impl->window = [[NSWindow alloc] initWithContentRect:contentRect
+                                                styleMask:style
+                                                  backing:NSBackingStoreBuffered
+                                                    defer:NO];
+    
+    impl->delegate = [[ZWidgetWindowDelegate alloc] initWithImpl:impl.get()];
+    [impl->window setDelegate:impl->delegate];
 
-void CocoaDisplayWindow::Show() {}
-void CocoaDisplayWindow::ShowFullscreen() {}
-void CocoaDisplayWindow::ShowMaximized() {}
-void CocoaDisplayWindow::ShowMinimized() {}
-void CocoaDisplayWindow::ShowNormal() {}
-bool CocoaDisplayWindow::IsWindowFullscreen() { return false; }
-void CocoaDisplayWindow::Hide() {}
-void CocoaDisplayWindow::Activate() {}
+    ZWidgetView* view = [[ZWidgetView alloc] initWithImpl:impl.get()];
+    [impl->window setContentView:view];
 
-void CocoaDisplayWindow::ShowCursor(bool enable) {}
+    if (renderAPI == RenderAPI::Metal)
+    {
+        impl->initMetal(view);
+    }
+    else if (renderAPI == RenderAPI::OpenGL)
+    {
+        impl->initOpenGL(view);
+    }
+    else
+    {
+        impl->renderAPI = RenderAPI::Bitmap; // Fallback
+    }
+
+    // Set initial key states
+    impl->keyState[InputKey::LeftMouse] = false;
+    impl->keyState[InputKey::RightMouse] = false;
+    impl->keyState[InputKey::MiddleMouse] = false;
+    impl->keyState[InputKey::LShift] = false;
+    impl->keyState[InputKey::RShift] = false;
+    impl->keyState[InputKey::LControl] = false;
+    impl->keyState[InputKey::RControl] = false;
+    impl->keyState[InputKey::LAlt] = false;
+    impl->keyState[InputKey::RAlt] = false;
+    impl->keyState[InputKey::LCommand] = false;
+}
+
+void CocoaDisplayWindow::SetWindowTitle(const std::string& text)
+{
+    if (impl->window)
+    {
+        [impl->window setTitle:[NSString stringWithUTF8String:text.c_str()]];
+    }
+}
+void CocoaDisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>& images)
+{
+    if (impl->window && !images.empty())
+    {
+        // For simplicity, use the first image as the icon.
+        // A more robust implementation might choose an appropriate size.
+        std::shared_ptr<Image> iconImage = images[0];
+
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+        CGContextRef context = CGBitmapContextCreate(
+            iconImage->GetData(), iconImage->GetWidth(), iconImage->GetHeight(), 8, iconImage->GetWidth() * 4, colorSpace,
+            kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+
+        if (context)
+        {
+            CGImageRef cgImage = CGBitmapContextCreateImage(context);
+            if (cgImage)
+            {
+                NSImage* nsImage = [[NSImage alloc] initWithCGImage:cgImage size:NSZeroSize];
+                [NSApp setApplicationIconImage:nsImage];
+                CGImageRelease(cgImage);
+            }
+            CGContextRelease(context);
+        }
+        CGColorSpaceRelease(colorSpace);
+    }
+}
+void CocoaDisplayWindow::SetWindowFrame(const Rect& box)
+{
+    if (impl->window)
+    {
+        NSRect frame = NSMakeRect(box.x, [[NSScreen mainScreen] frame].size.height - box.y - box.height, box.width, box.height);
+        [impl->window setFrame:frame display:YES animate:NO];
+    }
+}
+void CocoaDisplayWindow::SetClientFrame(const Rect& box)
+{
+    if (impl->window)
+    {
+        NSRect contentRect = NSMakeRect(box.x, [[NSScreen mainScreen] frame].size.height - box.y - box.height, box.width, box.height);
+        [impl->window setContentSize:contentRect.size];
+        [impl->window setFrameOrigin:contentRect.origin];
+    }
+}
+
+void CocoaDisplayWindow::Show()
+{
+    if (impl->window)
+    {
+        [impl->window makeKeyAndOrderFront:nil];
+    }
+}
+void CocoaDisplayWindow::ShowFullscreen()
+{
+    if (impl->window)
+    {
+        [impl->window toggleFullScreen:nil];
+    }
+}
+void CocoaDisplayWindow::ShowMaximized()
+{
+    if (impl->window)
+    {
+        [impl->window zoom:nil];
+    }
+}
+void CocoaDisplayWindow::ShowMinimized()
+{
+    if (impl->window)
+    {
+        [impl->window miniaturize:nil];
+    }
+}
+void CocoaDisplayWindow::ShowNormal()
+{
+    if (impl->window)
+    {
+        if ([impl->window isMiniaturized])
+        {
+            [impl->window deminiaturize:nil];
+        }
+        if ([impl->window isZoomed])
+        {
+            [impl->window zoom:nil];
+        }
+    }
+}
+bool CocoaDisplayWindow::IsWindowFullscreen()
+{
+    if (impl->window)
+    {
+        return ([impl->window styleMask] & NSWindowStyleMaskFullScreen) == NSWindowStyleMaskFullScreen;
+    }
+    return false;
+}
+void CocoaDisplayWindow::Hide()
+{
+    if (impl->window)
+    {
+        [impl->window orderOut:nil];
+    }
+}
+void CocoaDisplayWindow::Activate()
+{
+    if (impl->window)
+    {
+        [impl->window makeKeyAndOrderFront:nil];
+        [NSApp activateIgnoringOtherApps:YES];
+    }
+}
+
+void CocoaDisplayWindow::ShowCursor(bool enable)
+{
+    if (enable)
+    {
+        [NSCursor unhide];
+    }
+    else
+    {
+        [NSCursor hide];
+    }
+}
 void CocoaDisplayWindow::LockKeyboard() {}
 void CocoaDisplayWindow::UnlockKeyboard() {}
-void CocoaDisplayWindow::LockCursor() {}
-void CocoaDisplayWindow::UnlockCursor() {}
-void CocoaDisplayWindow::CaptureMouse() {}
-void CocoaDisplayWindow::ReleaseMouseCapture() {}
+void CocoaDisplayWindow::LockCursor()
+{
+    if (impl->window)
+    {
+        CGAssociateMouseAndMouseCursorPosition(false);
+        // Hide cursor when locked
+        [NSCursor hide];
+    }
+}
+void CocoaDisplayWindow::UnlockCursor()
+{
+    if (impl->window)
+    {
+        CGAssociateMouseAndMouseCursorPosition(true);
+        // Show cursor when unlocked
+        [NSCursor unhide];
+    }
+}
+void CocoaDisplayWindow::CaptureMouse()
+{
+    impl->mouseCaptured = true;
+}
+void CocoaDisplayWindow::ReleaseMouseCapture()
+{
+    impl->mouseCaptured = false;
+}
 
-void CocoaDisplayWindow::Update() {}
+void CocoaDisplayWindow::Update()
+{
+    if (impl->window)
+    {
+        [[impl->window contentView] setNeedsDisplay:YES];
+    }
+}
 
-bool CocoaDisplayWindow::GetKeyState(InputKey key) { return false; }
+bool CocoaDisplayWindow::GetKeyState(InputKey key)
+{
+    auto it = impl->keyState.find(key);
+    if (it != impl->keyState.end())
+    {
+        return it->second;
+    }
+    return false;
+}
 
-void CocoaDisplayWindow::SetCursor(StandardCursor cursor, std::shared_ptr<CustomCursor> custom) {}
+void CocoaDisplayWindow::SetCursor(StandardCursor cursor, std::shared_ptr<CustomCursor> custom)
+{
+    NSCursor* nsCursor = nil;
+    switch (cursor)
+    {
+        case StandardCursor::arrow: nsCursor = [NSCursor arrowCursor]; break;
+        case StandardCursor::ibeam: nsCursor = [NSCursor IBeamCursor]; break;
+        case StandardCursor::wait: nsCursor = [NSCursor operationNotAllowedCursor]; break; // No direct wait cursor, using operationNotAllowed
+        case StandardCursor::cross: nsCursor = [NSCursor crosshairCursor]; break;
+        case StandardCursor::size_nwse: nsCursor = [NSCursor resizeUpCursor]; break; // No direct NWSE, using resizeUp
+        case StandardCursor::size_nesw: nsCursor = [NSCursor resizeDownCursor]; break; // No direct NESW, using resizeDown
+        case StandardCursor::size_we: nsCursor = [NSCursor resizeLeftRightCursor]; break;
+        case StandardCursor::size_ns: nsCursor = [NSCursor resizeUpDownCursor]; break;
+        case StandardCursor::size_all: nsCursor = [NSCursor openHandCursor]; break; // No direct SizeAll, using openHand
+        case StandardCursor::no: nsCursor = [NSCursor operationNotAllowedCursor]; break;
+        case StandardCursor::hand: nsCursor = [NSCursor pointingHandCursor]; break;
+        default: nsCursor = [NSCursor arrowCursor]; break;
+    }
+    [nsCursor set];
 
-Rect CocoaDisplayWindow::GetWindowFrame() const { return {}; }
-Size CocoaDisplayWindow::GetClientSize() const { return {}; }
-int CocoaDisplayWindow::GetPixelWidth() const { return 0; }
-int CocoaDisplayWindow::GetPixelHeight() const { return 0; }
-double CocoaDisplayWindow::GetDpiScale() const { return 1.0; }
+    // Custom cursors are not yet implemented
+}
 
-Point CocoaDisplayWindow::MapFromGlobal(const Point& pos) const { return {}; }
-Point CocoaDisplayWindow::MapToGlobal(const Point& pos) const { return {}; }
+Rect CocoaDisplayWindow::GetWindowFrame() const
+{
+    if (impl->window)
+    {
+        NSRect frame = [impl->window frame];
+        return Rect(frame.origin.x, [[NSScreen mainScreen] frame].size.height - frame.origin.y - frame.size.height, frame.size.width, frame.size.height);
+    }
+    return {};
+}
+Size CocoaDisplayWindow::GetClientSize() const
+{
+    if (impl->window)
+    {
+        NSRect contentRect = [[impl->window contentView] frame];
+        return Size(contentRect.size.width, contentRect.size.height);
+    }
+    return {};
+}
+int CocoaDisplayWindow::GetPixelWidth() const
+{
+    if (impl->window)
+    {
+        NSRect contentRect = [[impl->window contentView] frame];
+        return contentRect.size.width * [impl->window backingScaleFactor];
+    }
+    return 0;
+}
+int CocoaDisplayWindow::GetPixelHeight() const
+{
+    if (impl->window)
+    {
+        NSRect contentRect = [[impl->window contentView] frame];
+        return contentRect.size.height * [impl->window backingScaleFactor];
+    }
+    return 0;
+}
+double CocoaDisplayWindow::GetDpiScale() const
+{
+    if (impl->window)
+    {
+        return [impl->window backingScaleFactor];
+    }
+    return 1.0;
+}
+
+Point CocoaDisplayWindow::MapFromGlobal(const Point& pos) const
+{
+    if (impl->window)
+    {
+        NSPoint globalPoint = NSMakePoint(pos.x, [[NSScreen mainScreen] frame].size.height - pos.y);
+        NSPoint windowPoint = [impl->window convertPointFromScreen:globalPoint];
+        NSPoint viewPoint = [[impl->window contentView] convertPoint:windowPoint fromView:nil];
+        return Point(viewPoint.x, [[impl->window contentView] frame].size.height - viewPoint.y);
+    }
+    return {};
+}
+Point CocoaDisplayWindow::MapToGlobal(const Point& pos) const
+{
+    if (impl->window)
+    {
+        NSPoint viewPoint = NSMakePoint(pos.x, [[impl->window contentView] frame].size.height - pos.y);
+        NSPoint windowPoint = [[impl->window contentView] convertPoint:viewPoint toView:nil];
+        NSPoint globalPoint = [impl->window convertPointToScreen:windowPoint];
+        return Point(globalPoint.x, [[NSScreen mainScreen] frame].size.height - globalPoint.y);
+    }
+    return {};
+}
 
 void CocoaDisplayWindow::SetBorderColor(uint32_t bgra8) {}
 void CocoaDisplayWindow::SetCaptionColor(uint32_t bgra8) {}
 void CocoaDisplayWindow::SetCaptionTextColor(uint32_t bgra8) {}
 
-void CocoaDisplayWindow::PresentBitmap(int width, int height, const uint32_t* pixels) {}
+void CocoaDisplayWindow::PresentBitmap(int width, int height, const uint32_t* pixels)
+{
+    if (impl->renderAPI == RenderAPI::Bitmap)
+    {
+        if (impl->bitmapRep)
+        {
+            impl->bitmapRep = nil;
+        }
 
-std::string CocoaDisplayWindow::GetClipboardText() { return {}; }
-void CocoaDisplayWindow::SetClipboardText(const std::string& text) {}
+        CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+        CGContextRef context = CGBitmapContextCreate(
+            (void*)pixels, width, height, 8, width * 4, colorSpace,
+            kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
 
-void* CocoaDisplayWindow::GetNativeHandle() { return nullptr; }
+        if (context)
+        {
+            CGImageRef cgImage = CGBitmapContextCreateImage(context);
+            if (cgImage)
+            {
+                impl->bitmapRep = [[NSBitmapImageRep alloc] initWithCGImage:cgImage];
+                CGImageRelease(cgImage);
+            }
+            CGContextRelease(context);
+        }
+        CGColorSpaceRelease(colorSpace);
 
-std::vector<std::string> CocoaDisplayWindow::GetVulkanInstanceExtensions() { return {}; }
-VkSurfaceKHR CocoaDisplayWindow::CreateVulkanSurface(VkInstance instance) { return nullptr; }
+        if (impl->window)
+        {
+            [[impl->window contentView] setNeedsDisplay:YES];
+        }
+    }
+    else if (impl->renderAPI == RenderAPI::OpenGL)
+    {
+#ifdef HAVE_OPENGL
+        if (impl->openglContext)
+        {
+            [impl->openglContext makeCurrentContext];
+            glViewport(0, 0, width, height);
+            glRasterPos2i(-1, -1);
+            glDrawPixels(width, height, GL_BGRA, GL_UNSIGNED_INT_8_8_8_8_REV, pixels);
+            [impl->openglContext flushBuffer];
+        }
+#endif
+    }
+    else if (impl->renderAPI == RenderAPI::Metal)
+    {
+        // Metal rendering will be implemented later
+    }
+}
+
+std::string CocoaDisplayWindow::GetClipboardText()
+{
+    NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
+    NSString* text = [pasteboard stringForType:NSPasteboardTypeString];
+    if (text)
+    {
+        return [text UTF8String];
+    }
+    return {};
+}
+void CocoaDisplayWindow::SetClipboardText(const std::string& text)
+{
+    NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
+    [pasteboard clearContents];
+    [pasteboard setString:[NSString stringWithUTF8String:text.c_str()] forType:NSPasteboardTypeString];
+}
+
+void* CocoaDisplayWindow::GetNativeHandle()
+{
+    if (impl->window)
+    {
+        // Caller is responsible for deleting the returned CocoaNativeHandle*.
+        CocoaNativeHandle* handle = new CocoaNativeHandle();
+        handle->nsWindow = impl->window;
+        handle->nsView = [impl->window contentView];
+#ifdef HAVE_METAL
+        handle->metalLayer = impl->metalLayer;
+#endif
+        return handle;
+    }
+    return nullptr;
+}
+
+std::vector<std::string> CocoaDisplayWindow::GetVulkanInstanceExtensions()
+{
+    std::vector<std::string> extensions;
+#ifdef HAVE_VULKAN
+    extensions.push_back("VK_KHR_surface");
+    extensions.push_back("VK_EXT_metal_surface");
+#endif
+    return extensions;
+}
+VkSurfaceKHR CocoaDisplayWindow::CreateVulkanSurface(VkInstance instance)
+{
+    VkSurfaceKHR surface = nullptr;
+#ifdef HAVE_VULKAN
+    if (impl->window && impl->metalLayer)
+    {
+        // Dynamically load vkCreateMetalSurfaceEXT
+        static PFN_vkCreateMetalSurfaceEXT vkCreateMetalSurfaceEXT = nullptr;
+        if (!vkCreateMetalSurfaceEXT)
+        {
+            void* vulkanLib = dlopen("libvulkan.dylib", RTLD_NOW);
+            if (vulkanLib)
+            {
+                vkCreateMetalSurfaceEXT = (PFN_vkCreateMetalSurfaceEXT)dlsym(vulkanLib, "vkCreateMetalSurfaceEXT");
+            }
+        }
+
+        if (vkCreateMetalSurfaceEXT)
+        {
+            VkMetalSurfaceCreateInfoEXT surfaceInfo = {};
+            surfaceInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
+            surfaceInfo.pLayer = impl->metalLayer;
+
+            VkResult err = vkCreateMetalSurfaceEXT(instance, &surfaceInfo, nullptr, &surface);
+            if (err != VK_SUCCESS)
+            {
+                // Handle error
+                fprintf(stderr, "Failed to create Vulkan Metal surface: %d\n", err);
+            }
+        }
+    }
+#endif
+    return surface;
+}
+
+

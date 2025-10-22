@@ -21,7 +21,7 @@ void CocoaSaveFileDialog::AddFilter(const std::string &filter_description, const
         [((__bridge NSSavePanel*)panel) setAllowedContentTypes:utTypes];
     } else {
         // Fallback if no valid UTTypes could be created
-        [((__bridge NSSavePanel*)panel) setAllowedFileTypes:fileTypeStrings];
+        [((__bridge NSSavePanel*)panel) setAllowedContentTypes:@[]];
     }
 }
 
@@ -40,7 +40,7 @@ void CocoaSaveFileDialog::SetDefaultExtension(const std::string& extension)
         [((__bridge NSSavePanel*)panel) setAllowedContentTypes:@[utType]];
     } else {
         // Fallback for unknown extensions or older macOS versions if UTType is not available
-        [((__bridge NSSavePanel*)panel) setAllowedFileTypes:@[extensionString]];
+        [((__bridge NSSavePanel*)panel) setAllowedContentTypes:@[]];
     }
 }
 
