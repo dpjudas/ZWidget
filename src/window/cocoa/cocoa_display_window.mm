@@ -3,10 +3,13 @@
 #include <vector> // Required for std::vector
 #include <map>
 #include <dlfcn.h>
+#ifdef HAVE_VULKAN
+#define VK_USE_PLATFORM_METAL_EXT
+#include <vulkan/vulkan.h>
+#include <vulkan/vulkan_metal.h>
+#endif
 #include <zwidget/core/image.h>
 #include "zwidget/window/cocoanativehandle.h"
-
-
 
 #import "AppKitWrapper.h"
 #import <Cocoa/Cocoa.h>
@@ -14,6 +17,53 @@
 #ifdef HAVE_METAL
 #import <Metal/Metal.h>
 #import <QuartzCore/CAMetalLayer.h>
+#import <simd/simd.h>
+
+// Vertex shader
+const char* metalVertexShader = R"(
+#include <metal_stdlib>
+using namespace metal;
+
+struct VertexIn {
+    packed_float2 position;
+    packed_float2 texCoord;
+};
+
+struct VertexOut {
+    float4 position [[position]];
+    float2 texCoord;
+};
+
+vertex VertexOut vertexShader(
+    const device VertexIn* vertexArray [[buffer(0)]],
+    unsigned int vertexId [[vertex_id]]) {
+    
+    VertexIn in = vertexArray[vertexId];
+    VertexOut out;
+    out.position = float4(in.position, 0.0, 1.0);
+    out.texCoord = in.texCoord;
+    return out;
+}
+)";
+
+// Fragment shader
+const char* metalFragmentShader = R"(
+#include <metal_stdlib>
+using namespace metal;
+
+struct VertexOut {
+    float4 position [[position]];
+    float2 texCoord;
+};
+
+fragment float4 fragmentShader(
+    VertexOut in [[stage_in]],
+    texture2d<float> texture [[texture(0)]],
+    sampler textureSampler [[sampler(0)]]) {
+    
+    return texture.sample(textureSampler, in.texCoord);
+}
+)";
 #endif
 
 #ifdef HAVE_OPENGL
@@ -25,6 +75,7 @@
 
 // Forward declarations
 @class ZWidgetView;
+
 @class ZWidgetWindowDelegate;
 
 InputKey keycode_to_inputkey(unsigned short keycode)
@@ -66,12 +117,12 @@ InputKey keycode_to_inputkey(unsigned short keycode)
         {117, InputKey::Delete},
         {119, InputKey::End},
         {121, InputKey::PageDown},
-        {122, InputKey::F1},
-        {120, InputKey::F2},
-        {99, InputKey::F3},
-        {118, InputKey::F4},
-        {96, InputKey::F5},
-        {97, InputKey::F6},
+    {122, InputKey::F1},
+    {120, InputKey::F2},
+    {99, InputKey::F3},
+    {118, InputKey::F4},
+    {96, InputKey::F5},
+    {97, InputKey::F6},
         {98, InputKey::F7},
         {100, InputKey::F8},
         {101, InputKey::F9},
@@ -113,6 +164,8 @@ public:
     id<MTLDevice> metalDevice = nil;
     id<MTLCommandQueue> commandQueue = nil;
     CAMetalLayer* metalLayer = nil;
+    id<MTLRenderPipelineState> renderPipelineState = nil;
+    id<MTLSamplerState> samplerState = nil;
 #endif
 
 #ifdef HAVE_OPENGL
@@ -377,61 +430,26 @@ public:
 
 // ZWidgetWindowDelegate interface and implementation
 @interface ZWidgetWindowDelegate : NSObject <NSWindowDelegate>
-
 {
-
     CocoaDisplayWindowImpl* impl;
-
 }
-
 - (id)initWithImpl:(CocoaDisplayWindowImpl*)impl;
-
 @end
 
 
 
 @implementation ZWidgetWindowDelegate
-
-
-
 - (id)initWithImpl:(CocoaDisplayWindowImpl*)d
-
 {
-
     self = [super init];
-
     if (self)
-
     {
-
         impl = d;
-
     }
-
     return self;
-
 }
 
-
-
-// Implement NSWindowDelegate methods here if needed
-
-// For example:
-
-// - (BOOL)windowShouldClose:(NSWindow *)sender
-
-// {
-
-//     // Handle window close event
-
-//     return YES;
-
-// }
-
-
-
 @end
-
 // Implement CocoaDisplayWindowImpl methods here
 void CocoaDisplayWindowImpl::initMetal(ZWidgetView* view)
 {
@@ -445,10 +463,54 @@ void CocoaDisplayWindowImpl::initMetal(ZWidgetView* view)
         metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
         metalLayer.framebufferOnly = YES;
         renderAPI = RenderAPI::Metal;
-    }
-    else
-    {
-        renderAPI = RenderAPI::Bitmap; // Fallback if Metal not available
+
+        // Create render pipeline state
+        NSError* error = nil;
+        id<MTLLibrary> defaultLibrary = [metalDevice newLibraryWithSource:[NSString stringWithUTF8String:metalVertexShader] options:nil error:&error];
+        if (!defaultLibrary) {
+            NSLog(@"Failed to create default library from vertex shader source: %@", error);
+            renderAPI = RenderAPI::Bitmap; // Fallback
+            return;
+        }
+        id<MTLFunction> vertexFunction = [defaultLibrary newFunctionWithName:@"vertexShader"];
+        if (!vertexFunction) {
+            NSLog(@"Failed to create vertex function: %@", error);
+            renderAPI = RenderAPI::Bitmap; // Fallback
+            return;
+        }
+
+        defaultLibrary = [metalDevice newLibraryWithSource:[NSString stringWithUTF8String:metalFragmentShader] options:nil error:&error];
+        if (!defaultLibrary) {
+            NSLog(@"Failed to create default library from fragment shader source: %@", error);
+            renderAPI = RenderAPI::Bitmap; // Fallback
+            return;
+        }
+        id<MTLFunction> fragmentFunction = [defaultLibrary newFunctionWithName:@"fragmentShader"];
+        if (!fragmentFunction) {
+            NSLog(@"Failed to create fragment function: %@", error);
+            renderAPI = RenderAPI::Bitmap; // Fallback
+            return;
+        }
+
+        MTLRenderPipelineDescriptor* pipelineDescriptor = [[MTLRenderPipelineDescriptor alloc] init];
+        pipelineDescriptor.vertexFunction = vertexFunction;
+        pipelineDescriptor.fragmentFunction = fragmentFunction;
+        pipelineDescriptor.colorAttachments[0].pixelFormat = MTLPixelFormatBGRA8Unorm;
+        
+        renderPipelineState = [metalDevice newRenderPipelineStateWithDescriptor:pipelineDescriptor error:&error];
+        if (!renderPipelineState) {
+            NSLog(@"Failed to create render pipeline state: %@", error);
+            renderAPI = RenderAPI::Bitmap; // Fallback
+            return;
+        }
+
+        // Create sampler state
+        MTLSamplerDescriptor* samplerDescriptor = [[MTLSamplerDescriptor alloc] init];
+        samplerDescriptor.minFilter = MTLSamplerMinMagFilterNearest;
+        samplerDescriptor.magFilter = MTLSamplerMinMagFilterNearest;
+        samplerDescriptor.sAddressMode = MTLSamplerAddressModeClampToEdge;
+        samplerDescriptor.tAddressMode = MTLSamplerAddressModeClampToEdge;
+        samplerState = [metalDevice newSamplerStateWithDescriptor:samplerDescriptor];
     }
 #else
     renderAPI = RenderAPI::Bitmap; // Fallback if Metal not available
@@ -479,7 +541,7 @@ void CocoaDisplayWindowImpl::initOpenGL(ZWidgetView* view)
 CocoaDisplayWindow::CocoaDisplayWindow(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI) : impl(std::make_unique<CocoaDisplayWindowImpl>())
 {
     impl->windowHost = windowHost;
-    impl->renderAPI = renderAPI;
+
 
     NSRect contentRect = NSMakeRect(0, 0, 800, 600); // Default size
     NSWindowStyleMask style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
@@ -512,8 +574,9 @@ CocoaDisplayWindow::CocoaDisplayWindow(DisplayWindowHost* windowHost, bool popup
         impl->renderAPI = RenderAPI::Bitmap; // Fallback
     }
 
-    // Set initial key states
-    impl->keyState[InputKey::LeftMouse] = false;
+        // Set initial key states
+
+        impl->keyState[InputKey::LeftMouse] = false;
     impl->keyState[InputKey::RightMouse] = false;
     impl->keyState[InputKey::MiddleMouse] = false;
     impl->keyState[InputKey::LShift] = false;
@@ -536,14 +599,14 @@ void CocoaDisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>
 {
     if (impl->window && !images.empty())
     {
-        // For simplicity, use the first image as the icon.
-        // A more robust implementation might choose an appropriate size.
-        std::shared_ptr<Image> iconImage = images[0];
+                // For simplicity, use the first image as the icon.
+                // A more robust implementation might choose an appropriate size.
+                std::shared_ptr<Image> iconImage = images[0];
 
         CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
         CGContextRef context = CGBitmapContextCreate(
             iconImage->GetData(), iconImage->GetWidth(), iconImage->GetHeight(), 8, iconImage->GetWidth() * 4, colorSpace,
-            kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+            kCGImageAlphaPremultipliedLast | (CGBitmapInfo)kCGBitmapByteOrder32Big);
 
         if (context)
         {
@@ -721,8 +784,9 @@ void CocoaDisplayWindow::SetCursor(StandardCursor cursor, std::shared_ptr<Custom
     }
     [nsCursor set];
 
-    // Custom cursors are not yet implemented
-}
+        // Custom cursors are not yet implemented
+
+    }
 
 Rect CocoaDisplayWindow::GetWindowFrame() const
 {
@@ -808,7 +872,7 @@ void CocoaDisplayWindow::PresentBitmap(int width, int height, const uint32_t* pi
         CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
         CGContextRef context = CGBitmapContextCreate(
             (void*)pixels, width, height, 8, width * 4, colorSpace,
-            kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+            kCGImageAlphaPremultipliedLast | (CGBitmapInfo)kCGBitmapByteOrder32Big);
 
         if (context)
         {
@@ -842,7 +906,76 @@ void CocoaDisplayWindow::PresentBitmap(int width, int height, const uint32_t* pi
     }
     else if (impl->renderAPI == RenderAPI::Metal)
     {
-        // Metal rendering will be implemented later
+#ifdef HAVE_METAL
+        if (impl->metalLayer && impl->commandQueue)
+        {
+            id<CAMetalDrawable> drawable = [impl->metalLayer nextDrawable];
+            if (!drawable)
+                return;
+
+            MTLRenderPassDescriptor* renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+            renderPassDescriptor.colorAttachments[0].texture = drawable.texture;
+            renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+            renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 1.0);
+            renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
+
+            id<MTLCommandBuffer> commandBuffer = [impl->commandQueue commandBuffer];
+            id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+
+            // Metal rendering will be implemented here
+
+            // Create texture from pixels
+            MTLTextureDescriptor *textureDescriptor = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                                                                         width:width
+                                                                                                        height:height
+                                                                                                     mipmapped:NO];
+            id<MTLTexture> texture = [impl->metalDevice newTextureWithDescriptor:textureDescriptor];
+
+            MTLRegion region = MTLRegionMake2D(0, 0, width, height);
+            [texture replaceRegion:region
+                      mipmapLevel:0
+                        withBytes:pixels
+                      bytesPerRow:width * 4]; // 4 bytes per pixel (BGRA8Unorm)
+
+            // Set the texture in the fragment shader
+            [renderEncoder setFragmentTexture:texture atIndex:0];
+
+            // Set render pipeline state
+            [renderEncoder setRenderPipelineState:impl->renderPipelineState];
+
+            // Set sampler state
+            [renderEncoder setFragmentSamplerState:impl->samplerState atIndex:0];
+
+            // Define vertices for a quad that covers the entire screen
+            // The texture coordinates are (0,0) to (1,1)
+            typedef struct {
+                simd_float2 position;
+                simd_float2 texCoord;
+            } Vertex;
+
+            Vertex quadVertices[] = {
+                // Triangle 1
+                {{-1.0f, -1.0f}, {0.0f, 1.0f}}, // Bottom-left
+                {{ 1.0f, -1.0f}, {1.0f, 1.0f}}, // Bottom-right
+                {{-1.0f,  1.0f}, {0.0f, 0.0f}}, // Top-left
+
+                // Triangle 2
+                {{ 1.0f, -1.0f}, {1.0f, 1.0f}}, // Bottom-right
+                {{ 1.0f,  1.0f}, {1.0f, 0.0f}}, // Top-right
+                {{-1.0f,  1.0f}, {0.0f, 0.0f}}  // Top-left
+            };
+
+            // Set vertex buffer
+            [renderEncoder setVertexBytes:quadVertices length:sizeof(quadVertices) atIndex:0];
+
+            // Draw the quad
+            [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangle vertexStart:0 vertexCount:6];
+
+            [renderEncoder endEncoding];
+            [commandBuffer presentDrawable:drawable];
+            [commandBuffer commit];
+        }
+#endif
     }
 }
 

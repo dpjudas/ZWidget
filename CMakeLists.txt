@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 project(zwidget)
+
+option(ZWIDGET_USE_SDL2_BACKEND "Enable SDL2 backend for ZWidget" OFF)
 message(STATUS "HAVE_METAL is ${HAVE_METAL}")
 
 if (UNIX AND NOT APPLE)
@@ -20,7 +22,7 @@ endif()
 
 # SDL2 finding stuff
 # Optional on all platforms
-find_package(SDL2 QUIET)
+#find_package(SDL2 QUIET)
 if(NOT ${SDL2_FOUND})
 	include(FindPkgConfig)
 	pkg_search_module(SDL2 sdl2)
@@ -265,6 +267,8 @@ elseif(APPLE)
 	endif()
 
 	find_library(METAL_FRAMEWORK Metal)
+	find_package(Vulkan COMPONENTS MoltenVK)
+
 
 	    find_library(OPENGL_FRAMEWORK OpenGL)
 		if (NOT OPENGL_FRAMEWORK)
@@ -295,7 +299,7 @@ elseif(APPLE)
 	endif()
 endif()
 
-if(SDL2_FOUND AND NOT WIN32)
+if(SDL2_FOUND AND NOT WIN32 AND ZWIDGET_USE_SDL2_BACKEND)
 	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_SDL2_SOURCES})
 	set(ZWIDGET_DEFINES ${ZWIDGET_DEFINES} -DUSE_SDL2)
 endif()
@@ -316,6 +320,10 @@ target_link_libraries(zwidget PRIVATE ${ZWIDGET_LIBS} ${COCOA_FRAMEWORK} ${OPENG
 if (METAL_FRAMEWORK)
     target_link_libraries(zwidget PRIVATE ${METAL_FRAMEWORK})
     target_compile_definitions(zwidget PRIVATE HAVE_METAL)
+endif()
+if(Vulkan_FOUND)
+    target_include_directories(zwidget PRIVATE ${Vulkan_INCLUDE_DIR})
+    target_link_libraries(zwidget PRIVATE Vulkan::Vulkan)
 endif()
 if(SDL2_FOUND)
 	target_include_directories(zwidget PRIVATE ${SDL2_INCLUDE_DIRS})
