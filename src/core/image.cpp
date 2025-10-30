@@ -1,4 +1,5 @@
 
+#include <iostream>
 #include "core/image.h"
 #include "core/resourcedata.h"
 #include "picopng/picopng.h"
@@ -69,7 +70,7 @@ std::shared_ptr<Image> Image::LoadResource(const std::string& resourcename, doub
 		int result = decodePNG(pixels, width, height, (const unsigned char*)filedata.data(), filedata.size(), true);
 		if (result != 0)
 			throw std::runtime_error("Could not decode PNG file");
-
+		std::cout << "Image::LoadResource - Successfully decoded PNG: " << resourcename << std::endl;
 		return Image::Create(width, height, ImageFormat::R8G8B8A8, pixels.data());
 	}
 	else if (extension == "svg")
@@ -95,6 +96,7 @@ std::shared_ptr<Image> Image::LoadResource(const std::string& resourcename, doub
 
 			nsvgDeleteRasterizer(rast);
 			nsvgDelete(svgimage);
+			std::cout << "Image::LoadResource - Successfully rasterized SVG: " << resourcename << std::endl;
 			return image;
 		}
 		catch (...)
@@ -105,6 +107,7 @@ std::shared_ptr<Image> Image::LoadResource(const std::string& resourcename, doub
 	}
 	else
 	{
+		std::cout << "Image::LoadResource - Unsupported image format: " << resourcename << std::endl;
 		throw std::runtime_error("Unsupported image format");
 	}
 }

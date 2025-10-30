@@ -180,7 +180,7 @@ WidgetTheme::WidgetTheme(const struct SimpleTheme &theme)
 	auto toolbarbutton = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "toolbarbutton");
 	auto statusbar = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "statusbar");
 
-	widget->SetString("font-family", "NotoSans");
+	widget->SetString("font-family", "OpenSans");
 	widget->SetColor("color", fgMain);
 	widget->SetColor("window-background", bgMain);
 	widget->SetColor("window-border", bgMain);

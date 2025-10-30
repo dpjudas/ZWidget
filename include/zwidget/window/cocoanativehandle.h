@@ -14,6 +14,8 @@ class CAMetalLayer;
 struct CocoaNativeHandle
 {
 	NSWindow* nsWindow = nullptr;
-        NSView* nsView = nullptr;
-        CAMetalLayer* metalLayer = nullptr;
+	NSView* nsView = nullptr;
+
+	// For application-side rendering. Not used by ZWidget itself.
+	CAMetalLayer* metalLayer = nullptr;
 };

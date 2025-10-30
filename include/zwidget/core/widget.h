@@ -1,5 +1,7 @@
 #pragma once
 
+#include "../window/window.h" // Moved to top
+
 #include <string>
 #include <memory>
 #include <variant>
@@ -9,7 +11,6 @@
 #include "canvas.h"
 #include "rect.h"
 #include "colorf.h"
-#include "../window/window.h"
 
 class Canvas;
 class Timer;
@@ -212,31 +213,29 @@ protected:
 
 	virtual void Notify(Widget* source, const WidgetEvent type) { };
 
-private:
-	void DetachFromParent();
-
-	void Paint(Canvas* canvas);
-
 	// DisplayWindowHost
-	void OnWindowPaint() override;
-	void OnWindowMouseMove(const Point& pos) override;
-	void OnWindowMouseLeave() override;
-	void OnWindowMouseDown(const Point& pos, InputKey key) override;
-	void OnWindowMouseDoubleclick(const Point& pos, InputKey key) override;
-	void OnWindowMouseUp(const Point& pos, InputKey key) override;
-	void OnWindowMouseWheel(const Point& pos, InputKey key) override;
-	void OnWindowRawKey(RawKeycode keycode, bool down) override;
-	void OnWindowRawMouseMove(int dx, int dy) override;
-	void OnWindowKeyChar(std::string chars) override;
-	void OnWindowKeyDown(InputKey key) override;
-	void OnWindowKeyUp(InputKey key) override;
-	void OnWindowGeometryChanged() override;
-	void OnWindowClose() override;
-	void OnWindowActivated() override;
-	void OnWindowDeactivated() override;
-	void OnWindowDpiScaleChanged() override;
-
+	virtual void OnWindowPaint() override;
+	virtual void OnWindowMouseMove(const Point& pos) override;
+	virtual void OnWindowMouseLeave() override;
+	virtual void OnWindowMouseDown(const Point& pos, InputKey key) override;
+	virtual void OnWindowMouseDoubleclick(const Point& pos, InputKey key) override;
+	virtual void OnWindowMouseUp(const Point& pos, InputKey key) override;
+	virtual void OnWindowMouseWheel(const Point& pos, InputKey key) override;
+	virtual void OnWindowRawMouseMove(int dx, int dy) override;
+	virtual void OnWindowRawKey(RawKeycode keycode, bool down) override;
+	virtual void OnWindowKeyChar(std::string chars) override;
+	virtual void OnWindowKeyDown(InputKey key) override;
+	virtual void OnWindowKeyUp(InputKey key) override;
+	virtual void OnWindowGeometryChanged() override;
+	virtual void OnWindowClose() override;
+	virtual void OnWindowActivated() override;
+	    virtual void OnWindowDeactivated() override;
+	    virtual void OnWindowDpiScaleChanged() override;
+	
+	    void Paint(Canvas* canvas);
+private:
 	void NotifySubscribers(const WidgetEvent type);
+	void DetachFromParent();
 
 	WidgetType Type = {};
 
@@ -281,6 +280,8 @@ private:
 	std::unordered_set<Widget*> Subscriptions;
 
 	Layout* m_Layout = nullptr;
+
+	void* m_BitmapTexture = nullptr; // Correctly declared here
 
 	friend class Timer;
 	friend class OpenFileDialog;
