@@ -149,14 +149,9 @@ LauncherWindow::LauncherWindow(): Widget(nullptr, WidgetType::Window)
 		unsigned long width = 0, height = 0;
 		int result = decodePNG(pixels, width, height, (const unsigned char*)filedata.data(), filedata.size(), true);
 		if (result == 0)
-		{
 			Logo->SetImage(Image::Create(width, height, ImageFormat::R8G8B8A8, pixels.data()));
-			std::cout << "Banner image loaded: " << width << "x" << height << std::endl;
-		}
 		else
-		{
 			std::cout << "Failed to decode banner.png, result=" << result << std::endl;
-		}
 	}
 	catch (const std::exception& e)
 	{
