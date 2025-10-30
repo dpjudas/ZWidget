@@ -143,12 +143,15 @@ set(ZWIDGET_DBUS_SOURCES
 )
 
 set(ZWIDGET_COCOA_SOURCES
+	src/core/resourceloader_mac.mm
+)
+
+set(ZWIDGET_COCOA_ARC_SOURCES
 	src/window/cocoa/cocoa_open_file_dialog.mm
 	src/window/cocoa/cocoa_save_file_dialog.mm
 	src/window/cocoa/cocoa_open_folder_dialog.mm
 	src/window/cocoa/cocoa_display_backend.mm
 	src/window/cocoa/cocoa_display_window.mm
-	src/core/resourceloader_mac.mm
 )
 
 set(ZWIDGET_SDL2_SOURCES
@@ -252,8 +255,8 @@ if(WIN32)
 		#set(ZWIDGET_DEFINES ${ZWIDGET_DEFINES} -D_CRT_SECURE_NO_WARNINGS)
 	endif()
 elseif(APPLE)
-	list(APPEND ZWIDGET_SOURCES ${ZWIDGET_COCOA_SOURCES})
-	set_source_files_properties(${ZWIDGET_COCOA_SOURCES} PROPERTIES COMPILE_FLAGS "-x objective-c++ -fobjc-arc")
+	list(APPEND ZWIDGET_SOURCES ${ZWIDGET_COCOA_SOURCES} ${ZWIDGET_COCOA_ARC_SOURCES})
+	set_source_files_properties(${ZWIDGET_COCOA_ARC_SOURCES} PROPERTIES COMPILE_FLAGS "-x objective-c++ -fobjc-arc")
 	set(ZWIDGET_LIBS ${CMAKE_DL_LIBS} -ldl)
 	set(ZWIDGET_DEFINES -DUNIX -D_UNIX)
 	set(ZWIDGET_LINK_OPTIONS -pthread)
