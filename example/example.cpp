@@ -22,8 +22,6 @@
 // Prototypes
 // ************************************************************
 
-static std::vector<uint8_t> ReadAllBytes(const std::string& filename);
-
 class LauncherWindowTab1 : public Widget
 {
 public:
@@ -376,7 +374,7 @@ void LauncherWindowTab3::OnGeometryChanged()
 // ************************************************************
 
 #ifdef __APPLE__
-static std::vector<uint8_t> LoadSystemFontData()
+std::vector<uint8_t> LoadSystemFontData()
 {
 	// Try common macOS system font paths
 	const char* fontPaths[] = {
@@ -506,6 +504,8 @@ int example(Backend backend = Backend::Default, Theme theme = Theme::Default)
 
 #ifdef WIN32
 
+#include <Windows.h>
+
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
@@ -520,22 +520,6 @@ int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmd
 #include <vector>
 #include <string>
 #include <stdexcept>
-
-static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
-{
-	std::ifstream file(filename, std::ios::binary | std::ios::ate);
-	if (!file)
-		throw std::runtime_error("ReadFile failed");
-
-	std::streamsize size = file.tellg();
-	file.seekg(0, std::ios::beg);
-
-	std::vector<uint8_t> buffer(size);
-	if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
-		throw std::runtime_error("ReadFile failed ");
-
-	return buffer;
-}
 
 int main(int argc, const char** argv)
 {

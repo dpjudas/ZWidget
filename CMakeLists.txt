@@ -45,6 +45,7 @@ set(ZWIDGET_SOURCES
 	src/core/pathfill.cpp
 	src/core/truetypefont.cpp
 	src/core/truetypefont.h
+	src/core/resourceloader_common.cpp
 	src/core/picopng/picopng.cpp
 	src/core/picopng/picopng.h
 	src/core/nanosvg/nanosvg.cpp

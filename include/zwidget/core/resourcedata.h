@@ -13,3 +13,4 @@ struct SingleFontData
 std::vector<SingleFontData> LoadWidgetFontData(const std::string& name);
 std::vector<uint8_t> LoadWidgetData(const std::string& name);
 std::vector<uint8_t> LoadSystemFontData();
+std::vector<uint8_t> ReadAllBytes(const std::string& filename);

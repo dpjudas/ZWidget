@@ -1,4 +1,5 @@
 #include "zwidget/core/resourcedata.h"
+#include <iostream>
 #include <fstream>
 #include <stdexcept>
 #include <vector>
@@ -6,9 +7,7 @@
 #import <Cocoa/Cocoa.h>
 #import <CoreText/CoreText.h>
 
-static std::vector<uint8_t> ReadAllBytes(const std::string& filename);
-
-static std::vector<uint8_t> LoadSystemFontData()
+std::vector<uint8_t> LoadSystemFontData()
 {
     std::cerr << "LoadSystemFontData: Attempting to load system font." << std::endl;
     std::vector<uint8_t> fontDataVector;
@@ -30,7 +29,7 @@ static std::vector<uint8_t> LoadSystemFontData()
 
         // Convert CFURLRef to NSString path
         // __bridge_transfer transfers ownership to ARC, so no manual CFRelease is needed
-        NSString* fontPath = (__bridge_transfer NSString*)CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
+        NSString* fontPath = (NSString*)CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
         if (!fontPath)
         {
             NSLog(@"Failed to convert font URL to file path.");
@@ -54,7 +53,7 @@ static std::vector<uint8_t> LoadSystemFontData()
     return fontDataVector;
 }
 
-static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
+std::vector<uint8_t> ReadAllBytes(const std::string& filename)
 {
     std::cerr << "ReadAllBytes: Attempting to read file: " << filename << std::endl;
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
@@ -71,7 +70,7 @@ static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
     return buffer;
 }
 
-std::vector<SingleFontData> ResourceLoader::LoadWidgetFontData(const std::string& name)
+std::vector<SingleFontData> LoadWidgetFontData(const std::string& name)
 {
     if (name == "SystemDefault")
     {
@@ -87,7 +86,7 @@ std::vector<SingleFontData> ResourceLoader::LoadWidgetFontData(const std::string
     };
 }
 
-std::vector<uint8_t> ResourceLoader::LoadWidgetData(const std::string& name)
+std::vector<uint8_t> LoadWidgetData(const std::string& name)
 {
     std::cerr << "ResourceLoader::LoadWidgetData: Loading resource: " << name << std::endl;
     return ReadAllBytes(name);
