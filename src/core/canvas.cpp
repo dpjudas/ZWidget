@@ -12,6 +12,7 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <cstring>
+#include <iostream>
 
 #if defined(__SSE2__) || defined(_M_X64)
 #include <immintrin.h>
@@ -274,8 +275,9 @@ void Canvas::drawImage(const std::shared_ptr<Image>& image, const Point& pos)
 	if (!texture)
 	{
 		texture = createTexture(image->GetWidth(), image->GetHeight(), image->GetData(), image->GetFormat());
+		std::cout << "Canvas::drawImage - Created texture: " << image->GetWidth() << "x" << image->GetHeight() << ", format=" << (int)image->GetFormat() << std::endl;
 	}
-	Colorf color(1.0f, 1.0f, 1.0f);
+	Colorf color(1.0f, 1.0f, 1.0f, 1.0f);
 	drawTile(texture.get(), (float)((origin.x + pos.x) * uiscale), (float)((origin.y + pos.y) * uiscale), (float)(texture->Width * uiscale), (float)(texture->Height * uiscale), 0.0, 0.0, (float)texture->Width, (float)texture->Height, color);
 }
 

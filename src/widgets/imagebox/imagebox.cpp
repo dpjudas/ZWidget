@@ -1,5 +1,6 @@
 
 #include "widgets/imagebox/imagebox.h"
+#include <iostream>
 
 ImageBox::ImageBox(Widget* parent) : Widget(parent)
 {
@@ -41,8 +42,10 @@ void ImageBox::SetImageMode(ImageBoxMode newMode)
 
 void ImageBox::OnPaint(Canvas* canvas)
 {
+	std::cout << "ImageBox::OnPaint called, image=" << (image ? "SET" : "NULL") << ", width=" << GetWidth() << ", height=" << GetHeight() << std::endl;
 	if (image)
 	{
+		std::cout << "ImageBox::OnPaint - Drawing image: " << image->GetWidth() << "x" << image->GetHeight() << ", mode=" << (int)mode << std::endl;
 		if (mode == ImageBoxMode::Center)
 		{
 			canvas->drawImage(image, Point((GetWidth() - (double)image->GetWidth()) * 0.5, (GetHeight() - (double)image->GetHeight()) * 0.5));

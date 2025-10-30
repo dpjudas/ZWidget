@@ -153,10 +153,20 @@ LauncherWindow::LauncherWindow(): Widget(nullptr, WidgetType::Window)
 		if (result == 0)
 		{
 			Logo->SetImage(Image::Create(width, height, ImageFormat::R8G8B8A8, pixels.data()));
+			std::cout << "Banner image loaded: " << width << "x" << height << std::endl;
 		}
+		else
+		{
+			std::cout << "Failed to decode banner.png, result=" << result << std::endl;
+		}
+	}
+	catch (const std::exception& e)
+	{
+		std::cout << "Exception loading banner: " << e.what() << std::endl;
 	}
 	catch (...)
 	{
+		std::cout << "Unknown exception loading banner" << std::endl;
 	}
 }
 
@@ -365,11 +375,85 @@ void LauncherWindowTab3::OnGeometryChanged()
 // Shared code
 // ************************************************************
 
+#ifdef __APPLE__
+static std::vector<uint8_t> LoadSystemFontData()
+{
+	// Try common macOS system font paths
+	const char* fontPaths[] = {
+		"/System/Library/Fonts/SFNS.ttf",                    // San Francisco (modern macOS)
+		"/System/Library/Fonts/SFNSText.ttf",                // San Francisco Text
+		"/System/Library/Fonts/Helvetica.ttc",               // Helvetica (fallback)
+		"/System/Library/Fonts/HelveticaNeue.ttc",           // Helvetica Neue (fallback)
+		nullptr
+	};
+
+	for (const char** path = fontPaths; *path != nullptr; ++path)
+	{
+		try
+		{
+			return ReadAllBytes(std::string(*path));
+		}
+		catch (...)
+		{
+			// Try next font path
+		}
+	}
+
+	return std::vector<uint8_t>();
+}
+#endif
+
 std::vector<SingleFontData> LoadWidgetFontData(const std::string& name)
 {
-	return {
-		{std::move(ReadAllBytes("OpenSans.ttf")), ""}
-	};
+	// Font loading strategy controlled by CMake option ZWIDGET_USE_BUNDLED_FONTS
+	// OFF (default): Try system font first, fall back to bundled font
+	// ON: Try bundled font first, fall back to system font
+
+#ifdef ZWIDGET_USE_BUNDLED_FONTS
+	// Try bundled font first
+	try
+	{
+		std::string filename = name + ".ttf";
+		return {
+			{ReadAllBytes(filename), ""}
+		};
+	}
+	catch (...)
+	{
+		// Fall back to system font if bundled font not found
+		std::cout << "Bundled font '" << name << "' not found, trying system font" << std::endl;
+#if defined(__APPLE__) || defined(WIN32)
+		std::vector<uint8_t> systemFont = LoadSystemFontData();
+		if (!systemFont.empty())
+		{
+			return { {std::move(systemFont), ""} };
+		}
+#endif
+		throw std::runtime_error("Failed to load font: " + name);
+	}
+#else
+	// Try system font first (default behavior)
+#if defined(__APPLE__) || defined(WIN32)
+	std::vector<uint8_t> systemFont = LoadSystemFontData();
+	if (!systemFont.empty())
+	{
+		return { {std::move(systemFont), ""} };
+	}
+#endif
+
+	// Fall back to bundled font if system font not available
+	try
+	{
+		std::string filename = name + ".ttf";
+		return {
+			{ReadAllBytes(filename), ""}
+		};
+	}
+	catch (...)
+	{
+		throw std::runtime_error("Failed to load font: " + name);
+	}
+#endif
 }
 
 std::vector<uint8_t> LoadWidgetData(const std::string& name)
@@ -426,6 +510,7 @@ int example(Backend backend = Backend::Default, Theme theme = Theme::Default)
 #define NOMINMAX
 #include <Windows.h>
 #include <stdexcept>
+#include <ShlObj.h>
 
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
@@ -472,6 +557,32 @@ static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
 	return buffer;
 }
 
+static std::vector<uint8_t> LoadSystemFontData()
+{
+	std::vector<uint8_t> fontDataVector;
+
+	// Try to load Segoe UI, the default Windows system font
+	wchar_t fontsPath[MAX_PATH];
+	if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, fontsPath)))
+	{
+		std::wstring segoeUIPath = std::wstring(fontsPath) + L"\\segoeui.ttf";
+
+		try
+		{
+			// Convert wstring path to string for ReadAllBytes
+			int size_needed = WideCharToMultiByte(CP_UTF8, 0, segoeUIPath.c_str(), (int)segoeUIPath.length(), NULL, 0, NULL, NULL);
+			std::string strPath(size_needed, 0);
+			WideCharToMultiByte(CP_UTF8, 0, segoeUIPath.c_str(), (int)segoeUIPath.length(), &strPath[0], size_needed, NULL, NULL);
+
+			fontDataVector = ReadAllBytes(strPath);
+		}
+		catch (...)
+		{
+		}
+	}
+
+	return fontDataVector;
+}
 
 int APIENTRY WinMain(HINSTANCE hInst, HINSTANCE hInstPrev, PSTR cmdline, int cmdshow)
 {
