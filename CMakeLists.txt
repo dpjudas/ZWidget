@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 3.11)
 project(zwidget)
 message(STATUS "HAVE_METAL is ${HAVE_METAL}")
 
-# Font loading options
-option(ZWIDGET_USE_BUNDLED_FONTS "Prefer bundled fonts over system fonts (OFF = system fonts first)" OFF)
-
 option(ENABLE_METAL "Enable Metal support for application rendering" ON)
 option(ENABLE_OPENGL "Enable OpenGL support for application rendering" ON)
 
@@ -133,6 +130,7 @@ set(ZWIDGET_WIN32_SOURCES
 	src/window/win32/win32_save_file_dialog.cpp
 	src/window/win32/win32_save_file_dialog.h
 	src/window/win32/win32_util.h
+	src/core/resourceloader_win.cpp
 )
 
 set(ZWIDGET_DBUS_SOURCES
@@ -150,6 +148,7 @@ set(ZWIDGET_COCOA_SOURCES
 	src/window/cocoa/cocoa_open_folder_dialog.mm
 	src/window/cocoa/cocoa_display_backend.mm
 	src/window/cocoa/cocoa_display_window.mm
+	src/core/resourceloader_mac.mm
 )
 
 set(ZWIDGET_SDL2_SOURCES
@@ -236,7 +235,7 @@ set(ZWIDGET_INCLUDE_DIRS include/zwidget src)
 set(ZWIDGET_COMPILE_OPTIONS)
 
 if(WIN32)
-	list(APPEND ZWIDGET_SOURCES ${ZWIDGET_WIN32_SOURCES} src/core/resourceloader_win.cpp)
+	list(APPEND ZWIDGET_SOURCES ${ZWIDGET_WIN32_SOURCES})
 	set(ZWIDGET_DEFINES -DUNICODE -D_UNICODE)
 	set(ZWIDGET_LINK_OPTIONS)
 	if(MSVC)
@@ -253,12 +252,8 @@ if(WIN32)
 		#set(ZWIDGET_DEFINES ${ZWIDGET_DEFINES} -D_CRT_SECURE_NO_WARNINGS)
 	endif()
 elseif(APPLE)
-	list(APPEND ZWIDGET_SOURCES ${ZWIDGET_COCOA_SOURCES} src/core/resourceloader_mac.mm)
-	set_source_files_properties(src/window/cocoa/cocoa_display_backend.mm PROPERTIES COMPILE_FLAGS "-x objective-c++ -fobjc-arc")
-	set_source_files_properties(src/window/cocoa/cocoa_open_file_dialog.mm PROPERTIES COMPILE_FLAGS "-x objective-c++ -fobjc-arc")
-	set_source_files_properties(src/window/cocoa/cocoa_save_file_dialog.mm PROPERTIES COMPILE_FLAGS "-x objective-c++ -fobjc-arc")
-	set_source_files_properties(src/window/cocoa/cocoa_open_folder_dialog.mm PROPERTIES COMPILE_FLAGS "-x objective-c++ -fobjc-arc")
-	set_source_files_properties(src/window/cocoa/cocoa_display_window.mm PROPERTIES COMPILE_FLAGS "-x objective-c++ -fobjc-arc")
+	list(APPEND ZWIDGET_SOURCES ${ZWIDGET_COCOA_SOURCES})
+	set_source_files_properties(${ZWIDGET_COCOA_SOURCES} PROPERTIES COMPILE_FLAGS "-x objective-c++ -fobjc-arc")
 	set(ZWIDGET_LIBS ${CMAKE_DL_LIBS} -ldl)
 	set(ZWIDGET_DEFINES -DUNIX -D_UNIX)
 	set(ZWIDGET_LINK_OPTIONS -pthread)
@@ -352,6 +347,7 @@ if(MSVC)
 endif()
 
 option(ZWIDGET_BUILD_EXAMPLE "Build the zwidget example application" ON)
+option(ZWIDGET_USE_BUNDLED_FONTS "Prefer bundled fonts over system fonts (OFF = system fonts first)" OFF)
 
 if(ZWIDGET_BUILD_EXAMPLE)
 	add_executable(zwidget_example WIN32

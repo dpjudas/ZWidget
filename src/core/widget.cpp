@@ -268,10 +268,8 @@ void Widget::SetFrameGeometry(const Rect& geometry)
 
 void Widget::Show()
 {
-	std::cout << "Widget::Show() called (this=" << this << ")" << std::endl;
 	if (Type != WidgetType::Child)
 	{
-		std::cout << "Widget::Show(): Calling DispWindow->Show()" << std::endl;
 		DispWindow->Show();
 		NotifySubscribers(WidgetEvent::VisibilityChange);
 	}
@@ -281,7 +279,6 @@ void Widget::Show()
 		NotifySubscribers(WidgetEvent::VisibilityChange);
 		Update();
 	}
-	std::cout << "Widget::Show() finished (this=" << this << ")" << std::endl;
 }
 
 void Widget::ShowFullscreen()
@@ -407,40 +404,24 @@ void Widget::Update()
 
 void Widget::Repaint()
 {
-	std::cout << "Widget::Repaint() called (this=" << this << ")" << std::endl;
 	Widget* w = Window();
 	if (!w)
-	{
-		std::cout << "Widget::Repaint(): Window() returned nullptr" << std::endl;
 		return;
-	}
-	std::cout << "Widget::Repaint(): Window() returned w=" << w << std::endl;
 
 	if (!w->DispWindow)
-	{
-		std::cout << "Widget::Repaint(): w->DispWindow is nullptr" << std::endl;
 		return;
-	}
-	std::cout << "Widget::Repaint(): w->DispWindow is valid" << std::endl;
 
 	Canvas* canvas = w->DispCanvas.get();
 	if (!canvas)
-	{
-		std::cout << "Widget::Repaint(): w->DispCanvas.get() returned nullptr" << std::endl;
 		return;
-	}
-	std::cout << "Widget::Repaint(): w->DispCanvas.get() returned canvas=" << canvas << std::endl;
 
-	std::cout << "Widget::Repaint(): Calling canvas->begin()" << std::endl;
 	canvas->begin(w->WindowBackground);
 	w->Paint(canvas);
 	canvas->end();
-	std::cout << "Widget::Repaint(): canvas->end() called" << std::endl;
 }
 
 void Widget::Paint(Canvas* canvas)
 {
-	std::cout << "Widget::Paint() called (this=" << this << ", type=" << (int)Type << ", class=" << StyleClass << ")" << std::endl;
 	Point oldOrigin = canvas->getOrigin();
 	canvas->pushClip(FrameGeometry);
 	canvas->setOrigin(oldOrigin + FrameGeometry.topLeft());
@@ -455,13 +436,11 @@ void Widget::Paint(Canvas* canvas)
 	{
 		if (w->Type == WidgetType::Child && !w->HiddenFlag)
 		{
-			std::cout << "Widget::Paint(): Painting child widget " << w << std::endl;
 			w->Paint(canvas);
 		}
 	}
 	canvas->setOrigin(oldOrigin);
 	canvas->popClip();
-	std::cout << "Widget::Paint() finished (this=" << this << ")" << std::endl;
 }
 
 void Widget::OnPaintFrame(Canvas* canvas)

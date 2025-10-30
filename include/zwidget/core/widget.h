@@ -214,27 +214,27 @@ protected:
 	virtual void Notify(Widget* source, const WidgetEvent type) { };
 
 	// DisplayWindowHost
-	virtual void OnWindowPaint() override;
-	virtual void OnWindowMouseMove(const Point& pos) override;
-	virtual void OnWindowMouseLeave() override;
-	virtual void OnWindowMouseDown(const Point& pos, InputKey key) override;
-	virtual void OnWindowMouseDoubleclick(const Point& pos, InputKey key) override;
-	virtual void OnWindowMouseUp(const Point& pos, InputKey key) override;
-	virtual void OnWindowMouseWheel(const Point& pos, InputKey key) override;
-	virtual void OnWindowRawMouseMove(int dx, int dy) override;
-	virtual void OnWindowRawKey(RawKeycode keycode, bool down) override;
-	virtual void OnWindowKeyChar(std::string chars) override;
-	virtual void OnWindowKeyDown(InputKey key) override;
-	virtual void OnWindowKeyUp(InputKey key) override;
-	virtual void OnWindowGeometryChanged() override;
-	virtual void OnWindowClose() override;
-	virtual void OnWindowActivated() override;
-	    virtual void OnWindowDeactivated() override;
-	    virtual void OnWindowDpiScaleChanged() override;
+	void OnWindowPaint() override;
+	void OnWindowMouseMove(const Point& pos) override;
+	void OnWindowMouseLeave() override;
+	void OnWindowMouseDown(const Point& pos, InputKey key) override;
+	void OnWindowMouseDoubleclick(const Point& pos, InputKey key) override;
+	void OnWindowMouseUp(const Point& pos, InputKey key) override;
+	void OnWindowMouseWheel(const Point& pos, InputKey key) override;
+	void OnWindowRawMouseMove(int dx, int dy) override;
+	void OnWindowRawKey(RawKeycode keycode, bool down) override;
+	void OnWindowKeyChar(std::string chars) override;
+	void OnWindowKeyDown(InputKey key) override;
+	void OnWindowKeyUp(InputKey key) override;
+	void OnWindowGeometryChanged() override;
+	void OnWindowClose() override;
+	void OnWindowActivated() override;
+	void OnWindowDeactivated() override;
+	void OnWindowDpiScaleChanged() override;
 	
-	    void Paint(Canvas* canvas);
 private:
 	void NotifySubscribers(const WidgetEvent type);
+	void Paint(Canvas* canvas);
 	void DetachFromParent();
 
 	WidgetType Type = {};
@@ -280,8 +280,6 @@ private:
 	std::unordered_set<Widget*> Subscriptions;
 
 	Layout* m_Layout = nullptr;
-
-	void* m_BitmapTexture = nullptr; // Correctly declared here
 
 	friend class Timer;
 	friend class OpenFileDialog;

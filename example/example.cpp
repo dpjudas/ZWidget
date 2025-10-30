@@ -15,8 +15,8 @@
 #include <zwidget/widgets/pushbutton/pushbutton.h>
 #include <zwidget/widgets/checkboxlabel/checkboxlabel.h>
 #include <zwidget/widgets/lineedit/lineedit.h>
-#include "picopng.h"
 #include <zwidget/widgets/tabwidget/tabwidget.h>
+#include "picopng.h"
 
 // ************************************************************
 // Prototypes

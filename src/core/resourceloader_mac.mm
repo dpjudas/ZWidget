@@ -9,7 +9,6 @@
 
 std::vector<uint8_t> LoadSystemFontData()
 {
-    std::cerr << "LoadSystemFontData: Attempting to load system font." << std::endl;
     std::vector<uint8_t> fontDataVector;
     @autoreleasepool {
         NSFont* systemFont = [NSFont systemFontOfSize:13.0]; // Use a default size
@@ -55,7 +54,6 @@ std::vector<uint8_t> LoadSystemFontData()
 
 std::vector<uint8_t> ReadAllBytes(const std::string& filename)
 {
-    std::cerr << "ReadAllBytes: Attempting to read file: " << filename << std::endl;
     std::ifstream file(filename, std::ios::binary | std::ios::ate);
     if (!file)
         throw std::runtime_error("ReadFile failed: " + filename);
@@ -88,6 +86,5 @@ std::vector<SingleFontData> LoadWidgetFontData(const std::string& name)
 
 std::vector<uint8_t> LoadWidgetData(const std::string& name)
 {
-    std::cerr << "ResourceLoader::LoadWidgetData: Loading resource: " << name << std::endl;
     return ReadAllBytes(name);
 }

@@ -52,8 +52,8 @@ enum class InputKey : uint32_t
 	MiddleMouse, Unknown05, Unknown06, Unknown07,
 	Backspace, Tab, Unknown0A, Unknown0B,
 	Unknown0C, Enter, Unknown0E, Unknown0F,
-	Shift, Ctrl, Alt, LAlt, RAlt, LCommand, RCommand, Pause,
-	CapsLock, Unknown15, Unknown16, Unknown17,
+	Shift, Ctrl, Alt, Pause,
+	CapsLock, LCommand, RCommand, Unknown17,
 	Unknown18, Unknown19, Unknown1A, Escape,
 	Unknown1C, Unknown1D, Unknown1E, Unknown1F,
 	Space, PageUp, PageDown, End,
@@ -269,14 +269,9 @@ enum class RenderAPI
 	Unspecified,
 	Bitmap,
 	Vulkan,
-
-	// For application-side rendering. Not used by ZWidget itself.
 	OpenGL,
-
 	D3D11,
 	D3D12,
-
-	// For application-side rendering. Not used by ZWidget itself.
 	Metal
 };
 

@@ -1,9 +1,13 @@
-#include <zwidget/core/resourcedata.h>
-#include <windows.h>
+
+#include "core/resourcedata.h"
 #include <stdexcept>
-#include <ShlObj.h>
 #include <vector>
 #include <string>
+
+#define WIN32_MEAN_AND_LEAN
+#define NOMINMAX
+#include <windows.h>
+#include <ShlObj.h>
 
 static std::wstring to_utf16(const std::string& str)
 {
@@ -54,16 +58,16 @@ std::vector<uint8_t> LoadSystemFontData()
 
 	// Try to load Segoe UI, the default Windows system font
 	wchar_t fontsPath[MAX_PATH];
-	if (SUCCEEDED(SHGetFolderPathW(NULL, CSIDL_FONTS, NULL, 0, fontsPath)))
+	if (SUCCEEDED(SHGetFolderPathW(0, CSIDL_FONTS, nullptr, 0, fontsPath)))
 	{
 		std::wstring segoeUIPath = std::wstring(fontsPath) + L"\\segoeui.ttf";
 
 		try
 		{
 			// Convert wstring path to string for ReadAllBytes
-			int size_needed = WideCharToMultiByte(CP_UTF8, 0, segoeUIPath.c_str(), (int)segoeUIPath.length(), NULL, 0, NULL, NULL);
+			int size_needed = WideCharToMultiByte(CP_UTF8, 0, segoeUIPath.c_str(), (int)segoeUIPath.length(), nullptr, 0, nullptr, nullptr);
 			std::string strPath(size_needed, 0);
-			WideCharToMultiByte(CP_UTF8, 0, segoeUIPath.c_str(), (int)segoeUIPath.length(), &strPath[0], size_needed, NULL, NULL);
+			WideCharToMultiByte(CP_UTF8, 0, segoeUIPath.c_str(), (int)segoeUIPath.length(), &strPath[0], size_needed, nullptr, nullptr);
 
 			fontDataVector = ReadAllBytes(strPath);
 		}

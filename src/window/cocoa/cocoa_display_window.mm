@@ -1,6 +1,7 @@
 #include "cocoa_display_window.h"
 #include <stdio.h>
-#include <vector> // Required for std::vector
+#include <vector>
+#include <stdexcept>
 #include <map>
 #include <dlfcn.h>
 #include <cmath>
@@ -63,10 +64,10 @@ InputKey keycode_to_inputkey(unsigned short keycode)
         {55, InputKey::LCommand}, // Command key
         {56, InputKey::LShift},
         {57, InputKey::CapsLock},
-        {58, InputKey::LAlt}, // Left Alt (Option)
+        {58, InputKey::Alt}, // Left Alt (Option)
         {59, InputKey::LControl},
         {60, InputKey::RShift},
-        {61, InputKey::RAlt}, // Right Alt (Option)
+        {61, InputKey::Alt}, // Right Alt (Option)
         {62, InputKey::RControl},
         {115, InputKey::Home},
         {116, InputKey::PageUp},
@@ -458,17 +459,11 @@ void CocoaDisplayWindowImpl::stopDisplayLink()
         }
 
         // Update Alt keys
-        if (impl->keyState[InputKey::LAlt] != altPressed)
+        if (impl->keyState[InputKey::Alt] != altPressed)
         {
-            impl->keyState[InputKey::LAlt] = altPressed;
-            if (altPressed) impl->windowHost->OnWindowKeyDown(InputKey::LAlt);
-            else impl->windowHost->OnWindowKeyUp(InputKey::LAlt);
-        }
-        if (impl->keyState[InputKey::RAlt] != altPressed) // Also update RAlt
-        {
-            impl->keyState[InputKey::RAlt] = altPressed;
-            if (altPressed) impl->windowHost->OnWindowKeyDown(InputKey::RAlt);
-            else impl->keyState[InputKey::RAlt] = false;
+            impl->keyState[InputKey::Alt] = altPressed;
+            if (altPressed) impl->windowHost->OnWindowKeyDown(InputKey::Alt);
+            else impl->windowHost->OnWindowKeyUp(InputKey::Alt);
         }
 
         // Update Command key (mapped to LCommand)
@@ -570,61 +565,61 @@ CVReturn CocoaDisplayWindowImpl::displayLinkOutputCallback(CVDisplayLinkRef disp
 
 CocoaDisplayWindow::CocoaDisplayWindow(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI)
 {
-	impl = std::make_unique<CocoaDisplayWindowImpl>();
-	impl->windowHost = windowHost;
-	impl->renderAPI = renderAPI;
+    impl = std::make_unique<CocoaDisplayWindowImpl>();
+    impl->windowHost = windowHost;
+    impl->renderAPI = renderAPI;
 
-	NSRect contentRect = NSMakeRect(0, 0, 640, 480);
-	NSWindowStyleMask style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
-	if (popupWindow)
-		style = NSWindowStyleMaskBorderless;
+    NSRect contentRect = NSMakeRect(0, 0, 640, 480);
+    NSWindowStyleMask style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
+    if (popupWindow)
+        style = NSWindowStyleMaskBorderless;
 
-	impl->window = [[NSWindow alloc] initWithContentRect:contentRect styleMask:style backing:NSBackingStoreBuffered defer:NO];
-	impl->delegate = [[ZWidgetWindowDelegate alloc] initWithImpl:impl.get()];
-	[impl->window setDelegate:impl->delegate];
-	[impl->window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-	[impl->window setAcceptsMouseMovedEvents:YES];
-	[impl->window setRestorable:NO];
-	[impl->window setReleasedWhenClosed:NO];
+    impl->window = [[NSWindow alloc] initWithContentRect:contentRect styleMask:style backing:NSBackingStoreBuffered defer:NO];
+    impl->delegate = [[ZWidgetWindowDelegate alloc] initWithImpl:impl.get()];
+    [impl->window setDelegate:impl->delegate];
+    [impl->window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
+    [impl->window setAcceptsMouseMovedEvents:YES];
+    [impl->window setRestorable:NO];
+    [impl->window setReleasedWhenClosed:NO];
 
-	ZWidgetView* view = [[ZWidgetView alloc] initWithImpl:impl.get()];
-	[impl->window setContentView:view];
+    ZWidgetView* view = [[ZWidgetView alloc] initWithImpl:impl.get()];
+    [impl->window setContentView:view];
 
-	if (owner)
-	{
-		CocoaDisplayWindow* cocoaOwner = static_cast<CocoaDisplayWindow*>(owner);
-		[impl->window setParentWindow:cocoaOwner->impl->window];
-	}
+    if (owner)
+    {
+        CocoaDisplayWindow* cocoaOwner = static_cast<CocoaDisplayWindow*>(owner);
+        [impl->window setParentWindow:cocoaOwner->impl->window];
+    }
 
 #ifdef HAVE_METAL
-	// Create Metal device and layer for application rendering (not ZWidget rendering)
-	// Applications can access these via GetMetalDevice() and GetMetalLayer()
-	impl->metalDevice = MTLCreateSystemDefaultDevice();
-	if (impl->metalDevice)
-	{
-		impl->metalLayer = [CAMetalLayer layer];
-		impl->metalLayer.device = impl->metalDevice;
-		impl->metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
-		impl->metalLayer.framebufferOnly = NO;  // Allow reading for screenshots, etc.
-		impl->metalLayer.presentsWithTransaction = NO;
-		impl->metalLayer.displaySyncEnabled = YES;
-		impl->metalLayer.maximumDrawableCount = 3;
-		impl->metalLayer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
-		impl->metalLayer.contentsScale = [[NSScreen mainScreen] backingScaleFactor];
-		impl->metalLayer.frame = view.layer.frame;
-		[view.layer addSublayer:impl->metalLayer];
-	}
+    // Create Metal device and layer for application rendering (not ZWidget rendering)
+    // Applications can access these via GetMetalDevice() and GetMetalLayer()
+    impl->metalDevice = MTLCreateSystemDefaultDevice();
+    if (impl->metalDevice)
+    {
+        impl->metalLayer = [CAMetalLayer layer];
+        impl->metalLayer.device = impl->metalDevice;
+        impl->metalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+        impl->metalLayer.framebufferOnly = NO;  // Allow reading for screenshots, etc.
+        impl->metalLayer.presentsWithTransaction = NO;
+        impl->metalLayer.displaySyncEnabled = YES;
+        impl->metalLayer.maximumDrawableCount = 3;
+        impl->metalLayer.autoresizingMask = kCALayerWidthSizable | kCALayerHeightSizable;
+        impl->metalLayer.contentsScale = [[NSScreen mainScreen] backingScaleFactor];
+        impl->metalLayer.frame = view.layer.frame;
+        [view.layer addSublayer:impl->metalLayer];
+    }
 #endif
 #ifdef HAVE_OPENGL
-	if (renderAPI == RenderAPI::OpenGL)
-	{
-		impl->initOpenGL(view);
-	}
-	else
+    if (renderAPI == RenderAPI::OpenGL)
+    {
+        impl->initOpenGL(view);
+    }
+    else
 #endif
-	{
-		impl->renderAPI = RenderAPI::Bitmap;
-	}
+    {
+        impl->renderAPI = RenderAPI::Bitmap;
+    }
 }
 
 CocoaDisplayWindow::~CocoaDisplayWindow()
@@ -644,7 +639,7 @@ void CocoaDisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>
 {
     if (impl->window && !images.empty())
     {
-	// For simplicity, use the first image as the icon.
+    // For simplicity, use the first image as the icon.
         // A more robust implementation might choose an appropriate size.
         std::shared_ptr<Image> iconImage = images[0];
 
@@ -692,7 +687,7 @@ void CocoaDisplayWindow::Show()
     if (impl->window)
     {
         [impl->window makeKeyAndOrderFront:nil];
-		Update();
+        Update();
     }
 }
 
@@ -1076,7 +1071,6 @@ std::vector<std::string> CocoaDisplayWindow::GetVulkanInstanceExtensions()
 }
 VkSurfaceKHR CocoaDisplayWindow::CreateVulkanSurface(VkInstance instance)
 {
-    VkSurfaceKHR surface = nullptr;
 #ifdef HAVE_VULKAN
     if (impl->window && impl->metalLayer)
     {
@@ -1097,16 +1091,17 @@ VkSurfaceKHR CocoaDisplayWindow::CreateVulkanSurface(VkInstance instance)
             surfaceInfo.sType = VK_STRUCTURE_TYPE_METAL_SURFACE_CREATE_INFO_EXT;
             surfaceInfo.pLayer = impl->metalLayer;
 
+            VkSurfaceKHR surface = nullptr;
             VkResult err = vkCreateMetalSurfaceEXT(instance, &surfaceInfo, nullptr, &surface);
             if (err != VK_SUCCESS)
-            {
-                // Handle error
-                fprintf(stderr, "Failed to create Vulkan Metal surface: %d\n", err);
-            }
+                throw std::runtime_error("Could not create vulkan surface: vkCreateMetalSurfaceEXT failed");
+            return surface;
         }
     }
+    throw std::runtime_error("Could not create vulkan surface: no metal layer");
+#else
+    throw std::runtime_error("Vulkan support not compiled into zwidget");
 #endif
-    return surface;
 }
 
 void* CocoaDisplayWindow::GetMetalDevice()
@@ -1115,7 +1110,7 @@ void* CocoaDisplayWindow::GetMetalDevice()
     // Return the Metal device for application rendering
     return (__bridge void*)impl->metalDevice;
 #else
-    return nullptr;
+    throw std::runtime_error("Metal support not compiled into zwidget");
 #endif
 }
 
@@ -1125,6 +1120,6 @@ void* CocoaDisplayWindow::GetMetalLayer()
     // Return the CAMetalLayer for application rendering
     return (__bridge void*)impl->metalLayer;
 #else
-    return nullptr;
+    throw std::runtime_error("Metal support not compiled into zwidget");
 #endif
 }
