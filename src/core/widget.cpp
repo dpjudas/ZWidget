@@ -1,10 +1,3 @@
-#include <iostream>
-#if defined(__APPLE__)
-extern "C" {
-	typedef const void* CFTypeRef;
-	void CFRelease(CFTypeRef cf);
-}
-#endif
 #include "core/widget.h"
 #include "core/timer.h"
 #include "core/colorf.h"
@@ -405,16 +398,10 @@ void Widget::Update()
 void Widget::Repaint()
 {
 	Widget* w = Window();
-	if (!w)
-		return;
-
-	if (!w->DispWindow)
+	if (!w || !w->DispCanvas)
 		return;
 
 	Canvas* canvas = w->DispCanvas.get();
-	if (!canvas)
-		return;
-
 	canvas->begin(w->WindowBackground);
 	w->Paint(canvas);
 	canvas->end();
@@ -435,9 +422,7 @@ void Widget::Paint(Canvas* canvas)
 	for (Widget* w = FirstChild(); w != nullptr; w = w->NextSibling())
 	{
 		if (w->Type == WidgetType::Child && !w->HiddenFlag)
-		{
 			w->Paint(canvas);
-		}
 	}
 	canvas->setOrigin(oldOrigin);
 	canvas->popClip();

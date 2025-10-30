@@ -7,6 +7,12 @@
 #import <Cocoa/Cocoa.h>
 #import <CoreText/CoreText.h>
 
+extern "C"
+{
+    typedef const void* CFTypeRef;
+    void CFRelease(CFTypeRef cf);
+}
+
 std::vector<uint8_t> LoadSystemFontData()
 {
     std::vector<uint8_t> fontDataVector;

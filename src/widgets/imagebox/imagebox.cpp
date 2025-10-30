@@ -1,6 +1,5 @@
 
 #include "widgets/imagebox/imagebox.h"
-#include <iostream>
 
 ImageBox::ImageBox(Widget* parent) : Widget(parent)
 {

@@ -1,7 +1,6 @@
 #pragma once
 
-#include "../window/window.h" // Moved to top
-
+#include "../window/window.h"
 #include <string>
 #include <memory>
 #include <variant>
