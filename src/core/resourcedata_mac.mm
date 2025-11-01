@@ -139,7 +139,7 @@ struct ResourceDefaultLoader
 static std::unique_ptr<ResourceLoader>& GetLoader()
 {
 	static ResourceDefaultLoader loader;
-	return loader->loader;
+	return loader.loader;
 }
 
 ResourceLoader* ResourceLoader::Get()
