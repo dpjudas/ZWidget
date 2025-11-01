@@ -30,7 +30,7 @@ std::vector<SingleFontData> ResourceData::LoadSystemFont()
 		// __bridge_transfer transfers ownership to ARC, so no manual CFRelease is needed
 		NSString* fontPath = (NSString*)CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
 		if (!fontPath)
-			throw std::runtime_error(Failed to convert font URL to file path");
+			throw std::runtime_error("Failed to convert font URL to file path");
 
 		// Read the font file data
 		try
@@ -71,7 +71,7 @@ std::vector<SingleFontData> ResourceData::LoadMonospaceSystemFont()
 		// __bridge_transfer transfers ownership to ARC, so no manual CFRelease is needed
 		NSString* fontPath = (NSString*)CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
 		if (!fontPath)
-			throw std::runtime_error(Failed to convert font URL to file path");
+			throw std::runtime_error("Failed to convert font URL to file path");
 
 		// Read the font file data
 		try
