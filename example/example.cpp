@@ -16,7 +16,6 @@
 #include <zwidget/widgets/checkboxlabel/checkboxlabel.h>
 #include <zwidget/widgets/lineedit/lineedit.h>
 #include <zwidget/widgets/tabwidget/tabwidget.h>
-#include "picopng.h"
 
 // ************************************************************
 // Prototypes
@@ -144,22 +143,10 @@ LauncherWindow::LauncherWindow(): Widget(nullptr, WidgetType::Window)
 
 	try
 	{
-		auto filedata = ReadAllBytes("banner.png");
-		std::vector<unsigned char> pixels;
-		unsigned long width = 0, height = 0;
-		int result = decodePNG(pixels, width, height, (const unsigned char*)filedata.data(), filedata.size(), true);
-		if (result == 0)
-			Logo->SetImage(Image::Create(width, height, ImageFormat::R8G8B8A8, pixels.data()));
-		else
-			std::cout << "Failed to decode banner.png, result=" << result << std::endl;
-	}
-	catch (const std::exception& e)
-	{
-		std::cout << "Exception loading banner: " << e.what() << std::endl;
+		Logo->SetImage(Image::LoadResource("banner.png"));
 	}
 	catch (...)
 	{
-		std::cout << "Unknown exception loading banner" << std::endl;
 	}
 }
 
@@ -368,92 +355,6 @@ void LauncherWindowTab3::OnGeometryChanged()
 // Shared code
 // ************************************************************
 
-#ifdef __APPLE__
-std::vector<uint8_t> LoadSystemFontData()
-{
-	// Try common macOS system font paths
-	const char* fontPaths[] = {
-		"/System/Library/Fonts/SFNS.ttf",                    // San Francisco (modern macOS)
-		"/System/Library/Fonts/SFNSText.ttf",                // San Francisco Text
-		"/System/Library/Fonts/Helvetica.ttc",               // Helvetica (fallback)
-		"/System/Library/Fonts/HelveticaNeue.ttc",           // Helvetica Neue (fallback)
-		nullptr
-	};
-
-	for (const char** path = fontPaths; *path != nullptr; ++path)
-	{
-		try
-		{
-			return ReadAllBytes(std::string(*path));
-		}
-		catch (...)
-		{
-			// Try next font path
-		}
-	}
-
-	return std::vector<uint8_t>();
-}
-#endif
-
-std::vector<SingleFontData> LoadWidgetFontData(const std::string& name)
-{
-	// Font loading strategy controlled by CMake option ZWIDGET_USE_BUNDLED_FONTS
-	// OFF (default): Try system font first, fall back to bundled font
-	// ON: Try bundled font first, fall back to system font
-
-#ifdef ZWIDGET_USE_BUNDLED_FONTS
-	// Try bundled font first
-	try
-	{
-		std::string filename = name + ".ttf";
-		return {
-			{ReadAllBytes(filename), ""}
-		};
-	}
-	catch (...)
-	{
-		// Fall back to system font if bundled font not found
-		std::cout << "Bundled font '" << name << "' not found, trying system font" << std::endl;
-#if defined(__APPLE__) || defined(WIN32)
-		std::vector<uint8_t> systemFont = LoadSystemFontData();
-		if (!systemFont.empty())
-		{
-			return { {std::move(systemFont), ""} };
-		}
-#endif
-		throw std::runtime_error("Failed to load font: " + name);
-	}
-#else
-	// Try system font first (default behavior)
-#if defined(__APPLE__) || defined(WIN32)
-	std::vector<uint8_t> systemFont = LoadSystemFontData();
-	if (!systemFont.empty())
-	{
-		return { {std::move(systemFont), ""} };
-	}
-#endif
-
-	// Fall back to bundled font if system font not available
-	try
-	{
-		std::string filename = name + ".ttf";
-		return {
-			{ReadAllBytes(filename), ""}
-		};
-	}
-	catch (...)
-	{
-		throw std::runtime_error("Failed to load font: " + name);
-	}
-#endif
-}
-
-std::vector<uint8_t> LoadWidgetData(const std::string& name)
-{
-	return ReadAllBytes(name);
-}
-
 enum class Backend
 {
 	Default, Win32, SDL2, X11, Wayland
@@ -524,8 +425,6 @@ int main(int argc, const char** argv)
 	for (auto i = 1; i < argc; i++)
 	{
 		std::string s = argv[i];
-		std::transform(s.begin(), s.end(), s.begin(),
-			[](unsigned char c){ return std::tolower(c); });
 
 		if (s == "light") { theme = Theme::Light; continue; }
 		if (s == "dark")  { theme = Theme::Dark;  continue; }

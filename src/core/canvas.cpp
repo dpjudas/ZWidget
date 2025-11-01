@@ -152,7 +152,7 @@ CanvasGlyph* CanvasFont::getGlyph(Canvas* canvas, uint32_t utfchar)
 
 CanvasFontGroup::CanvasFontGroup(const std::string& fontname, double height) : height(height)
 {
-	auto fontdata = LoadWidgetFontData(fontname);
+	auto fontdata = ResourceData::LoadFont(fontname);
 	fonts.resize(fontdata.size());
 	for (size_t i = 0; i < fonts.size(); i++)
 	{
@@ -199,7 +199,7 @@ void Canvas::attach(DisplayWindow* newWindow)
 	uiscale = window ? window->GetDpiScale() : 1.0f;
 	uint32_t white = 0xffffffff;
 	whiteTexture = createTexture(1, 1, &white);
-	font = std::make_unique<CanvasFontGroup>("NotoSans", 13.0 * uiscale);
+	font = std::make_unique<CanvasFontGroup>("system", 13.0 * uiscale);
 }
 
 void Canvas::detach()

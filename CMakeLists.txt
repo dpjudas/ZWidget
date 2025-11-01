@@ -42,7 +42,6 @@ set(ZWIDGET_SOURCES
 	src/core/pathfill.cpp
 	src/core/truetypefont.cpp
 	src/core/truetypefont.h
-	src/core/resourceloader_common.cpp
 	src/core/picopng/picopng.cpp
 	src/core/picopng/picopng.h
 	src/core/nanosvg/nanosvg.cpp
@@ -130,7 +129,7 @@ set(ZWIDGET_WIN32_SOURCES
 	src/window/win32/win32_save_file_dialog.cpp
 	src/window/win32/win32_save_file_dialog.h
 	src/window/win32/win32_util.h
-	src/core/resourceloader_win.cpp
+	src/core/resourcedata_win.cpp
 )
 
 set(ZWIDGET_DBUS_SOURCES
@@ -142,8 +141,12 @@ set(ZWIDGET_DBUS_SOURCES
 	src/window/dbus/dbus_save_file_dialog.h
 )
 
+set(ZWIDGET_UNIX_SOURCES
+	src/core/resourcedata_unix.cpp
+)
+
 set(ZWIDGET_COCOA_SOURCES
-	src/core/resourceloader_mac.mm
+	src/core/resourcedata_mac.mm
 )
 
 set(ZWIDGET_COCOA_ARC_SOURCES
@@ -282,10 +285,12 @@ elseif(APPLE)
 		message(FATAL_ERROR "UniformTypeIdentifiers framework not found")
 	endif()
 elseif(HAIKU)
+	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_UNIX_SOURCES})
 	set(ZWIDGET_LIBS ${CMAKE_DL_LIBS})
 	set(ZWIDGET_DEFINES -DUNIX -D_UNIX)
 	set(ZWIDGET_LINK_OPTIONS -pthread)
 else()
+	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_UNIX_SOURCES})
 	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_X11_SOURCES})
 	set(ZWIDGET_LIBS ${CMAKE_DL_LIBS} -lX11 -lXi)
 	set(ZWIDGET_DEFINES -DUNIX -D_UNIX -DUSE_X11)
@@ -350,19 +355,12 @@ if(MSVC)
 endif()
 
 option(ZWIDGET_BUILD_EXAMPLE "Build the zwidget example application" ON)
-option(ZWIDGET_USE_BUNDLED_FONTS "Prefer bundled fonts over system fonts (OFF = system fonts first)" OFF)
 
 if(ZWIDGET_BUILD_EXAMPLE)
 	add_executable(zwidget_example WIN32
 		example/example.cpp
-		example/picopng.cpp
-		example/picopng.h
 	)
 	target_compile_options(zwidget_example PRIVATE ${CXX_WARNING_FLAGS})
-
-	if(ZWIDGET_USE_BUNDLED_FONTS)
-		target_compile_definitions(zwidget_example PRIVATE ZWIDGET_USE_BUNDLED_FONTS)
-	endif()
 
 	add_custom_command(
 		TARGET zwidget_example POST_BUILD

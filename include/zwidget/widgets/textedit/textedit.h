@@ -152,7 +152,7 @@ private:
 
 	bool select_all_on_focus_gain = false;
 
-	std::shared_ptr<Font> font = Font::Create("NotoSans", 12.0);
+	std::shared_ptr<Font> font = Font::Create("system", 12.0);
 
 	template<typename T>
 	static T clamp(T val, T minval, T maxval) { return std::max<T>(std::min<T>(val, maxval), minval); }
