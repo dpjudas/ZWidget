@@ -37,7 +37,7 @@ std::vector<SingleFontData> ResourceData::LoadSystemFont()
 		{
 			fontData.fontdata = ReadAllBytes(std::string([fontPath UTF8String]));
 		}
-		catch (const std::error& e)
+		catch (const std::exception& e)
 		{
 			CFRelease(fontURL);
 			throw std::runtime_error(std::string("Error reading system font file: ") + e.what());
@@ -78,7 +78,7 @@ std::vector<SingleFontData> ResourceData::LoadMonospaceSystemFont()
 		{
 			fontData.fontdata = ReadAllBytes(std::string([fontPath UTF8String]));
 		}
-		catch (const std::error& e)
+		catch (const std::exception& e)
 		{
 			CFRelease(fontURL);
 			throw std::runtime_error(std::string("Error reading system font file: ") + e.what());
