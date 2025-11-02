@@ -4,10 +4,11 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <gio/gio.h>
+#include <fontconfig/fontconfig.h>
 
 static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
 {
-	return ::ReadAllBytes(filename);
 	std::ifstream file(filename, std::ios::binary | std::ios::ate);
 	if (!file)
 		throw std::runtime_error("Could not open: " + filename);
@@ -22,17 +23,12 @@ static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
 	return buffer;
 }
 
-#if 0 // To do: test this on Linux and add the dependency libraries to CMakeLists or dlopen them
-
-#include <gio/gio.h>
-#include <fontconfig/fontconfig.h>
-
 static std::vector<SingleFontData> GetGtkUIFont(const std::string& propertyName)
 {
 	// Ask GTK what the UI font is:
 
 	GSettings *settings = g_settings_new ("org.gnome.desktop.interface");
-	const gchar* str = g_settings_get_string(settings, propertyName.c_str());
+	gchar* str = g_settings_get_string(settings, propertyName.c_str());
 	if (!str)
 		throw std::runtime_error("Could not get gtk font property");
 	std::string fontname = str;
@@ -66,7 +62,7 @@ static std::vector<SingleFontData> GetGtkUIFont(const std::string& propertyName)
 
 	SingleFontData fontdata;
 	fontdata.fontdata = ReadAllBytes(filename);
-	return { std::move(fontdata); }
+	return { std::move(fontdata) };
 }
 
 std::vector<SingleFontData> ResourceData::LoadSystemFont()
@@ -78,22 +74,6 @@ std::vector<SingleFontData> ResourceData::LoadMonospaceSystemFont()
 {
 	return GetGtkUIFont("monospace-font-name");
 }
-
-#else
-
-std::vector<SingleFontData> ResourceData::LoadSystemFont()
-{
-	throw std::runtime_error("ResourceData::LoadSystemFont not implemented on linux");
-}
-
-std::vector<SingleFontData> ResourceData::LoadMonospaceSystemFont()
-{
-	// gsettings get org.gnome.desktop.interface monospace-font-name
-
-	throw std::runtime_error("ResourceData::LoadSystemFont not implemented on linux");
-}
-
-#endif
 
 double ResourceData::GetSystemFontSize()
 {

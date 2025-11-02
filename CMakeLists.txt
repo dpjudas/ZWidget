@@ -1,6 +1,5 @@
 cmake_minimum_required(VERSION 3.11)
 project(zwidget)
-message(STATUS "HAVE_METAL is ${HAVE_METAL}")
 
 option(ENABLE_METAL "Enable Metal support for application rendering" ON)
 option(ENABLE_OPENGL "Enable OpenGL support for application rendering" ON)
@@ -19,6 +18,8 @@ if (UNIX AND NOT APPLE)
 		wayland-cursor++
 		xkbcommon>=0.5.0
 	)
+	pkg_check_modules(GLIB glib-2.0)
+	pkg_check_modules(FONTCONFIG fontconfig)
 endif()
 
 # SDL2 finding stuff
@@ -308,6 +309,12 @@ else()
 		set(ZWIDGET_LIBS ${ZWIDGET_LIBS} ${WAYLANDPP_LDFLAGS})
 		set(ZWIDGET_DEFINES ${ZWIDGET_DEFINES} -DUSE_WAYLAND)
 	endif()
+
+	set(ZWIDGET_INCLUDE_DIRS ${ZWIDGET_INCLUDE_DIRS} ${GLIB_INCLUDE_DIRS})
+	set(ZWIDGET_LIBS ${ZWIDGET_LIBS} ${GLIB_LDFLAGS} -lgio-2.0)
+
+	set(ZWIDGET_INCLUDE_DIRS ${ZWIDGET_INCLUDE_DIRS} ${FONTCONFIG_INCLUDE_DIRS})
+	set(ZWIDGET_LIBS ${ZWIDGET_LIBS} ${FONTCONFIG_LDFLAGS})
 endif()
 
 if(SDL2_FOUND AND NOT WIN32)
