@@ -5,16 +5,95 @@
 #include <string>
 #include <cmath>
 
+static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
+{
+	return ::ReadAllBytes(filename);
+	std::ifstream file(filename, std::ios::binary | std::ios::ate);
+	if (!file)
+		throw std::runtime_error("Could not open: " + filename);
+
+	std::streamsize size = file.tellg();
+	file.seekg(0, std::ios::beg);
+
+	std::vector<uint8_t> buffer(size);
+	if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
+		throw std::runtime_error("Could not read: " + filename);
+
+	return buffer;
+}
+
+#if 0 // To do: test this on Linux and add the dependency libraries to CMakeLists or dlopen them
+
+#include <gio/gio.h>
+#include <fontconfig/fontconfig.h>
+
+static std::vector<SingleFontData> GetGtkUIFont(const std::string& propertyName)
+{
+	// Ask GTK what the UI font is:
+
+	GSettings *settings = g_settings_new ("org.gnome.desktop.interface");
+	const gchar* str = g_settings_get_string(settings, propertyName.c_str());
+	if (!str)
+		throw std::runtime_error("Could not get gtk font property");
+	std::string fontname = str;
+	g_free(str);
+
+	// Find the font filename using fontconfig:
+
+	std::string filename;
+	FcConfig* config = FcInitLoadConfigAndFonts();
+	if (config)
+	{
+		FcPattern* pat = FcNameParse((const FcChar8*)(fontname.c_str()));
+		if (pat)
+		{
+			FcConfigSubstitute(config, pat, FcMatchPattern);
+			FcDefaultSubstitute(pat);
+			FcResult res;
+			FcPattern* font = FcFontMatch(config, pat, &res);
+			if (font)
+			{
+				FcChar8* file = nullptr;
+				if (FcPatternGetString(font, FC_FILE, 0, &file) == FcResultMatch)
+					filename = (const char*)file;
+				FcPatternDestroy(font);
+			}
+			FcPatternDestroy(pat);
+		}
+	}
+	if (filename.empty())
+		throw std::runtime_error("Could not find font filename for: " + fontname);
+
+	SingleFontData fontdata;
+	fontdata.fontdata = ReadAllBytes(filename);
+	return { std::move(fontdata); }
+}
+
 std::vector<SingleFontData> ResourceData::LoadSystemFont()
 {
-	// How do you even do this? Ask X11? Ask Wayland? Ask dbus? Should this be delegated to the window backend?
+	return GetGtkUIFont("font-name");
+}
+
+std::vector<SingleFontData> ResourceData::LoadMonospaceSystemFont()
+{
+	return GetGtkUIFont("monospace-font-name");
+}
+
+#else
+
+std::vector<SingleFontData> ResourceData::LoadSystemFont()
+{
 	throw std::runtime_error("ResourceData::LoadSystemFont not implemented on linux");
 }
 
 std::vector<SingleFontData> ResourceData::LoadMonospaceSystemFont()
 {
+	// gsettings get org.gnome.desktop.interface monospace-font-name
+
 	throw std::runtime_error("ResourceData::LoadSystemFont not implemented on linux");
 }
+
+#endif
 
 double ResourceData::GetSystemFontSize()
 {
@@ -36,18 +115,7 @@ public:
 
 	std::vector<uint8_t> ReadAllBytes(const std::string& filename) override
 	{
-		std::ifstream file(filename, std::ios::binary | std::ios::ate);
-		if (!file)
-			throw std::runtime_error("Could not open: " + filename);
-
-		std::streamsize size = file.tellg();
-		file.seekg(0, std::ios::beg);
-
-		std::vector<uint8_t> buffer(size);
-		if (!file.read(reinterpret_cast<char*>(buffer.data()), size))
-			throw std::runtime_error("Could not read: " + filename);
-
-		return buffer;
+		return ::ReadAllBytes(filename);
 	}
 };
 
