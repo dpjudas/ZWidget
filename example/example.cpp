@@ -34,7 +34,6 @@ class LauncherWindowTab2 : public Widget
 {
 public:
 	LauncherWindowTab2(Widget parent);
-	void OnGeometryChanged() override;
 private:
 	TextLabel* WelcomeLabel = nullptr;
 	TextLabel* VersionLabel = nullptr;
@@ -258,52 +257,6 @@ LauncherWindowTab2::LauncherWindowTab2(Widget parent): Widget(nullptr)
 	//layout->AddStretch();
 
 	SetLayout(layout);
-}
-
-void LauncherWindowTab2::OnGeometryChanged()
-{
-	/*
-	double y = 0, h;
-
-	h = WelcomeLabel->GetPreferredHeight();
-	WelcomeLabel->SetFrameGeometry(20, y, GetWidth() - 40, h);
-	y += h;
-
-	h = VersionLabel->GetPreferredHeight();
-	VersionLabel->SetFrameGeometry(20, y, GetWidth() - 40, h);
-	y += h + 10;
-
-	h = SelectLabel->GetPreferredHeight();
-	SelectLabel->SetFrameGeometry(20, y, GetWidth() - 40, h);
-	y += h;
-
-	double listViewTop = y + 10, listViewBottom;
-
-	y = GetHeight();
-
-	h = DontAskAgainCheckbox->GetPreferredHeight();
-	y -= h;
-	DontAskAgainCheckbox->SetFrameGeometry(20, y, 190, h);
-	WidescreenCheckbox->SetFrameGeometry(GetWidth() - 170, y, 150, WidescreenCheckbox->GetPreferredHeight());
-
-	h = DisableAutoloadCheckbox->GetPreferredHeight();
-	y -= h;
-	DisableAutoloadCheckbox->SetFrameGeometry(20, y, 190, h);
-	BrightmapsCheckbox->SetFrameGeometry(GetWidth() - 170, y, 150, BrightmapsCheckbox->GetPreferredHeight());
-
-	h = FullscreenCheckbox->GetPreferredHeight();
-	y -= h;
-	FullscreenCheckbox->SetFrameGeometry(20, y, 190, h);
-	LightsCheckbox->SetFrameGeometry(GetWidth() - 170, y, 150, LightsCheckbox->GetPreferredHeight());
-
-	h = GeneralLabel->GetPreferredHeight();
-	y -= h;
-	GeneralLabel->SetFrameGeometry(20, y, 190, GeneralLabel->GetPreferredHeight());
-	ExtrasLabel->SetFrameGeometry(GetWidth() - 170, y, 150, ExtrasLabel->GetPreferredHeight());
-
-	listViewBottom = y - 10;
-	GamesList->SetFrameGeometry(20, listViewTop, GetWidth() - 40, std::max<double>(listViewBottom - listViewTop, 0));
-	*/
 }
 
 LauncherWindowTab3::LauncherWindowTab3(Widget parent): Widget(nullptr)

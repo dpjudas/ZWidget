@@ -420,8 +420,9 @@ Rect Canvas::measureText(const std::shared_ptr<Font>& font, const std::string& t
 
 Rect Canvas::measureText(const std::string& text)
 {
+	const TrueTypeTextMetrics& tm = font->GetTextMetrics();
+	double lineHeight = tm.ascent + tm.descent + tm.lineGap;
 	double x = 0.0;
-	double y = font->GetTextMetrics().ascender - font->GetTextMetrics().descender;
 
 	UTF8Reader reader(text.data(), text.size());
 	while (!reader.is_end())
@@ -436,37 +437,58 @@ Rect Canvas::measureText(const std::string& text)
 		reader.next();
 	}
 
-	return Rect::xywh(0.0, 0.0, x / uiscale, y / uiscale);
+	return Rect::xywh(0.0, 0.0, x / uiscale, lineHeight / uiscale);
 }
 
 FontMetrics Canvas::getFontMetrics()
 {
-	return getFontMetrics({}); // To do: properly deal with a default UI font and make getFontMetrics actually use its font
+	const TrueTypeTextMetrics& tm = font->GetTextMetrics();
+	FontMetrics metrics;
+	metrics.external_leading = tm.lineGap / uiscale;
+	metrics.ascent = tm.ascent / uiscale;
+	metrics.descent = tm.descent / uiscale;
+	metrics.height = (tm.ascent + tm.descent) / uiscale;
+	return metrics;
 }
 
 FontMetrics Canvas::getFontMetrics(const std::shared_ptr<Font>& font)
 {
-	VerticalTextPosition vtp = verticalTextAlign();
-	FontMetrics metrics;
-	metrics.external_leading = vtp.top;
-	metrics.ascent = vtp.baseline - vtp.top;
-	metrics.descent = vtp.bottom - vtp.baseline;
-	metrics.height = metrics.ascent + metrics.descent;
-	return metrics;
+	return getFontMetrics(); // To do: properly deal with a default UI font and make getFontMetrics actually use its font
+}
+
+int Canvas::getCharacterIndex(const std::string& text, const Point& hitPoint)
+{
+	double x = 0.0;
+	UTF8Reader reader(text.data(), text.size());
+	while (!reader.is_end())
+	{
+		CanvasGlyph* glyph = font->getGlyph(this, reader.character(), language.c_str());
+		if (!glyph || !glyph->texture)
+		{
+			glyph = font->getGlyph(this, 32);
+		}
+
+		if (hitPoint.x <= (x + glyph->metrics.advanceWidth * 0.5) / uiscale)
+			return (int)reader.position();
+
+		x += std::round(glyph->metrics.advanceWidth);
+		reader.next();
+	}
+	return (int)text.size();
 }
 
 int Canvas::getCharacterIndex(const std::shared_ptr<Font>& font, const std::string& text, const Point& hitPoint)
 {
-	return 0;
+	return getCharacterIndex(text, hitPoint); // To do: properly deal with a default UI font
 }
 
 VerticalTextPosition Canvas::verticalTextAlign()
 {
+	const TrueTypeTextMetrics& tm = font->GetTextMetrics();
 	VerticalTextPosition align;
 	align.top = 0.0f;
-	auto tm = font->GetTextMetrics();
-	align.baseline = tm.ascender / uiscale;
-	align.bottom = (tm.ascender - tm.descender) / uiscale;
+	align.baseline = (tm.ascent + tm.lineGap * 0.5) / uiscale;
+	align.bottom = (tm.ascent + tm.descent + tm.lineGap) / uiscale;
 	return align;
 }
 
