@@ -182,7 +182,7 @@ LauncherWindowTab1::LauncherWindowTab1(Widget parent): Widget(nullptr)
 
 void LauncherWindowTab1::OnGeometryChanged()
 {
-	Text->SetFrameGeometry(0, 10, GetWidth(), GetHeight());
+	Text->SetFrameGeometry(0, 10, GetWidth(), GetHeight() - 20);
 }
 
 LauncherWindowTab2::LauncherWindowTab2(Widget parent): Widget(nullptr)
