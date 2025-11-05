@@ -2,7 +2,7 @@
 
 #include <unordered_map>
 #include <zwidget/window/window.h>
-#include <zwidget/window/sdl2nativehandle.h>
+#include <zwidget/window/sdlnativehandle.h>
 #include <SDL2/SDL.h>
 
 class SDL2DisplayWindow : public DisplayWindow
@@ -95,7 +95,7 @@ public:
 	static Uint32 ExecTimer(Uint32 interval, void* id);
 
 	DisplayWindowHost* WindowHost = nullptr;
-	SDL2NativeHandle Handle;
+	SDLNativeHandle Handle;
 	SDL_Renderer* RendererHandle = nullptr;
 	SDL_Texture* BackBufferTexture = nullptr;
 	int BackBufferWidth = 0;
