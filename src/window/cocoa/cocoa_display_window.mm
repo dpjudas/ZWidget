@@ -1053,7 +1053,7 @@ void* CocoaDisplayWindow::GetNativeHandle()
         handle->nsWindow = impl->window;
         handle->nsView = [impl->window contentView];
 #ifdef HAVE_METAL
-        handle->metalLayer = impl->metalLayer;
+        handle->metalLayer = (__bridge void*)impl->metalLayer;
 #endif
     }
     return handle;
