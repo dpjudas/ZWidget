@@ -439,3 +439,43 @@ if(ZWIDGET_BUILD_EXAMPLE)
 		set_property(TARGET zwidget_example PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	endif()
 endif()
+
+option(ZWIDGET_BUILD_GZDOOM_LOADER "Build the GZDoom loader application" ON)
+
+if(ZWIDGET_BUILD_GZDOOM_LOADER)
+	add_executable(gzdoom_loader WIN32
+		gzdoom_loader/main.cpp
+		gzdoom_loader/gzdoom_launcher.cpp
+		gzdoom_loader/gzdoom_launcher.h
+	)
+	target_compile_options(gzdoom_loader PRIVATE ${CXX_WARNING_FLAGS})
+
+	target_include_directories(gzdoom_loader PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/gzdoom_loader)
+	target_link_libraries(gzdoom_loader PRIVATE zwidget)
+
+	if(WIN32)
+		target_compile_definitions(gzdoom_loader PRIVATE UNICODE _UNICODE)
+		target_link_libraries(gzdoom_loader PRIVATE gdi32 user32 shell32 comdlg32)
+	elseif(APPLE)
+		target_link_libraries(gzdoom_loader PRIVATE "-framework Cocoa")
+		if(ENABLE_OPENGL AND OPENGL_FRAMEWORK)
+			target_link_libraries(gzdoom_loader PRIVATE "-framework OpenGL")
+		endif()
+	else()
+		target_link_libraries(gzdoom_loader PRIVATE ${ZWIDGET_LIBS})
+	endif()
+
+	if(SDL3_FOUND)
+		target_link_libraries(gzdoom_loader PRIVATE SDL3::SDL3)
+	endif()
+
+	if(SDL2_FOUND AND NOT SDL3_FOUND)
+		target_link_libraries(gzdoom_loader PRIVATE SDL2::SDL2)
+	endif()
+
+	set_target_properties(gzdoom_loader PROPERTIES CXX_STANDARD 20)
+
+	if(MSVC)
+		set_property(TARGET gzdoom_loader PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	endif()
+endif()
