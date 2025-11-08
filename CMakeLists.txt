@@ -447,6 +447,8 @@ if(ZWIDGET_BUILD_GZDOOM_LOADER)
 		gzdoom_loader/main.cpp
 		gzdoom_loader/gzdoom_launcher.cpp
 		gzdoom_loader/gzdoom_launcher.h
+		gzdoom_loader/wad_parser.cpp
+		gzdoom_loader/wad_parser.h
 	)
 	target_compile_options(gzdoom_loader PRIVATE ${CXX_WARNING_FLAGS})
 

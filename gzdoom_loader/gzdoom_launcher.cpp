@@ -4,6 +4,7 @@
 #include "zwidget/widgets/pushbutton/pushbutton.h"
 #include "zwidget/widgets/listview/listview.h"
 #include "zwidget/widgets/dropdown/dropdown.h"
+#include "zwidget/widgets/textedit/textedit.h"
 #include "zwidget/window/window.h"
 #include "zwidget/systemdialogs/open_file_dialog.h"
 #include "zwidget/core/span_layout.h"
@@ -20,7 +21,7 @@
 
 GZDoomLauncher::GZDoomLauncher() : Widget(nullptr, WidgetType::Window)
 {
-	SetWindowTitle("GZDoom Loader");
+	SetWindowTitle("GZDoom Loader - Enhanced");
 	SetWindowBackground(Colorf::fromRgba8(32, 32, 32, 255));
 
 	CreateUI();
@@ -28,6 +29,7 @@ GZDoomLauncher::GZDoomLauncher() : Widget(nullptr, WidgetType::Window)
 	LoadConfig();
 	UpdatePWADList();
 	UpdatePresetList();
+	UpdateCommandPreview();
 }
 
 void GZDoomLauncher::CreateUI()
@@ -39,9 +41,9 @@ void GZDoomLauncher::CreateUI()
 
 	// Title
 	auto titleLabel = new TextLabel(this);
-	titleLabel->SetText("GZDoom Launcher");
+	titleLabel->SetText("GZDoom Launcher - Enhanced Edition");
 	titleLabel->SetTextAlignment(TextLabelAlignment::Left);
-	titleLabel->SetFrameGeometry(leftMargin, y, 760.0, 30.0);
+	titleLabel->SetFrameGeometry(leftMargin, y, 670.0, 30.0);
 	y += 40.0;
 
 	// ===== IWAD Section =====
@@ -52,13 +54,24 @@ void GZDoomLauncher::CreateUI()
 	y += lineHeight + 5.0;
 
 	iwadPathEdit = new LineEdit(this);
-	iwadPathEdit->SetFrameGeometry(leftMargin, y, 560.0, lineHeight);
+	iwadPathEdit->SetFrameGeometry(leftMargin, y, 460.0, lineHeight);
 	iwadPathEdit->SetReadOnly(true);
 
 	browseIWADButton = new PushButton(this);
 	browseIWADButton->SetText("Browse...");
-	browseIWADButton->SetFrameGeometry(590.0, y, 100.0, lineHeight);
-	y += lineHeight + spacing * 2;
+	browseIWADButton->SetFrameGeometry(490.0, y, 95.0, lineHeight);
+
+	autoDetectIWADButton = new PushButton(this);
+	autoDetectIWADButton->SetText("Auto-Detect");
+	autoDetectIWADButton->SetFrameGeometry(595.0, y, 95.0, lineHeight);
+	y += lineHeight + 5.0;
+
+	// IWAD info label
+	iwadInfoLabel = new TextLabel(this);
+	iwadInfoLabel->SetText("");
+	iwadInfoLabel->SetTextAlignment(TextLabelAlignment::Left);
+	iwadInfoLabel->SetFrameGeometry(leftMargin, y, 670.0, lineHeight);
+	y += lineHeight + spacing;
 
 	// ===== GZDoom Executable Section =====
 	auto gzdoomLabel = new TextLabel(this);
@@ -68,12 +81,16 @@ void GZDoomLauncher::CreateUI()
 	y += lineHeight + 5.0;
 
 	gzdoomPathEdit = new LineEdit(this);
-	gzdoomPathEdit->SetFrameGeometry(leftMargin, y, 560.0, lineHeight);
+	gzdoomPathEdit->SetFrameGeometry(leftMargin, y, 460.0, lineHeight);
 	gzdoomPathEdit->SetReadOnly(true);
 
 	browseGZDoomButton = new PushButton(this);
 	browseGZDoomButton->SetText("Browse...");
-	browseGZDoomButton->SetFrameGeometry(590.0, y, 100.0, lineHeight);
+	browseGZDoomButton->SetFrameGeometry(490.0, y, 95.0, lineHeight);
+
+	autoDetectGZDoomButton = new PushButton(this);
+	autoDetectGZDoomButton->SetText("Auto-Detect");
+	autoDetectGZDoomButton->SetFrameGeometry(595.0, y, 95.0, lineHeight);
 	y += lineHeight + spacing * 2;
 
 	// ===== PWAD/PK3 Section =====
@@ -174,23 +191,37 @@ void GZDoomLauncher::CreateUI()
 	deletePresetButton->SetFrameGeometry(leftMargin + 590.0, y, 100.0, lineHeight);
 	y += lineHeight + spacing * 2;
 
+	// ===== Command Preview =====
+	auto commandLabel = new TextLabel(this);
+	commandLabel->SetText("Command Preview:");
+	commandLabel->SetTextAlignment(TextLabelAlignment::Left);
+	commandLabel->SetFrameGeometry(leftMargin, y, 200.0, lineHeight);
+	y += lineHeight + 5.0;
+
+	commandPreview = new TextEdit(this);
+	commandPreview->SetFrameGeometry(leftMargin, y, 670.0, 60.0);
+	commandPreview->SetReadOnly(true);
+	y += 70.0;
+
 	// ===== Launch Button =====
 	launchButton = new PushButton(this);
 	launchButton->SetText("LAUNCH GZDOOM");
-	launchButton->SetFrameGeometry(leftMargin, y, 760.0, 40.0);
+	launchButton->SetFrameGeometry(leftMargin, y, 670.0, 40.0);
 	y += 50.0;
 
 	// ===== Status Label =====
 	statusLabel = new TextLabel(this);
-	statusLabel->SetText("Ready");
+	statusLabel->SetText("Ready - Use Auto-Detect buttons for quick setup");
 	statusLabel->SetTextAlignment(TextLabelAlignment::Left);
-	statusLabel->SetFrameGeometry(leftMargin, y, 760.0, lineHeight);
+	statusLabel->SetFrameGeometry(leftMargin, y, 670.0, lineHeight);
 }
 
 void GZDoomLauncher::SetupCallbacks()
 {
 	browseIWADButton->OnClick = [this]() { OnBrowseIWAD(); };
+	autoDetectIWADButton->OnClick = [this]() { OnAutoDetectIWAD(); };
 	browseGZDoomButton->OnClick = [this]() { OnBrowseGZDoom(); };
+	autoDetectGZDoomButton->OnClick = [this]() { OnAutoDetectGZDoom(); };
 	addPWADsButton->OnClick = [this]() { OnAddPWADs(); };
 	removePWADButton->OnClick = [this]() { OnRemovePWAD(); };
 	moveUpButton->OnClick = [this]() { OnMoveUp(); };
@@ -202,11 +233,17 @@ void GZDoomLauncher::SetupCallbacks()
 
 	pwadListView->OnChanged = [this](int index) {
 		selectedPWADIndex = index;
+		UpdateCommandPreview();
 	};
 
 	presetDropdown->OnChanged = [this](int index) {
 		OnPresetSelected(index);
 	};
+
+	// Update command preview when options change
+	skillDropdown->OnChanged = [this](int) { UpdateCommandPreview(); };
+	warpEdit->FuncAfterEditChanged = [this]() { UpdateCommandPreview(); };
+	customParamsEdit->FuncAfterEditChanged = [this]() { UpdateCommandPreview(); };
 }
 
 void GZDoomLauncher::OnBrowseIWAD()
@@ -223,9 +260,28 @@ void GZDoomLauncher::OnBrowseIWAD()
 		{
 			iwadPath = files[0];
 			iwadPathEdit->SetText(iwadPath);
-			statusLabel->SetText("IWAD selected: " + GetFileName(iwadPath));
+			OnIWADChanged();
 		}
 	}
+}
+
+void GZDoomLauncher::OnAutoDetectIWAD()
+{
+	statusLabel->SetText("Searching for IWADs...");
+	auto iwads = WADParser::FindIWADs();
+
+	if (iwads.empty())
+	{
+		statusLabel->SetText("No IWADs found. Please browse manually.");
+		return;
+	}
+
+	// Use the first found IWAD
+	iwadPath = iwads[0];
+	iwadPathEdit->SetText(iwadPath);
+	OnIWADChanged();
+
+	statusLabel->SetText("Found " + std::to_string(iwads.size()) + " IWAD(s). Loaded: " + GetFileName(iwadPath));
 }
 
 void GZDoomLauncher::OnBrowseGZDoom()
@@ -245,9 +301,29 @@ void GZDoomLauncher::OnBrowseGZDoom()
 			gzdoomPath = files[0];
 			gzdoomPathEdit->SetText(gzdoomPath);
 			statusLabel->SetText("GZDoom executable selected: " + GetFileName(gzdoomPath));
+			UpdateCommandPreview();
 			SaveConfig();
 		}
 	}
+}
+
+void GZDoomLauncher::OnAutoDetectGZDoom()
+{
+	statusLabel->SetText("Searching for GZDoom...");
+	auto executables = WADParser::FindGZDoom();
+
+	if (executables.empty())
+	{
+		statusLabel->SetText("GZDoom not found. Please browse manually.");
+		return;
+	}
+
+	// Use the first found executable
+	gzdoomPath = executables[0];
+	gzdoomPathEdit->SetText(gzdoomPath);
+	statusLabel->SetText("Found GZDoom at: " + gzdoomPath);
+	UpdateCommandPreview();
+	SaveConfig();
 }
 
 void GZDoomLauncher::OnAddPWADs()
@@ -268,6 +344,7 @@ void GZDoomLauncher::OnAddPWADs()
 			pwadPaths.push_back(file);
 		}
 		UpdatePWADList();
+		UpdateCommandPreview();
 		statusLabel->SetText("Added " + std::to_string(files.size()) + " file(s)");
 	}
 }
@@ -278,6 +355,7 @@ void GZDoomLauncher::OnRemovePWAD()
 	{
 		pwadPaths.erase(pwadPaths.begin() + selectedPWADIndex);
 		UpdatePWADList();
+		UpdateCommandPreview();
 		statusLabel->SetText("File removed");
 		selectedPWADIndex = -1;
 	}
@@ -294,6 +372,7 @@ void GZDoomLauncher::OnMoveUp()
 		std::swap(pwadPaths[selectedPWADIndex], pwadPaths[selectedPWADIndex - 1]);
 		selectedPWADIndex--;
 		UpdatePWADList();
+		UpdateCommandPreview();
 		pwadListView->SetSelectedItem(selectedPWADIndex);
 		statusLabel->SetText("File moved up");
 	}
@@ -306,6 +385,7 @@ void GZDoomLauncher::OnMoveDown()
 		std::swap(pwadPaths[selectedPWADIndex], pwadPaths[selectedPWADIndex + 1]);
 		selectedPWADIndex++;
 		UpdatePWADList();
+		UpdateCommandPreview();
 		pwadListView->SetSelectedItem(selectedPWADIndex);
 		statusLabel->SetText("File moved down");
 	}
@@ -614,4 +694,63 @@ std::string GZDoomLauncher::GetFileName(const std::string& path)
 	if (pos != std::string::npos)
 		return path.substr(pos + 1);
 	return path;
+}
+
+void GZDoomLauncher::OnIWADChanged()
+{
+	UpdateIWADInfo();
+	UpdateCommandPreview();
+	statusLabel->SetText("IWAD selected: " + GetFileName(iwadPath));
+}
+
+void GZDoomLauncher::UpdateIWADInfo()
+{
+	if (iwadPath.empty())
+	{
+		iwadInfoLabel->SetText("");
+		currentIWADMetadata = WADMetadata();
+		return;
+	}
+
+	// Parse WAD metadata
+	currentIWADMetadata = WADParser::ParseWAD(iwadPath);
+
+	if (!currentIWADMetadata.isValid)
+	{
+		iwadInfoLabel->SetText("Warning: Invalid WAD file");
+		return;
+	}
+
+	// Build info string
+	std::ostringstream info;
+	info << currentIWADMetadata.wadType;
+
+	if (!currentIWADMetadata.gameName.empty())
+	{
+		info << " - " << currentIWADMetadata.gameName;
+	}
+
+	if (currentIWADMetadata.HasMaps())
+	{
+		info << " - " << currentIWADMetadata.MapCount() << " map(s)";
+	}
+
+	info << " - " << currentIWADMetadata.numLumps << " lumps";
+
+	iwadInfoLabel->SetText(info.str());
+}
+
+void GZDoomLauncher::UpdateCommandPreview()
+{
+	if (!commandPreview)
+		return;
+
+	if (gzdoomPath.empty() || iwadPath.empty())
+	{
+		commandPreview->SetText("Select GZDoom executable and IWAD to preview command");
+		return;
+	}
+
+	std::string cmdLine = "\"" + gzdoomPath + "\" " + GenerateCommandLine();
+	commandPreview->SetText(cmdLine);
 }
