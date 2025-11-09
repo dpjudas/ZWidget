@@ -17,10 +17,50 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <shlobj.h>  // For SHGetFolderPath
 #else
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <pwd.h>
 #endif
+
+// Helper function to get config file path
+static std::string GetConfigFilePath()
+{
+#ifdef _WIN32
+	// Windows: %APPDATA%/gzdoom-launcher/config.txt
+	char appDataPath[MAX_PATH];
+	if (SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, appDataPath) == S_OK)
+	{
+		std::string configDir = std::string(appDataPath) + "\\gzdoom-launcher";
+		CreateDirectoryA(configDir.c_str(), NULL); // Create if doesn't exist
+		return configDir + "\\gzdoom_launcher_config.txt";
+	}
+#else
+	// Linux/macOS: $HOME/.config/gzdoom-launcher/config.txt
+	const char* home = getenv("HOME");
+	if (!home)
+	{
+		// Fallback to getpwuid if HOME not set
+		struct passwd* pw = getpwuid(getuid());
+		if (pw)
+			home = pw->pw_dir;
+	}
+
+	if (home)
+	{
+		std::string configDir = std::string(home) + "/.config/gzdoom-launcher";
+		// Create directory if it doesn't exist
+		mkdir(configDir.c_str(), 0755);
+		return configDir + "/gzdoom_launcher_config.txt";
+	}
+#endif
+
+	// Fallback: use current directory (legacy behavior)
+	return "gzdoom_launcher_config.txt";
+}
 
 GZDoomLauncher::GZDoomLauncher() : Widget(nullptr, WidgetType::Window)
 {
@@ -1000,7 +1040,8 @@ std::string GZDoomLauncher::GenerateCommandLine()
 
 void GZDoomLauncher::LoadConfig()
 {
-	std::ifstream file("gzdoom_launcher_config.txt");
+	std::string configPath = GetConfigFilePath();
+	std::ifstream file(configPath);
 	if (!file.is_open())
 		return;
 
@@ -1122,7 +1163,8 @@ void GZDoomLauncher::LoadConfig()
 
 void GZDoomLauncher::SaveConfig()
 {
-	std::ofstream file("gzdoom_launcher_config.txt");
+	std::string configPath = GetConfigFilePath();
+	std::ofstream file(configPath);
 	if (!file.is_open())
 		return;
 
