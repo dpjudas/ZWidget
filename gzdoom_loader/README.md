@@ -2,7 +2,29 @@
 
 A cross-platform, native GUI launcher for GZDoom built with ZWidget.
 
-## 🆕 Enhanced Features (v2.0)
+## 🆕 What's New in v3.0 - Multiplayer Edition
+
+### Multiplayer Support 🎮
+- **Host Games**: Set up multiplayer games with 2-8 players
+- **Join Games**: Connect to remote servers via IP address
+- **Game Modes**: Cooperative, Deathmatch, AltDeath (Deathmatch 2.0)
+- **Network Modes**: Peer-to-peer (fast) or Packet server (firewall-friendly)
+- **Port Configuration**: Custom network port support (default: 5029)
+- **Command Preview**: See exact multiplayer command-line before launch
+
+### Recent Configurations 📜
+- **Auto-Save History**: Automatically saves last 10 launched configurations
+- **Quick Load**: Click any recent config to instantly reload it
+- **Smart Display**: Shows IWAD + mod count + map in compact format
+- **Persistent**: Survives application restarts
+- **One-Click Replay**: Perfect for returning to favorite setups
+
+### Enhanced Presets 📋
+- **Descriptions**: Add optional descriptions to presets (future enhancement)
+- **Multiplayer Settings**: Presets now save multiplayer configuration
+- **Complete State**: Saves everything including network settings
+
+## Enhanced Features (v2.0)
 
 ### Auto-Detection System 🔍
 - **One-Click IWAD Detection**: Automatically finds IWADs in common installation directories
@@ -115,15 +137,43 @@ cmake -DZWIDGET_BUILD_EXAMPLE=OFF ..
    - Select a preset from the dropdown to auto-load it
    - Click "Delete" to remove unwanted presets
 
-5. **Launch**:
+5. **Multiplayer Setup** (v3.0):
+   - **Single Player**: Default mode for solo play
+   - **Host Game**:
+     - Select number of players (2-8)
+     - Choose game mode: Cooperative, Deathmatch, or AltDeath
+     - Select network mode: Peer-to-peer (faster) or Packet server (firewall-friendly)
+     - Set custom port if needed (default: 5029)
+   - **Join Game**:
+     - Enter server IP address (e.g., 192.168.1.100)
+     - Set port if server uses non-default port
+   - Command preview shows exact multiplayer parameters
+
+6. **Recent Configurations** (v3.0):
+   - Recent launches automatically saved to list
+   - Click any recent config to instantly reload it
+   - Shows IWAD, mod count, and map for quick identification
+
+7. **Launch**:
    - Click "LAUNCH GZDOOM" to start the game with your configuration
 
 ## Command-Line Generation
 
 The launcher generates proper GZDoom command lines following this format:
 
+**Single Player:**
 ```bash
 gzdoom -iwad "path/to/doom2.wad" -file "mod1.pk3" "mod2.wad" -skill 4 -warp 01
+```
+
+**Multiplayer Host (v3.0):**
+```bash
+gzdoom -host 4 -deathmatch -iwad "path/to/doom2.wad" -file "mod1.pk3" -skill 4 -warp 01
+```
+
+**Multiplayer Join (v3.0):**
+```bash
+gzdoom -join 192.168.1.100 -iwad "path/to/doom2.wad" -file "mod1.pk3" -skill 4
 ```
 
 ## File Structure
@@ -248,6 +298,15 @@ Contributions welcome! Areas for improvement:
 - No slowdown in UI responsiveness
 
 ## Changelog
+
+### v3.0 - Multiplayer Edition (2025)
+- Added full multiplayer support (host/join games)
+- Implemented game modes (Cooperative, Deathmatch, AltDeath)
+- Added network mode selection (peer-to-peer, packet server)
+- Implemented recent configurations history (last 10 launches)
+- Enhanced preset system with multiplayer settings
+- Added custom port configuration
+- Improved command-line generation for multiplayer
 
 ### v2.0 - Enhanced Edition (2025)
 - Added IWAD/GZDoom auto-detection

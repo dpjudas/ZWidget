@@ -5,12 +5,15 @@
 #include "zwidget/widgets/listview/listview.h"
 #include "zwidget/widgets/dropdown/dropdown.h"
 #include "zwidget/widgets/textedit/textedit.h"
+#include "zwidget/widgets/checkboxlabel/checkboxlabel.h"
 #include "zwidget/window/window.h"
 #include "zwidget/systemdialogs/open_file_dialog.h"
 #include "zwidget/core/span_layout.h"
 #include <sstream>
 #include <fstream>
 #include <algorithm>
+#include <ctime>
+#include <iomanip>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -21,7 +24,7 @@
 
 GZDoomLauncher::GZDoomLauncher() : Widget(nullptr, WidgetType::Window)
 {
-	SetWindowTitle("GZDoom Loader - Enhanced");
+	SetWindowTitle("GZDoom Loader v3.0 - Multiplayer Edition");
 	SetWindowBackground(Colorf::fromRgba8(32, 32, 32, 255));
 
 	CreateUI();
@@ -29,7 +32,25 @@ GZDoomLauncher::GZDoomLauncher() : Widget(nullptr, WidgetType::Window)
 	LoadConfig();
 	UpdatePWADList();
 	UpdatePresetList();
+	UpdateRecentConfigsList();
+	UpdateMultiplayerUI();
 	UpdateCommandPreview();
+}
+
+std::string RecentConfig::GetDisplayName() const
+{
+	std::ostringstream oss;
+	std::string iwadName = iwadPath.substr(iwadPath.find_last_of("/\\") + 1);
+	oss << iwadName;
+	if (!pwadPaths.empty())
+	{
+		oss << " + " << pwadPaths.size() << " mod(s)";
+	}
+	if (!warpMap.empty())
+	{
+		oss << " [MAP" << warpMap << "]";
+	}
+	return oss.str();
 }
 
 void GZDoomLauncher::CreateUI()
@@ -41,7 +62,7 @@ void GZDoomLauncher::CreateUI()
 
 	// Title
 	auto titleLabel = new TextLabel(this);
-	titleLabel->SetText("GZDoom Launcher - Enhanced Edition");
+	titleLabel->SetText("GZDoom Launcher v3.0 - Multiplayer Edition");
 	titleLabel->SetTextAlignment(TextLabelAlignment::Left);
 	titleLabel->SetFrameGeometry(leftMargin, y, 670.0, 30.0);
 	y += 40.0;
@@ -169,6 +190,97 @@ void GZDoomLauncher::CreateUI()
 	customParamsEdit->SetFrameGeometry(leftMargin + 120.0, y, 560.0, lineHeight);
 	y += lineHeight + spacing * 2;
 
+	// ===== Multiplayer Section =====
+	multiplayerLabel = new TextLabel(this);
+	multiplayerLabel->SetText("Multiplayer:");
+	multiplayerLabel->SetTextAlignment(TextLabelAlignment::Left);
+	multiplayerLabel->SetFrameGeometry(leftMargin, y, 200.0, lineHeight);
+	y += lineHeight + 5.0;
+
+	// Mode selection
+	singlePlayerCheck = new CheckboxLabel(this);
+	singlePlayerCheck->SetText("Single Player");
+	singlePlayerCheck->SetFrameGeometry(leftMargin, y, 140.0, lineHeight);
+	singlePlayerCheck->SetRadioStyle(true);
+	singlePlayerCheck->SetChecked(true);
+
+	hostGameCheck = new CheckboxLabel(this);
+	hostGameCheck->SetText("Host Game");
+	hostGameCheck->SetFrameGeometry(leftMargin + 150.0, y, 120.0, lineHeight);
+	hostGameCheck->SetRadioStyle(true);
+
+	joinGameCheck = new CheckboxLabel(this);
+	joinGameCheck->SetText("Join Game");
+	joinGameCheck->SetFrameGeometry(leftMargin + 280.0, y, 120.0, lineHeight);
+	joinGameCheck->SetRadioStyle(true);
+	y += lineHeight + spacing;
+
+	// Host options (initially hidden/shown based on mode)
+	auto hostPlayersLabel = new TextLabel(this);
+	hostPlayersLabel->SetText("Players:");
+	hostPlayersLabel->SetTextAlignment(TextLabelAlignment::Left);
+	hostPlayersLabel->SetFrameGeometry(leftMargin, y, 80.0, lineHeight);
+
+	hostPlayersEdit = new LineEdit(this);
+	hostPlayersEdit->SetFrameGeometry(leftMargin + 80.0, y, 50.0, lineHeight);
+	hostPlayersEdit->SetText("2");
+
+	auto gameModeLabel = new TextLabel(this);
+	gameModeLabel->SetText("Mode:");
+	gameModeLabel->SetTextAlignment(TextLabelAlignment::Left);
+	gameModeLabel->SetFrameGeometry(leftMargin + 150.0, y, 60.0, lineHeight);
+
+	gameModeDropdown = new Dropdown(this);
+	gameModeDropdown->SetFrameGeometry(leftMargin + 210.0, y, 150.0, lineHeight);
+	gameModeDropdown->AddItem("Cooperative");
+	gameModeDropdown->AddItem("Deathmatch");
+	gameModeDropdown->AddItem("AltDeath");
+	gameModeDropdown->SetSelectedItem(0);
+
+	auto networkModeLabel = new TextLabel(this);
+	networkModeLabel->SetText("Network:");
+	networkModeLabel->SetTextAlignment(TextLabelAlignment::Left);
+	networkModeLabel->SetFrameGeometry(leftMargin + 380.0, y, 70.0, lineHeight);
+
+	networkModeDropdown = new Dropdown(this);
+	networkModeDropdown->SetFrameGeometry(leftMargin + 450.0, y, 150.0, lineHeight);
+	networkModeDropdown->AddItem("Peer-to-Peer");
+	networkModeDropdown->AddItem("Packet Server");
+	networkModeDropdown->SetSelectedItem(0);
+	y += lineHeight + spacing;
+
+	// Join options
+	auto joinIPLabel = new TextLabel(this);
+	joinIPLabel->SetText("Server IP:");
+	joinIPLabel->SetTextAlignment(TextLabelAlignment::Left);
+	joinIPLabel->SetFrameGeometry(leftMargin, y, 80.0, lineHeight);
+
+	joinIPEdit = new LineEdit(this);
+	joinIPEdit->SetFrameGeometry(leftMargin + 80.0, y, 150.0, lineHeight);
+	joinIPEdit->SetText("127.0.0.1");
+
+	auto portLabel = new TextLabel(this);
+	portLabel->SetText("Port:");
+	portLabel->SetTextAlignment(TextLabelAlignment::Left);
+	portLabel->SetFrameGeometry(leftMargin + 250.0, y, 50.0, lineHeight);
+
+	networkPortEdit = new LineEdit(this);
+	networkPortEdit->SetFrameGeometry(leftMargin + 300.0, y, 80.0, lineHeight);
+	networkPortEdit->SetText("5029");
+	y += lineHeight + spacing * 2;
+
+	// ===== Recent Configs Section =====
+	recentLabel = new TextLabel(this);
+	recentLabel->SetText("Recent Configurations:");
+	recentLabel->SetTextAlignment(TextLabelAlignment::Left);
+	recentLabel->SetFrameGeometry(leftMargin, y, 200.0, lineHeight);
+	y += lineHeight + 5.0;
+
+	recentConfigsList = new ListView(this);
+	recentConfigsList->SetFrameGeometry(leftMargin, y, 670.0, 80.0);
+	recentConfigsList->SetColumnWidths({ 670.0 });
+	y += 90.0;
+
 	// ===== Preset Section =====
 	auto presetLabel = new TextLabel(this);
 	presetLabel->SetText("Presets:");
@@ -244,6 +356,49 @@ void GZDoomLauncher::SetupCallbacks()
 	skillDropdown->OnChanged = [this](int) { UpdateCommandPreview(); };
 	warpEdit->FuncAfterEditChanged = [this]() { UpdateCommandPreview(); };
 	customParamsEdit->FuncAfterEditChanged = [this]() { UpdateCommandPreview(); };
+
+	// Multiplayer mode callbacks
+	singlePlayerCheck->FuncChanged = [this](bool checked) {
+		if (checked) {
+			currentMultiplayerMode = MultiplayerMode::SinglePlayer;
+			hostGameCheck->SetChecked(false);
+			joinGameCheck->SetChecked(false);
+			OnMultiplayerModeChanged();
+		}
+	};
+
+	hostGameCheck->FuncChanged = [this](bool checked) {
+		if (checked) {
+			currentMultiplayerMode = MultiplayerMode::Host;
+			singlePlayerCheck->SetChecked(false);
+			joinGameCheck->SetChecked(false);
+			OnMultiplayerModeChanged();
+		}
+	};
+
+	joinGameCheck->FuncChanged = [this](bool checked) {
+		if (checked) {
+			currentMultiplayerMode = MultiplayerMode::Join;
+			singlePlayerCheck->SetChecked(false);
+			hostGameCheck->SetChecked(false);
+			OnMultiplayerModeChanged();
+		}
+	};
+
+	// Multiplayer options callbacks for command preview update
+	hostPlayersEdit->FuncAfterEditChanged = [this]() { UpdateCommandPreview(); };
+	gameModeDropdown->OnChanged = [this](int) { UpdateCommandPreview(); };
+	networkModeDropdown->OnChanged = [this](int) { UpdateCommandPreview(); };
+	joinIPEdit->FuncAfterEditChanged = [this]() { UpdateCommandPreview(); };
+	networkPortEdit->FuncAfterEditChanged = [this]() { UpdateCommandPreview(); };
+
+	// Recent configs callback
+	recentConfigsList->OnActivated = [this]() {
+		int index = recentConfigsList->GetSelectedItem();
+		if (index >= 0) {
+			OnLoadRecentConfig(index);
+		}
+	};
 }
 
 void GZDoomLauncher::OnBrowseIWAD()
@@ -409,6 +564,9 @@ void GZDoomLauncher::OnLaunch()
 	std::string cmdLine = GenerateCommandLine();
 	statusLabel->SetText("Launching: " + cmdLine);
 
+	// Save to recent configs
+	SaveRecentConfig();
+
 #ifdef _WIN32
 	// Windows: Use CreateProcess
 	STARTUPINFOA si = {};
@@ -560,7 +718,38 @@ std::string GZDoomLauncher::GenerateCommandLine()
 {
 	std::ostringstream cmd;
 
+	// Add multiplayer parameters first
+	if (currentMultiplayerMode == MultiplayerMode::Host)
+	{
+		int players = std::stoi(hostPlayersEdit->GetText());
+		cmd << "-host " << players;
+
+		// Add game mode
+		int modeIdx = gameModeDropdown->GetSelectedItem();
+		if (modeIdx == 1) cmd << " -deathmatch";
+		else if (modeIdx == 2) cmd << " -altdeath";
+
+		// Add network mode
+		int netModeIdx = networkModeDropdown->GetSelectedItem();
+		if (netModeIdx == 1) cmd << " -netmode 1";
+
+		// Add custom port if not default
+		int port = std::stoi(networkPortEdit->GetText());
+		if (port != 5029) cmd << " -port " << port;
+	}
+	else if (currentMultiplayerMode == MultiplayerMode::Join)
+	{
+		std::string ip = joinIPEdit->GetText();
+		cmd << "-join " << ip;
+
+		// Add custom port if not default
+		int port = std::stoi(networkPortEdit->GetText());
+		if (port != 5029) cmd << " -port " << port;
+	}
+
 	// Add IWAD
+	if (currentMultiplayerMode != MultiplayerMode::SinglePlayer)
+		cmd << " ";
 	cmd << "-iwad \"" << iwadPath << "\"";
 
 	// Add PWADs/PK3s
@@ -609,6 +798,44 @@ void GZDoomLauncher::LoadConfig()
 		gzdoomPathEdit->SetText(gzdoomPath);
 	}
 
+	// Read recent configs
+	int recentCount = 0;
+	if (std::getline(file, line) && line.find("RECENT_COUNT=") == 0)
+	{
+		recentCount = std::stoi(line.substr(13));
+	}
+
+	for (int i = 0; i < recentCount; i++)
+	{
+		RecentConfig recent;
+
+		if (std::getline(file, line) && line.find("RECENT_IWAD=") == 0)
+			recent.iwadPath = line.substr(12);
+
+		if (std::getline(file, line) && line.find("RECENT_SKILL=") == 0)
+			recent.skillLevel = std::stoi(line.substr(13));
+
+		if (std::getline(file, line) && line.find("RECENT_WARP=") == 0)
+			recent.warpMap = line.substr(12);
+
+		if (std::getline(file, line) && line.find("RECENT_TIMESTAMP=") == 0)
+			recent.timestamp = line.substr(17);
+
+		int pwadCount = 0;
+		if (std::getline(file, line) && line.find("RECENT_PWAD_COUNT=") == 0)
+			pwadCount = std::stoi(line.substr(18));
+
+		for (int j = 0; j < pwadCount; j++)
+		{
+			if (std::getline(file, line) && line.find("RECENT_PWAD=") == 0)
+			{
+				recent.pwadPaths.push_back(line.substr(12));
+			}
+		}
+
+		recentConfigs.push_back(recent);
+	}
+
 	// Read presets count
 	int presetCount = 0;
 	if (std::getline(file, line) && line.find("PRESET_COUNT=") == 0)
@@ -624,6 +851,9 @@ void GZDoomLauncher::LoadConfig()
 		if (std::getline(file, line) && line.find("PRESET_NAME=") == 0)
 			preset.name = line.substr(12);
 
+		if (std::getline(file, line) && line.find("PRESET_DESC=") == 0)
+			preset.description = line.substr(12);
+
 		if (std::getline(file, line) && line.find("PRESET_IWAD=") == 0)
 			preset.iwadPath = line.substr(12);
 
@@ -638,6 +868,24 @@ void GZDoomLauncher::LoadConfig()
 
 		if (std::getline(file, line) && line.find("PRESET_CUSTOM=") == 0)
 			preset.customParams = line.substr(14);
+
+		if (std::getline(file, line) && line.find("PRESET_MP_MODE=") == 0)
+			preset.multiplayerMode = static_cast<MultiplayerMode>(std::stoi(line.substr(15)));
+
+		if (std::getline(file, line) && line.find("PRESET_HOST_PLAYERS=") == 0)
+			preset.hostPlayers = std::stoi(line.substr(20));
+
+		if (std::getline(file, line) && line.find("PRESET_GAME_MODE=") == 0)
+			preset.gameMode = static_cast<GameMode>(std::stoi(line.substr(17)));
+
+		if (std::getline(file, line) && line.find("PRESET_NETWORK_MODE=") == 0)
+			preset.networkMode = static_cast<NetworkMode>(std::stoi(line.substr(20)));
+
+		if (std::getline(file, line) && line.find("PRESET_JOIN_IP=") == 0)
+			preset.joinIP = line.substr(15);
+
+		if (std::getline(file, line) && line.find("PRESET_PORT=") == 0)
+			preset.networkPort = std::stoi(line.substr(12));
 
 		int pwadCount = 0;
 		if (std::getline(file, line) && line.find("PRESET_PWAD_COUNT=") == 0)
@@ -666,17 +914,39 @@ void GZDoomLauncher::SaveConfig()
 	// Save GZDoom path
 	file << "GZDOOM_PATH=" << gzdoomPath << "\n";
 
+	// Save recent configs
+	file << "RECENT_COUNT=" << recentConfigs.size() << "\n";
+	for (const auto& recent : recentConfigs)
+	{
+		file << "RECENT_IWAD=" << recent.iwadPath << "\n";
+		file << "RECENT_SKILL=" << recent.skillLevel << "\n";
+		file << "RECENT_WARP=" << recent.warpMap << "\n";
+		file << "RECENT_TIMESTAMP=" << recent.timestamp << "\n";
+		file << "RECENT_PWAD_COUNT=" << recent.pwadPaths.size() << "\n";
+		for (const auto& pwad : recent.pwadPaths)
+		{
+			file << "RECENT_PWAD=" << pwad << "\n";
+		}
+	}
+
 	// Save presets
 	file << "PRESET_COUNT=" << presets.size() << "\n";
 
 	for (const auto& preset : presets)
 	{
 		file << "PRESET_NAME=" << preset.name << "\n";
+		file << "PRESET_DESC=" << preset.description << "\n";
 		file << "PRESET_IWAD=" << preset.iwadPath << "\n";
 		file << "PRESET_GZDOOM=" << preset.gzdoomPath << "\n";
 		file << "PRESET_SKILL=" << preset.skillLevel << "\n";
 		file << "PRESET_WARP=" << preset.warpMap << "\n";
 		file << "PRESET_CUSTOM=" << preset.customParams << "\n";
+		file << "PRESET_MP_MODE=" << static_cast<int>(preset.multiplayerMode) << "\n";
+		file << "PRESET_HOST_PLAYERS=" << preset.hostPlayers << "\n";
+		file << "PRESET_GAME_MODE=" << static_cast<int>(preset.gameMode) << "\n";
+		file << "PRESET_NETWORK_MODE=" << static_cast<int>(preset.networkMode) << "\n";
+		file << "PRESET_JOIN_IP=" << preset.joinIP << "\n";
+		file << "PRESET_PORT=" << preset.networkPort << "\n";
 		file << "PRESET_PWAD_COUNT=" << preset.pwadPaths.size() << "\n";
 
 		for (const auto& pwad : preset.pwadPaths)
@@ -753,4 +1023,109 @@ void GZDoomLauncher::UpdateCommandPreview()
 
 	std::string cmdLine = "\"" + gzdoomPath + "\" " + GenerateCommandLine();
 	commandPreview->SetText(cmdLine);
+}
+
+void GZDoomLauncher::OnMultiplayerModeChanged()
+{
+	UpdateMultiplayerUI();
+	UpdateCommandPreview();
+}
+
+void GZDoomLauncher::UpdateMultiplayerUI()
+{
+	// Enable/disable fields based on mode
+	bool isHost = (currentMultiplayerMode == MultiplayerMode::Host);
+	bool isJoin = (currentMultiplayerMode == MultiplayerMode::Join);
+
+	// Host options
+	if (hostPlayersEdit) hostPlayersEdit->SetEnabled(isHost);
+	if (gameModeDropdown) gameModeDropdown->SetEnabled(isHost);
+	if (networkModeDropdown) networkModeDropdown->SetEnabled(isHost || isJoin);
+
+	// Join options
+	if (joinIPEdit) joinIPEdit->SetEnabled(isJoin);
+
+	// Port is used by both host and join
+	if (networkPortEdit) networkPortEdit->SetEnabled(isHost || isJoin);
+}
+
+void GZDoomLauncher::OnLoadRecentConfig(int index)
+{
+	if (index < 0 || index >= static_cast<int>(recentConfigs.size()))
+		return;
+
+	const auto& recent = recentConfigs[index];
+
+	// Load configuration
+	iwadPath = recent.iwadPath;
+	iwadPathEdit->SetText(iwadPath);
+	OnIWADChanged();
+
+	pwadPaths = recent.pwadPaths;
+	UpdatePWADList();
+
+	skillDropdown->SetSelectedItem(recent.skillLevel - 1);
+	warpEdit->SetText(recent.warpMap);
+
+	UpdateCommandPreview();
+	statusLabel->SetText("Loaded recent config: " + recent.GetDisplayName());
+}
+
+void GZDoomLauncher::UpdateRecentConfigsList()
+{
+	if (!recentConfigsList)
+		return;
+
+	// Clear list
+	while (recentConfigsList->GetItemAmount() > 0)
+	{
+		recentConfigsList->RemoveItem(0);
+	}
+
+	// Add recent configs
+	for (const auto& recent : recentConfigs)
+	{
+		recentConfigsList->AddItem(recent.GetDisplayName());
+	}
+}
+
+void GZDoomLauncher::SaveRecentConfig()
+{
+	if (iwadPath.empty())
+		return;
+
+	RecentConfig recent;
+	recent.iwadPath = iwadPath;
+	recent.pwadPaths = pwadPaths;
+	recent.skillLevel = skillDropdown->GetSelectedItem() + 1;
+	recent.warpMap = warpEdit->GetText();
+	recent.timestamp = GetCurrentTimestamp();
+
+	// Add to front of list
+	recentConfigs.insert(recentConfigs.begin(), recent);
+
+	// Keep only last 10
+	if (recentConfigs.size() > 10)
+	{
+		recentConfigs.resize(10);
+	}
+
+	UpdateRecentConfigsList();
+	SaveConfig();
+}
+
+void GZDoomLauncher::OnSavePresetWithName()
+{
+	// For now, save with auto-generated name
+	// TODO: Add dialog for custom name and description
+	OnSavePreset();
+}
+
+std::string GZDoomLauncher::GetCurrentTimestamp()
+{
+	std::time_t now = std::time(nullptr);
+	std::tm* tm = std::localtime(&now);
+	std::ostringstream oss;
+	oss << std::put_time(tm, "%Y-%m-%d %H:%M");
+	return oss.str();
 }
