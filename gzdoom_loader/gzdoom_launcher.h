@@ -1,6 +1,7 @@
 #pragma once
 
 #include "zwidget/core/widget.h"
+#include "zwidget/widgets/listview/listview.h"
 #include "wad_parser.h"
 #include <string>
 #include <vector>
@@ -8,7 +9,6 @@
 class TextLabel;
 class LineEdit;
 class PushButton;
-class ListView;
 class Dropdown;
 class TextEdit;
 class CheckboxLabel;
@@ -34,6 +34,29 @@ enum class NetworkMode
 {
 	PeerToPeer,    // -netmode 0 (default, faster)
 	PacketServer   // -netmode 1 (firewall friendly)
+};
+
+// DraggableListView - ListView with drag-and-drop reordering support
+class DraggableListView : public ListView
+{
+public:
+	DraggableListView(Widget* parent = nullptr);
+
+	// Callback when items are reordered via drag-and-drop
+	std::function<void(int fromIndex, int toIndex)> OnReordered;
+
+protected:
+	bool OnMouseDown(const Point& pos, InputKey key) override;
+	void OnMouseMove(const Point& pos) override;
+	bool OnMouseUp(const Point& pos, InputKey key) override;
+	void OnPaint(Canvas* canvas) override;
+
+private:
+	bool isDragging = false;
+	int draggedItemIndex = -1;
+	int dropTargetIndex = -1;
+	Point dragStartPos;
+	static constexpr double DRAG_THRESHOLD = 5.0; // pixels
 };
 
 // Structure to hold a preset configuration
@@ -131,7 +154,7 @@ private:
 	// UI Components
 	LineEdit* iwadPathEdit = nullptr;
 	LineEdit* gzdoomPathEdit = nullptr;
-	ListView* pwadListView = nullptr;
+	DraggableListView* pwadListView = nullptr;
 	Dropdown* skillDropdown = nullptr;
 	LineEdit* warpEdit = nullptr;
 	LineEdit* customParamsEdit = nullptr;

@@ -127,6 +127,125 @@ void PresetNameDialog::OnCancel()
 	delete this;
 }
 
+// DraggableListView implementation
+DraggableListView::DraggableListView(Widget* parent) : ListView(parent)
+{
+}
+
+bool DraggableListView::OnMouseDown(const Point& pos, InputKey key)
+{
+	// Only handle left mouse button
+	if (key == InputKey::LeftMouse)
+	{
+		// Calculate which item was clicked
+		double itemHeight = getItemHeight();
+		int itemIndex = static_cast<int>(pos.y / itemHeight);
+
+		if (itemIndex >= 0 && itemIndex < static_cast<int>(GetItemAmount()))
+		{
+			// Store drag start position and item index
+			dragStartPos = pos;
+			draggedItemIndex = itemIndex;
+			// Don't start dragging yet - wait for threshold
+		}
+	}
+
+	// Always call parent to preserve normal ListView behavior (selection, etc.)
+	return ListView::OnMouseDown(pos, key);
+}
+
+void DraggableListView::OnMouseMove(const Point& pos)
+{
+	if (draggedItemIndex >= 0 && !isDragging)
+	{
+		// Check if mouse moved beyond threshold
+		double dx = pos.x - dragStartPos.x;
+		double dy = pos.y - dragStartPos.y;
+		double distSq = dx * dx + dy * dy;
+
+		if (distSq > DRAG_THRESHOLD * DRAG_THRESHOLD)
+		{
+			// Start dragging
+			isDragging = true;
+			SetPointerCapture();
+			SetCursor(StandardCursor::size_ns);
+		}
+	}
+
+	if (isDragging)
+	{
+		// Update drop target indicator
+		double itemHeight = getItemHeight();
+		int hoverIndex = static_cast<int>(pos.y / itemHeight);
+
+		// Clamp to valid range
+		if (hoverIndex < 0) hoverIndex = 0;
+		if (hoverIndex >= static_cast<int>(GetItemAmount()))
+			hoverIndex = static_cast<int>(GetItemAmount()) - 1;
+
+		if (dropTargetIndex != hoverIndex)
+		{
+			dropTargetIndex = hoverIndex;
+			Update(); // Trigger repaint to show drop indicator
+		}
+	}
+
+	ListView::OnMouseMove(pos);
+}
+
+bool DraggableListView::OnMouseUp(const Point& pos, InputKey key)
+{
+	if (key == InputKey::LeftMouse && isDragging)
+	{
+		// Perform the reorder
+		if (dropTargetIndex >= 0 &&
+		    dropTargetIndex != draggedItemIndex &&
+		    dropTargetIndex < static_cast<int>(GetItemAmount()))
+		{
+			// Notify parent to reorder the data
+			if (OnReordered)
+			{
+				OnReordered(draggedItemIndex, dropTargetIndex);
+			}
+		}
+
+		// Clean up drag state
+		isDragging = false;
+		draggedItemIndex = -1;
+		dropTargetIndex = -1;
+		ReleasePointerCapture();
+		SetCursor(StandardCursor::arrow);
+		Update(); // Clear visual feedback
+
+		// Don't call parent - we handled the mouse up during drag
+		return true;
+	}
+	else if (draggedItemIndex >= 0)
+	{
+		// Mouse up without dragging - just clear state
+		draggedItemIndex = -1;
+	}
+
+	return ListView::OnMouseUp(pos, key);
+}
+
+void DraggableListView::OnPaint(Canvas* canvas)
+{
+	// Draw normal ListView content
+	ListView::OnPaint(canvas);
+
+	// Draw drop target indicator if dragging
+	if (isDragging && dropTargetIndex >= 0)
+	{
+		double itemHeight = getItemHeight();
+		double y = dropTargetIndex * itemHeight;
+
+		// Draw a horizontal line to show drop position
+		Rect lineRect = Rect::xywh(0.0, y - 1.0, GetWidth(), 2.0);
+		canvas->fillRect(lineRect, Colorf::fromRgba8(0, 120, 215, 255)); // Blue indicator
+	}
+}
+
 void GZDoomLauncher::CreateUI()
 {
 	double y = 20.0;
@@ -196,7 +315,7 @@ void GZDoomLauncher::CreateUI()
 	y += lineHeight + 5.0;
 
 	// PWAD List
-	pwadListView = new ListView(this);
+	pwadListView = new DraggableListView(this);
 	pwadListView->SetFrameGeometry(leftMargin, y, 560.0, 150.0);
 	pwadListView->SetColumnWidths({ 560.0 });
 
@@ -420,6 +539,28 @@ void GZDoomLauncher::SetupCallbacks()
 	pwadListView->OnChanged = [this](int index) {
 		selectedPWADIndex = index;
 		UpdateCommandPreview();
+	};
+
+	// Drag-and-drop reordering callback
+	pwadListView->OnReordered = [this](int fromIndex, int toIndex) {
+		if (fromIndex >= 0 && fromIndex < static_cast<int>(pwadPaths.size()) &&
+		    toIndex >= 0 && toIndex < static_cast<int>(pwadPaths.size()) &&
+		    fromIndex != toIndex)
+		{
+			// Reorder the pwadPaths vector
+			std::string movedItem = pwadPaths[fromIndex];
+			pwadPaths.erase(pwadPaths.begin() + fromIndex);
+			pwadPaths.insert(pwadPaths.begin() + toIndex, movedItem);
+
+			// Update the UI to reflect the new order
+			UpdatePWADList();
+			UpdateCommandPreview();
+			statusLabel->SetText("Reordered: " + GetFileName(movedItem));
+
+			// Update selection to follow the moved item
+			selectedPWADIndex = toIndex;
+			pwadListView->SetSelectedItem(toIndex);
+		}
 	};
 
 	presetDropdown->OnChanged = [this](int index) {
