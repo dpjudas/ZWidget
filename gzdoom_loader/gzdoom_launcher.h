@@ -69,6 +69,23 @@ struct RecentConfig
 	std::string GetDisplayName() const;
 };
 
+// Simple dialog for entering preset name and description
+class PresetNameDialog : public Widget
+{
+public:
+	PresetNameDialog(Widget* parent, std::function<void(const std::string&, const std::string&)> onAccept);
+
+private:
+	void OnOK();
+	void OnCancel();
+
+	LineEdit* nameEdit = nullptr;
+	TextEdit* descriptionEdit = nullptr;
+	PushButton* okButton = nullptr;
+	PushButton* cancelButton = nullptr;
+	std::function<void(const std::string&, const std::string&)> onAcceptCallback;
+};
+
 class GZDoomLauncher : public Widget
 {
 public:

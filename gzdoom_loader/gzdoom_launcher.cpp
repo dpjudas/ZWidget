@@ -53,6 +53,80 @@ std::string RecentConfig::GetDisplayName() const
 	return oss.str();
 }
 
+// PresetNameDialog implementation
+PresetNameDialog::PresetNameDialog(Widget* parent, std::function<void(const std::string&, const std::string&)> onAccept)
+	: Widget(nullptr, WidgetType::Window), onAcceptCallback(onAccept)
+{
+	SetWindowTitle("Save Preset");
+	SetFrameGeometry(0.0, 0.0, 450.0, 250.0);
+
+	// Center dialog on parent
+	if (parent)
+	{
+		Rect parentGeom = parent->GetFrameGeometry();
+		double x = parentGeom.x + (parentGeom.width - 450.0) / 2.0;
+		double y = parentGeom.y + (parentGeom.height - 250.0) / 2.0;
+		SetFrameGeometry(x, y, 450.0, 250.0);
+	}
+
+	double y = 20.0;
+
+	// Name label and input
+	auto nameLabel = new TextLabel(this);
+	nameLabel->SetText("Preset Name:");
+	nameLabel->SetFrameGeometry(20.0, y, 410.0, 20.0);
+	y += 25.0;
+
+	nameEdit = new LineEdit(this);
+	nameEdit->SetFrameGeometry(20.0, y, 410.0, 24.0);
+	nameEdit->SetText("My Preset");
+	y += 35.0;
+
+	// Description label and input
+	auto descLabel = new TextLabel(this);
+	descLabel->SetText("Description (optional):");
+	descLabel->SetFrameGeometry(20.0, y, 410.0, 20.0);
+	y += 25.0;
+
+	descriptionEdit = new TextEdit(this);
+	descriptionEdit->SetFrameGeometry(20.0, y, 410.0, 80.0);
+	y += 90.0;
+
+	// Buttons
+	okButton = new PushButton(this);
+	okButton->SetText("OK");
+	okButton->SetFrameGeometry(250.0, y, 80.0, 30.0);
+	okButton->OnClick = [this]() { OnOK(); };
+
+	cancelButton = new PushButton(this);
+	cancelButton->SetText("Cancel");
+	cancelButton->SetFrameGeometry(340.0, y, 80.0, 30.0);
+	cancelButton->OnClick = [this]() { OnCancel(); };
+
+	// Focus name field
+	nameEdit->SetFocus();
+	nameEdit->SelectAll();
+
+	// Show the dialog
+	Show();
+}
+
+void PresetNameDialog::OnOK()
+{
+	if (onAcceptCallback)
+	{
+		std::string name = nameEdit ? nameEdit->GetText() : "";
+		std::string desc = descriptionEdit ? descriptionEdit->GetText() : "";
+		onAcceptCallback(name, desc);
+	}
+	delete this;
+}
+
+void PresetNameDialog::OnCancel()
+{
+	delete this;
+}
+
 void GZDoomLauncher::CreateUI()
 {
 	double y = 20.0;
@@ -339,7 +413,7 @@ void GZDoomLauncher::SetupCallbacks()
 	moveUpButton->OnClick = [this]() { OnMoveUp(); };
 	moveDownButton->OnClick = [this]() { OnMoveDown(); };
 	launchButton->OnClick = [this]() { OnLaunch(); };
-	savePresetButton->OnClick = [this]() { OnSavePreset(); };
+	savePresetButton->OnClick = [this]() { OnSavePresetWithName(); };
 	loadPresetButton->OnClick = [this]() { OnLoadPreset(); };
 	deletePresetButton->OnClick = [this]() { OnDeletePreset(); };
 
@@ -1116,9 +1190,37 @@ void GZDoomLauncher::SaveRecentConfig()
 
 void GZDoomLauncher::OnSavePresetWithName()
 {
-	// For now, save with auto-generated name
-	// TODO: Add dialog for custom name and description
-	OnSavePreset();
+	// Show dialog to get preset name and description
+	new PresetNameDialog(this, [this](const std::string& name, const std::string& description) {
+		if (name.empty())
+		{
+			statusLabel->SetText("Preset name cannot be empty");
+			return;
+		}
+
+		LaunchPreset preset;
+		preset.name = name;
+		preset.description = description;
+		preset.iwadPath = iwadPath;
+		preset.pwadPaths = pwadPaths;
+		preset.gzdoomPath = gzdoomPath;
+		preset.skillLevel = skillDropdown->GetSelectedItem() + 1;
+		preset.warpMap = warpEdit->GetText();
+		preset.customParams = customParamsEdit->GetText();
+
+		// Save multiplayer settings
+		preset.multiplayerMode = currentMultiplayerMode;
+		preset.hostPlayers = std::stoi(hostPlayersEdit->GetText());
+		preset.gameMode = static_cast<GameMode>(gameModeDropdown->GetSelectedItem());
+		preset.networkMode = static_cast<NetworkMode>(networkModeDropdown->GetSelectedItem());
+		preset.joinIP = joinIPEdit->GetText();
+		preset.networkPort = std::stoi(networkPortEdit->GetText());
+
+		presets.push_back(preset);
+		UpdatePresetList();
+		SaveConfig();
+		statusLabel->SetText("Preset saved: " + name);
+	});
 }
 
 std::string GZDoomLauncher::GetCurrentTimestamp()
