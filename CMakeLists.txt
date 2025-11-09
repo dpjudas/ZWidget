@@ -385,7 +385,7 @@ if(SDL2_FOUND AND NOT SDL3_FOUND)
 		target_link_libraries(zwidget PRIVATE ${SDL2_LIBRARY})
 	endif()
 endif()
-set_target_properties(zwidget PROPERTIES CXX_STANDARD 20)
+set_target_properties(zwidget PROPERTIES CXX_STANDARD 17)
 target_compile_options(zwidget PRIVATE ${CXX_WARNING_FLAGS})
 
 if(MSVC)
@@ -433,7 +433,7 @@ if(ZWIDGET_BUILD_EXAMPLE)
 		target_link_libraries(zwidget_example PRIVATE SDL2::SDL2)
 	endif()
 
-	set_target_properties(zwidget_example PROPERTIES CXX_STANDARD 20)
+	set_target_properties(zwidget_example PROPERTIES CXX_STANDARD 17)
 
 	if(MSVC)
 		set_property(TARGET zwidget_example PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
@@ -475,7 +475,7 @@ if(ZWIDGET_BUILD_GZDOOM_LOADER)
 		target_link_libraries(gzdoom_loader PRIVATE SDL2::SDL2)
 	endif()
 
-	set_target_properties(gzdoom_loader PROPERTIES CXX_STANDARD 20)
+	set_target_properties(gzdoom_loader PROPERTIES CXX_STANDARD 17)
 
 	if(MSVC)
 		set_property(TARGET gzdoom_loader PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
