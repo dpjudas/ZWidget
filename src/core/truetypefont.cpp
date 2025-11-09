@@ -7,6 +7,7 @@
 #include <cmath>
 #include <cstring>
 #include <map>
+#include <utility>
 
 #ifdef DUMP_GLYPH
 #include <fstream>
@@ -361,10 +362,10 @@ void TrueTypeFont::LoadGlyph(TTF_SimpleGlyph& g, uint32_t glyphIndex, int compos
 	reader.Seek(loca.offsets[glyphIndex]);
 
 	ttf_int16 numberOfContours = reader.ReadInt16();
-	ttf_int16 xMin = reader.ReadInt16();
-	ttf_int16 yMin = reader.ReadInt16();
-	ttf_int16 xMax = reader.ReadInt16();
-	ttf_int16 yMax = reader.ReadInt16();
+	/*ttf_int16 xMin = */reader.ReadInt16();
+	/*ttf_int16 yMin = */reader.ReadInt16();
+	/*ttf_int16 xMax = */reader.ReadInt16();
+	/*ttf_int16 yMax = */reader.ReadInt16();
 
 	if (numberOfContours > 0) // Simple glyph
 	{
@@ -508,7 +509,7 @@ void TrueTypeFont::LoadGlyph(TTF_SimpleGlyph& g, uint32_t glyphIndex, int compos
 
 			if (transform)
 			{
-				for (int i = childPointsOffset; i < g.points.size(); i++)
+				for (int i = childPointsOffset; (size_t)i < g.points.size(); i++)
 				{
 					float x = g.points[i].x * mat2x2[0] + g.points[i].y * mat2x2[1];
 					float y = g.points[i].x * mat2x2[2] + g.points[i].y * mat2x2[3];
@@ -550,7 +551,7 @@ void TrueTypeFont::LoadGlyph(TTF_SimpleGlyph& g, uint32_t glyphIndex, int compos
 				dy = g.points[parentPointIndex].y - g.points[childPointIndex].y;
 			}
 
-			for (int i = childPointsOffset; i < g.points.size(); i++)
+			for (int i = childPointsOffset; (size_t)i < g.points.size(); i++)
 			{
 				g.points[i].x += dx;
 				g.points[i].y += dy;
@@ -647,9 +648,9 @@ void TrueTypeFont::LoadCharacterMapEncoding(TrueTypeFileReader& reader)
 				for (ttf_uint16 c = startCode; c <= endCode; c++)
 				{
 					int offset = idRangeOffset / 2 + (c - startCode) - ((int)subformat.segCount - i);
-					if (offset >= 0 && offset < subformat.glyphIdArray.size())
+					if (offset >= 0 && (size_t)offset < subformat.glyphIdArray.size())
 					{
-						int glyphId = subformat.glyphIdArray[offset];
+						ttf_uint32 glyphId = subformat.glyphIdArray[offset];
 						if (firstGlyph)
 						{
 							range.startGlyphID = glyphId;
@@ -955,9 +956,9 @@ void TTF_CMapSubtable4::Load(TrueTypeFileReader& reader)
 	language = reader.ReadUInt16();
 
 	segCount = reader.ReadUInt16() / 2;
-	ttf_uint16 searchRange = reader.ReadUInt16();
-	ttf_uint16 entrySelector = reader.ReadUInt16();
-	ttf_uint16 rangeShift = reader.ReadUInt16();
+	/*ttf_uint16 searchRange = */reader.ReadUInt16();
+	/*ttf_uint16 entrySelector = */reader.ReadUInt16();
+	/*ttf_uint16 rangeShift = */reader.ReadUInt16();
 
 	endCode.reserve(segCount);
 	startCode.reserve(segCount);
