@@ -16,7 +16,7 @@ int main(int argc, char** argv)
 
 		// Create and show the launcher window
 		auto launcher = new GZDoomLauncher();
-		launcher->SetFrameGeometry(100.0, 100.0, 800.0, 600.0);
+		launcher->SetFrameGeometry(100.0, 100.0, 1100.0, 750.0);
 		launcher->Show();
 
 		// Run the event loop

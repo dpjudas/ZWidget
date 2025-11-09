@@ -288,279 +288,293 @@ void DraggableListView::OnPaint(Canvas* canvas)
 
 void GZDoomLauncher::CreateUI()
 {
-	double y = 20.0;
-	double leftMargin = 20.0;
-	double lineHeight = 30.0;
-	double spacing = 10.0;
+	// Layout constants
+	const double leftMargin = 20.0;
+	const double lineHeight = 30.0;
+	const double spacing = 10.0;
 
-	// Title
+	// Two-column layout
+	const double leftColX = leftMargin;
+	const double leftColWidth = 510.0;
+	const double rightColX = leftColX + leftColWidth + 30.0; // 30px gap between columns
+	const double rightColWidth = 510.0;
+
+	double leftY = 20.0;
+	double rightY = 20.0;
+
+	// ===== TITLE (spans both columns) =====
 	auto titleLabel = new TextLabel(this);
 	titleLabel->SetText("GZDoom Launcher v3.0 - Multiplayer Edition");
 	titleLabel->SetTextAlignment(TextLabelAlignment::Left);
-	titleLabel->SetFrameGeometry(leftMargin, y, 670.0, 30.0);
-	y += 40.0;
+	titleLabel->SetFrameGeometry(leftColX, leftY, leftColWidth + rightColWidth + 30.0, 30.0);
+	leftY += 40.0;
+	rightY += 40.0;
+
+	// ========== LEFT COLUMN ==========
 
 	// ===== IWAD Section =====
 	auto iwadLabel = new TextLabel(this);
 	iwadLabel->SetText("IWAD (Base Game):");
 	iwadLabel->SetTextAlignment(TextLabelAlignment::Left);
-	iwadLabel->SetFrameGeometry(leftMargin, y, 200.0, lineHeight);
-	y += lineHeight + 5.0;
+	iwadLabel->SetFrameGeometry(leftColX, leftY, 200.0, lineHeight);
+	leftY += lineHeight + 5.0;
 
 	iwadPathEdit = new LineEdit(this);
-	iwadPathEdit->SetFrameGeometry(leftMargin, y, 460.0, lineHeight);
+	iwadPathEdit->SetFrameGeometry(leftColX, leftY, 310.0, lineHeight);
 	iwadPathEdit->SetReadOnly(true);
 
 	browseIWADButton = new PushButton(this);
 	browseIWADButton->SetText("Browse...");
-	browseIWADButton->SetFrameGeometry(490.0, y, 95.0, lineHeight);
+	browseIWADButton->SetFrameGeometry(leftColX + 320.0, leftY, 95.0, lineHeight);
 
 	autoDetectIWADButton = new PushButton(this);
 	autoDetectIWADButton->SetText("Auto-Detect");
-	autoDetectIWADButton->SetFrameGeometry(595.0, y, 95.0, lineHeight);
-	y += lineHeight + 5.0;
+	autoDetectIWADButton->SetFrameGeometry(leftColX + 420.0, leftY, 90.0, lineHeight);
+	leftY += lineHeight + 5.0;
 
-	// IWAD info label
+	// IWAD Info Label
 	iwadInfoLabel = new TextLabel(this);
 	iwadInfoLabel->SetText("");
 	iwadInfoLabel->SetTextAlignment(TextLabelAlignment::Left);
-	iwadInfoLabel->SetFrameGeometry(leftMargin, y, 670.0, lineHeight);
-	y += lineHeight + spacing;
+	iwadInfoLabel->SetFrameGeometry(leftColX, leftY, leftColWidth, lineHeight);
+	leftY += lineHeight + spacing;
 
 	// ===== GZDoom Executable Section =====
 	auto gzdoomLabel = new TextLabel(this);
 	gzdoomLabel->SetText("GZDoom Executable:");
 	gzdoomLabel->SetTextAlignment(TextLabelAlignment::Left);
-	gzdoomLabel->SetFrameGeometry(leftMargin, y, 200.0, lineHeight);
-	y += lineHeight + 5.0;
+	gzdoomLabel->SetFrameGeometry(leftColX, leftY, 200.0, lineHeight);
+	leftY += lineHeight + 5.0;
 
 	gzdoomPathEdit = new LineEdit(this);
-	gzdoomPathEdit->SetFrameGeometry(leftMargin, y, 460.0, lineHeight);
+	gzdoomPathEdit->SetFrameGeometry(leftColX, leftY, 310.0, lineHeight);
 	gzdoomPathEdit->SetReadOnly(true);
 
 	browseGZDoomButton = new PushButton(this);
 	browseGZDoomButton->SetText("Browse...");
-	browseGZDoomButton->SetFrameGeometry(490.0, y, 95.0, lineHeight);
+	browseGZDoomButton->SetFrameGeometry(leftColX + 320.0, leftY, 95.0, lineHeight);
 
 	autoDetectGZDoomButton = new PushButton(this);
 	autoDetectGZDoomButton->SetText("Auto-Detect");
-	autoDetectGZDoomButton->SetFrameGeometry(595.0, y, 95.0, lineHeight);
-	y += lineHeight + spacing * 2;
+	autoDetectGZDoomButton->SetFrameGeometry(leftColX + 420.0, leftY, 90.0, lineHeight);
+	leftY += lineHeight + spacing * 2;
 
 	// ===== PWAD/PK3 Section =====
 	auto pwadLabel = new TextLabel(this);
 	pwadLabel->SetText("Mods (PWADs/PK3s) - Load Order:");
 	pwadLabel->SetTextAlignment(TextLabelAlignment::Left);
-	pwadLabel->SetFrameGeometry(leftMargin, y, 300.0, lineHeight);
-	y += lineHeight + 5.0;
+	pwadLabel->SetFrameGeometry(leftColX, leftY, 300.0, lineHeight);
+	leftY += lineHeight + 5.0;
 
 	// PWAD List
 	pwadListView = new DraggableListView(this);
-	pwadListView->SetFrameGeometry(leftMargin, y, 560.0, 150.0);
-	pwadListView->SetColumnWidths({ 560.0 });
+	pwadListView->SetFrameGeometry(leftColX, leftY, leftColWidth - 110.0, 200.0);
+	pwadListView->SetColumnWidths({ leftColWidth - 110.0 });
 
-	// PWAD Control Buttons (right side)
-	double buttonX = 590.0;
-	double buttonWidth = 100.0;
+	// PWAD Control Buttons (right side of list)
+	double buttonX = leftColX + leftColWidth - 100.0;
 
 	addPWADsButton = new PushButton(this);
 	addPWADsButton->SetText("Add Files...");
-	addPWADsButton->SetFrameGeometry(buttonX, y, buttonWidth, lineHeight);
+	addPWADsButton->SetFrameGeometry(buttonX, leftY, 100.0, lineHeight);
 
 	removePWADButton = new PushButton(this);
 	removePWADButton->SetText("Remove");
-	removePWADButton->SetFrameGeometry(buttonX, y + 35.0, buttonWidth, lineHeight);
+	removePWADButton->SetFrameGeometry(buttonX, leftY + 40.0, 100.0, lineHeight);
 
 	moveUpButton = new PushButton(this);
 	moveUpButton->SetText("Move Up");
-	moveUpButton->SetFrameGeometry(buttonX, y + 70.0, buttonWidth, lineHeight);
+	moveUpButton->SetFrameGeometry(buttonX, leftY + 80.0, 100.0, lineHeight);
 
 	moveDownButton = new PushButton(this);
 	moveDownButton->SetText("Move Down");
-	moveDownButton->SetFrameGeometry(buttonX, y + 105.0, buttonWidth, lineHeight);
+	moveDownButton->SetFrameGeometry(buttonX, leftY + 120.0, 100.0, lineHeight);
 
-	y += 160.0;
+	leftY += 210.0;
 
 	// ===== Launch Options =====
 	auto optionsLabel = new TextLabel(this);
 	optionsLabel->SetText("Launch Options:");
 	optionsLabel->SetTextAlignment(TextLabelAlignment::Left);
-	optionsLabel->SetFrameGeometry(leftMargin, y, 200.0, lineHeight);
-	y += lineHeight + 5.0;
+	optionsLabel->SetFrameGeometry(leftColX, leftY, 200.0, lineHeight);
+	leftY += lineHeight + 5.0;
 
 	// Skill Level
 	auto skillLabel = new TextLabel(this);
 	skillLabel->SetText("Skill:");
 	skillLabel->SetTextAlignment(TextLabelAlignment::Left);
-	skillLabel->SetFrameGeometry(leftMargin, y, 80.0, lineHeight);
+	skillLabel->SetFrameGeometry(leftColX, leftY, 60.0, lineHeight);
 
 	skillDropdown = new Dropdown(this);
-	skillDropdown->SetFrameGeometry(leftMargin + 80.0, y, 150.0, lineHeight);
+	skillDropdown->SetFrameGeometry(leftColX + 65.0, leftY, 180.0, lineHeight);
 	skillDropdown->AddItem("1 - I'm Too Young to Die");
 	skillDropdown->AddItem("2 - Hey, Not Too Rough");
 	skillDropdown->AddItem("3 - Hurt Me Plenty");
 	skillDropdown->AddItem("4 - Ultra-Violence");
 	skillDropdown->AddItem("5 - Nightmare!");
-	skillDropdown->SetSelectedItem(2); // Default to skill 3
+	skillDropdown->SetSelectedItem(2);
 
-	// Warp Map
+	// Warp
 	auto warpLabel = new TextLabel(this);
 	warpLabel->SetText("Warp:");
 	warpLabel->SetTextAlignment(TextLabelAlignment::Left);
-	warpLabel->SetFrameGeometry(leftMargin + 250.0, y, 60.0, lineHeight);
+	warpLabel->SetFrameGeometry(leftColX + 260.0, leftY, 50.0, lineHeight);
 
 	warpEdit = new LineEdit(this);
-	warpEdit->SetFrameGeometry(leftMargin + 310.0, y, 100.0, lineHeight);
-	y += lineHeight + spacing;
+	warpEdit->SetFrameGeometry(leftColX + 315.0, leftY, 80.0, lineHeight);
+	warpEdit->SetText("");
+	leftY += lineHeight + spacing;
 
 	// Custom Parameters
 	auto customLabel = new TextLabel(this);
 	customLabel->SetText("Custom Params:");
 	customLabel->SetTextAlignment(TextLabelAlignment::Left);
-	customLabel->SetFrameGeometry(leftMargin, y, 120.0, lineHeight);
+	customLabel->SetFrameGeometry(leftColX, leftY, 130.0, lineHeight);
 
 	customParamsEdit = new LineEdit(this);
-	customParamsEdit->SetFrameGeometry(leftMargin + 120.0, y, 560.0, lineHeight);
-	y += lineHeight + spacing * 2;
+	customParamsEdit->SetFrameGeometry(leftColX + 135.0, leftY, leftColWidth - 135.0, lineHeight);
+	customParamsEdit->SetText("");
+
+	// ========== RIGHT COLUMN ==========
+
+	// ===== Presets Section =====
+	auto presetsLabel = new TextLabel(this);
+	presetsLabel->SetText("Configuration Presets:");
+	presetsLabel->SetTextAlignment(TextLabelAlignment::Left);
+	presetsLabel->SetFrameGeometry(rightColX, rightY, 200.0, lineHeight);
+	rightY += lineHeight + 5.0;
+
+	presetDropdown = new Dropdown(this);
+	presetDropdown->SetFrameGeometry(rightColX, rightY, rightColWidth - 240.0, lineHeight);
+
+	savePresetButton = new PushButton(this);
+	savePresetButton->SetText("Save");
+	savePresetButton->SetFrameGeometry(rightColX + rightColWidth - 235.0, rightY, 75.0, lineHeight);
+
+	loadPresetButton = new PushButton(this);
+	loadPresetButton->SetText("Load");
+	loadPresetButton->SetFrameGeometry(rightColX + rightColWidth - 155.0, rightY, 75.0, lineHeight);
+
+	deletePresetButton = new PushButton(this);
+	deletePresetButton->SetText("Delete");
+	deletePresetButton->SetFrameGeometry(rightColX + rightColWidth - 75.0, rightY, 75.0, lineHeight);
+	rightY += lineHeight + spacing * 2;
 
 	// ===== Multiplayer Section =====
 	multiplayerLabel = new TextLabel(this);
 	multiplayerLabel->SetText("Multiplayer:");
 	multiplayerLabel->SetTextAlignment(TextLabelAlignment::Left);
-	multiplayerLabel->SetFrameGeometry(leftMargin, y, 200.0, lineHeight);
-	y += lineHeight + 5.0;
+	multiplayerLabel->SetFrameGeometry(rightColX, rightY, 200.0, lineHeight);
+	rightY += lineHeight + 5.0;
 
 	// Mode selection
 	singlePlayerCheck = new CheckboxLabel(this);
 	singlePlayerCheck->SetText("Single Player");
-	singlePlayerCheck->SetFrameGeometry(leftMargin, y, 140.0, lineHeight);
+	singlePlayerCheck->SetFrameGeometry(rightColX, rightY, 140.0, lineHeight);
 	singlePlayerCheck->SetRadioStyle(true);
 	singlePlayerCheck->SetChecked(true);
 
 	hostGameCheck = new CheckboxLabel(this);
 	hostGameCheck->SetText("Host Game");
-	hostGameCheck->SetFrameGeometry(leftMargin + 150.0, y, 120.0, lineHeight);
+	hostGameCheck->SetFrameGeometry(rightColX + 150.0, rightY, 110.0, lineHeight);
 	hostGameCheck->SetRadioStyle(true);
 
 	joinGameCheck = new CheckboxLabel(this);
 	joinGameCheck->SetText("Join Game");
-	joinGameCheck->SetFrameGeometry(leftMargin + 280.0, y, 120.0, lineHeight);
+	joinGameCheck->SetFrameGeometry(rightColX + 270.0, rightY, 110.0, lineHeight);
 	joinGameCheck->SetRadioStyle(true);
-	y += lineHeight + spacing;
+	rightY += lineHeight + spacing;
 
-	// Host options (initially hidden/shown based on mode)
+	// Host options
 	auto hostPlayersLabel = new TextLabel(this);
 	hostPlayersLabel->SetText("Players:");
 	hostPlayersLabel->SetTextAlignment(TextLabelAlignment::Left);
-	hostPlayersLabel->SetFrameGeometry(leftMargin, y, 80.0, lineHeight);
+	hostPlayersLabel->SetFrameGeometry(rightColX, rightY, 70.0, lineHeight);
 
 	hostPlayersEdit = new LineEdit(this);
-	hostPlayersEdit->SetFrameGeometry(leftMargin + 80.0, y, 50.0, lineHeight);
+	hostPlayersEdit->SetFrameGeometry(rightColX + 75.0, rightY, 50.0, lineHeight);
 	hostPlayersEdit->SetText("2");
 
 	auto gameModeLabel = new TextLabel(this);
 	gameModeLabel->SetText("Mode:");
 	gameModeLabel->SetTextAlignment(TextLabelAlignment::Left);
-	gameModeLabel->SetFrameGeometry(leftMargin + 150.0, y, 60.0, lineHeight);
+	gameModeLabel->SetFrameGeometry(rightColX + 140.0, rightY, 50.0, lineHeight);
 
 	gameModeDropdown = new Dropdown(this);
-	gameModeDropdown->SetFrameGeometry(leftMargin + 210.0, y, 150.0, lineHeight);
+	gameModeDropdown->SetFrameGeometry(rightColX + 195.0, rightY, 130.0, lineHeight);
 	gameModeDropdown->AddItem("Cooperative");
 	gameModeDropdown->AddItem("Deathmatch");
 	gameModeDropdown->AddItem("AltDeath");
 	gameModeDropdown->SetSelectedItem(0);
+	rightY += lineHeight + spacing;
 
 	auto networkModeLabel = new TextLabel(this);
 	networkModeLabel->SetText("Network:");
 	networkModeLabel->SetTextAlignment(TextLabelAlignment::Left);
-	networkModeLabel->SetFrameGeometry(leftMargin + 380.0, y, 70.0, lineHeight);
+	networkModeLabel->SetFrameGeometry(rightColX, rightY, 70.0, lineHeight);
 
 	networkModeDropdown = new Dropdown(this);
-	networkModeDropdown->SetFrameGeometry(leftMargin + 450.0, y, 150.0, lineHeight);
+	networkModeDropdown->SetFrameGeometry(rightColX + 75.0, rightY, 150.0, lineHeight);
 	networkModeDropdown->AddItem("Peer-to-Peer");
 	networkModeDropdown->AddItem("Packet Server");
 	networkModeDropdown->SetSelectedItem(0);
-	y += lineHeight + spacing;
+
+	auto portLabel = new TextLabel(this);
+	portLabel->SetText("Port:");
+	portLabel->SetTextAlignment(TextLabelAlignment::Left);
+	portLabel->SetFrameGeometry(rightColX + 240.0, rightY, 40.0, lineHeight);
+
+	networkPortEdit = new LineEdit(this);
+	networkPortEdit->SetFrameGeometry(rightColX + 285.0, rightY, 80.0, lineHeight);
+	networkPortEdit->SetText("5029");
+	rightY += lineHeight + spacing;
 
 	// Join options
 	auto joinIPLabel = new TextLabel(this);
 	joinIPLabel->SetText("Server IP:");
 	joinIPLabel->SetTextAlignment(TextLabelAlignment::Left);
-	joinIPLabel->SetFrameGeometry(leftMargin, y, 80.0, lineHeight);
+	joinIPLabel->SetFrameGeometry(rightColX, rightY, 80.0, lineHeight);
 
 	joinIPEdit = new LineEdit(this);
-	joinIPEdit->SetFrameGeometry(leftMargin + 80.0, y, 150.0, lineHeight);
+	joinIPEdit->SetFrameGeometry(rightColX + 85.0, rightY, 150.0, lineHeight);
 	joinIPEdit->SetText("127.0.0.1");
-
-	auto portLabel = new TextLabel(this);
-	portLabel->SetText("Port:");
-	portLabel->SetTextAlignment(TextLabelAlignment::Left);
-	portLabel->SetFrameGeometry(leftMargin + 250.0, y, 50.0, lineHeight);
-
-	networkPortEdit = new LineEdit(this);
-	networkPortEdit->SetFrameGeometry(leftMargin + 300.0, y, 80.0, lineHeight);
-	networkPortEdit->SetText("5029");
-	y += lineHeight + spacing * 2;
+	rightY += lineHeight + spacing * 2;
 
 	// ===== Recent Configs Section =====
 	recentLabel = new TextLabel(this);
 	recentLabel->SetText("Recent Configurations:");
 	recentLabel->SetTextAlignment(TextLabelAlignment::Left);
-	recentLabel->SetFrameGeometry(leftMargin, y, 200.0, lineHeight);
-	y += lineHeight + 5.0;
+	recentLabel->SetFrameGeometry(rightColX, rightY, 200.0, lineHeight);
+	rightY += lineHeight + 5.0;
 
 	recentConfigsList = new ListView(this);
-	recentConfigsList->SetFrameGeometry(leftMargin, y, 670.0, 80.0);
-	recentConfigsList->SetColumnWidths({ 670.0 });
-	y += 90.0;
-
-	// ===== Preset Section =====
-	auto presetLabel = new TextLabel(this);
-	presetLabel->SetText("Presets:");
-	presetLabel->SetTextAlignment(TextLabelAlignment::Left);
-	presetLabel->SetFrameGeometry(leftMargin, y, 100.0, lineHeight);
-
-	presetDropdown = new Dropdown(this);
-	presetDropdown->SetFrameGeometry(leftMargin + 100.0, y, 300.0, lineHeight);
-
-	savePresetButton = new PushButton(this);
-	savePresetButton->SetText("Save");
-	savePresetButton->SetFrameGeometry(leftMargin + 410.0, y, 80.0, lineHeight);
-
-	loadPresetButton = new PushButton(this);
-	loadPresetButton->SetText("Load");
-	loadPresetButton->SetFrameGeometry(leftMargin + 500.0, y, 80.0, lineHeight);
-
-	deletePresetButton = new PushButton(this);
-	deletePresetButton->SetText("Delete");
-	deletePresetButton->SetFrameGeometry(leftMargin + 590.0, y, 100.0, lineHeight);
-	y += lineHeight + spacing * 2;
+	recentConfigsList->SetFrameGeometry(rightColX, rightY, rightColWidth, 90.0);
+	recentConfigsList->SetColumnWidths({ rightColWidth });
+	rightY += 100.0;
 
 	// ===== Command Preview =====
 	auto commandLabel = new TextLabel(this);
 	commandLabel->SetText("Command Preview:");
 	commandLabel->SetTextAlignment(TextLabelAlignment::Left);
-	commandLabel->SetFrameGeometry(leftMargin, y, 200.0, lineHeight);
-	y += lineHeight + 5.0;
+	commandLabel->SetFrameGeometry(rightColX, rightY, 200.0, lineHeight);
+	rightY += lineHeight + 5.0;
 
 	commandPreview = new TextEdit(this);
-	commandPreview->SetFrameGeometry(leftMargin, y, 670.0, 60.0);
+	commandPreview->SetFrameGeometry(rightColX, rightY, rightColWidth, 60.0);
 	commandPreview->SetReadOnly(true);
-	y += 70.0;
+	rightY += 70.0;
 
-	// ===== Launch Button =====
+	// ===== Launch Button (spans both columns at bottom) =====
 	launchButton = new PushButton(this);
 	launchButton->SetText("LAUNCH GZDOOM");
-	launchButton->SetFrameGeometry(leftMargin, y, 670.0, 40.0);
-	y += 50.0;
+	launchButton->SetFrameGeometry(leftColX, leftY + lineHeight + spacing * 3, leftColWidth + rightColWidth + 30.0, 40.0);
 
-	// ===== Status Label =====
+	// ===== Status Label (spans both columns at very bottom) =====
 	statusLabel = new TextLabel(this);
 	statusLabel->SetText("Ready - Use Auto-Detect buttons for quick setup");
 	statusLabel->SetTextAlignment(TextLabelAlignment::Left);
-	statusLabel->SetFrameGeometry(leftMargin, y, 670.0, lineHeight);
+	statusLabel->SetFrameGeometry(leftColX, leftY + lineHeight + spacing * 3 + 50.0, leftColWidth + rightColWidth + 30.0, lineHeight);
 }
-
 void GZDoomLauncher::SetupCallbacks()
 {
 	browseIWADButton->OnClick = [this]() { OnBrowseIWAD(); };
