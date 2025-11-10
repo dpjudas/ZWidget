@@ -106,8 +106,11 @@ int main(int argc, char** argv)
 		// Initialize display backend
 		DisplayBackend::Set(DisplayBackend::TryCreateBackend());
 
-		// Install custom resource loader (fixes GTK dependency issue)
+#ifdef __linux__
+		// Install custom resource loader on Linux only (fixes GTK dependency issue)
+		// macOS and Windows use their native ZWidget resource loaders
 		ResourceLoader::Set(std::make_unique<CustomResourceLoader>());
+#endif
 
 		// Set dark theme by default
 		WidgetTheme::SetTheme(std::make_unique<DarkWidgetTheme>());
