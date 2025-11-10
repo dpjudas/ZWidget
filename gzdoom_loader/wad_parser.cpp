@@ -156,13 +156,35 @@ std::vector<std::string> WADParser::FindIWADs()
 	const char* home = getenv("HOME");
 	if (home)
 	{
+		// GZDoom config directories
 		searchPaths.push_back(std::string(home) + "/Library/Application Support/GZDoom");
 		searchPaths.push_back(std::string(home) + "/Library/Application Support/Doom");
 		searchPaths.push_back(std::string(home) + "/.config/gzdoom");
+
+		// Steam installations (multiple possible locations)
+		searchPaths.push_back(std::string(home) + "/Library/Application Support/Steam/steamapps/common/Ultimate Doom");
+		searchPaths.push_back(std::string(home) + "/Library/Application Support/Steam/steamapps/common/Doom 2");
+		searchPaths.push_back(std::string(home) + "/Library/Application Support/Steam/steamapps/common/Final Doom");
+		searchPaths.push_back(std::string(home) + "/Library/Application Support/Steam/steamapps/common/Heretic");
+		searchPaths.push_back(std::string(home) + "/Library/Application Support/Steam/steamapps/common/Hexen");
+		searchPaths.push_back(std::string(home) + "/Library/Application Support/Steam/steamapps/common/DOOM 3 BFG Edition/base/wads");
+
+		// User directories
+		searchPaths.push_back(std::string(home) + "/Documents/Doom");
+		searchPaths.push_back(std::string(home) + "/Games/Doom");
+		searchPaths.push_back(std::string(home) + "/doom");
 	}
+
+	// System-wide locations
 	searchPaths.push_back("/Applications/GZDoom.app/Contents/MacOS");
+	searchPaths.push_back("/Applications/GZDoom.app/Contents/Resources");
 	searchPaths.push_back("/usr/local/share/games/doom");
 	searchPaths.push_back("/usr/share/games/doom");
+	searchPaths.push_back("/opt/doom");
+
+	// Homebrew installations
+	searchPaths.push_back("/opt/homebrew/share/games/doom");
+	searchPaths.push_back("/usr/local/opt/gzdoom/share/doom");
 
 #else
 	// Linux common locations
