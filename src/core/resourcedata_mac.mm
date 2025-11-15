@@ -76,12 +76,18 @@ std::vector<SingleFontData> ResourceData::LoadMonospaceSystemFont()
 	SingleFontData fontData;
 	@autoreleasepool
 	{
-		NSFont* systemFont = [NSFont monospacedSystemFontOfSize:13.0 weight:NSFontWeightRegular]; // Use a default size
-		if (!systemFont)
-			throw std::runtime_error("Failed to get system font");
-
-		CTFontRef ctFont = (__bridge CTFontRef)systemFont;
-		CFURLRef fontURL = (CFURLRef)CTFontCopyAttribute(ctFont, kCTFontURLAttribute);
+					NSFont* systemFont = nil;
+					if (@available(macOS 10.15, *)) {
+						systemFont = [NSFont monospacedSystemFontOfSize:13.0 weight:NSFontWeightRegular]; // Use a default size
+					}
+					if (!systemFont) {
+						// Fallback for older macOS versions
+						systemFont = [NSFont systemFontOfSize:13.0];
+					}
+					if (!systemFont) // Double check after fallback
+						throw std::runtime_error("Failed to get system font");
+		
+					CTFontRef ctFont = (__bridge CTFontRef)systemFont;		CFURLRef fontURL = (CFURLRef)CTFontCopyAttribute(ctFont, kCTFontURLAttribute);
 
 		std::string fontPath;
 
