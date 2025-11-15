@@ -248,9 +248,13 @@ void Canvas::pushClip(const Rect& box)
 		y1 = std::min(y1, clip.y + clip.height);
 
 		if (x0 < x1 && y0 < y1)
+		{
 			clipStack.push_back(Rect::ltrb(x0, y0, x1, y1));
+		}
 		else
+		{
 			clipStack.push_back(Rect::xywh(0.0, 0.0, 0.0, 0.0));
+		}
 	}
 	else
 	{
@@ -1093,6 +1097,7 @@ void BitmapCanvas::begin(const Colorf& color)
 	uint32_t b = (int32_t)clamp(color.b * 255.0f, 0.0f, 255.0f);
 	uint32_t a = (int32_t)clamp(color.a * 255.0f, 0.0f, 255.0f);
 	uint32_t bgcolor = (a << 24) | (r << 16) | (g << 8) | b;
+
 	pixels.clear();
 	pixels.resize(width * height, bgcolor);
 }

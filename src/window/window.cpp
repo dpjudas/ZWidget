@@ -93,6 +93,10 @@ std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateBackend()
 		{
 			backend = TryCreateWin32();
 		}
+		else if (backendSelectionStr == "Cocoa")
+		{
+			backend = TryCreateCocoa();
+		}
 		else if (backendSelectionStr == "X11")
 		{
 			backend = TryCreateX11();
@@ -110,6 +114,7 @@ std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateBackend()
 	if (!backend)
 	{
 		backend = TryCreateWin32();
+		if (!backend) backend = TryCreateCocoa();
 		if (!backend) backend = TryCreateWayland();
 		if (!backend) backend = TryCreateX11();
 		if (!backend) backend = TryCreateSDL3();
@@ -223,9 +228,15 @@ std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateWayland()
 
 #endif
 
-#ifndef __APPLE__
+#ifdef __APPLE__
 
-std::unique_ptr<DisplayBackend> TryCreateCocoa()
+#include "cocoa/cocoa_display_backend.h"
+
+// DisplayBackend::TryCreateCocoa() is defined in cocoa_display_backend.mm
+
+#else
+
+std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateCocoa()
 {
 	return nullptr;
 }
