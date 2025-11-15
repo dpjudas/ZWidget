@@ -172,10 +172,14 @@ void TabBar::SetCurrentIndex(int pageIndex)
 	if (CurrentIndex != pageIndex)
 	{
 		if (CurrentIndex != -1)
+		{
 			Tabs[CurrentIndex]->SetCurrent(false);
+		}
 		CurrentIndex = pageIndex;
 		if (CurrentIndex != -1)
+		{
 			Tabs[CurrentIndex]->SetCurrent(true);
+		}
 	}
 }
 
@@ -186,7 +190,9 @@ void TabBar::OnTabClicked(TabBarTab* tab)
 	{
 		SetCurrentIndex(pageIndex);
 		if (OnCurrentChanged)
+		{
 			OnCurrentChanged();
+		}
 	}
 }
 
@@ -314,7 +320,9 @@ void TabBarTab::OnMouseMove(const Point& pos)
 bool TabBarTab::OnMouseDown(const Point& pos, InputKey key)
 {
 	if (OnClick)
+	{
 		OnClick();
+	}
 	return true;
 }
 

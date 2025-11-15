@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <cmath>
 #include <algorithm>
+#include <typeinfo>
 
 Widget::Widget(Widget* parent, WidgetType type, RenderAPI renderAPI) : Type(type)
 {
@@ -34,6 +35,13 @@ Widget::Widget(Widget* parent, WidgetType type, RenderAPI renderAPI) : Type(type
 
 Widget::~Widget()
 {
+	// Release cursor lock if this widget has it
+	Widget* window = Window();
+	if (window && window->CursorLockWidget == this)
+	{
+		window->CursorLockWidget = nullptr;
+	}
+
 	for (auto subscription: Subscriptions)
 		subscription->Subscribers.erase(this);
 
@@ -398,7 +406,10 @@ void Widget::Update()
 void Widget::Repaint()
 {
 	Widget* w = Window();
-	if (!w || !w->DispCanvas)
+	if (!w)
+		return;
+
+	if (!w->DispCanvas)
 		return;
 
 	Canvas* canvas = w->DispCanvas.get();
@@ -422,7 +433,9 @@ void Widget::Paint(Canvas* canvas)
 	for (Widget* w = FirstChild(); w != nullptr; w = w->NextSibling())
 	{
 		if (w->Type == WidgetType::Child && !w->HiddenFlag)
+		{
 			w->Paint(canvas);
+		}
 	}
 	canvas->setOrigin(oldOrigin);
 	canvas->popClip();
@@ -680,11 +693,19 @@ Widget* Widget::ChildAt(const Point& pos)
 Point Widget::MapFrom(const Widget* parent, const Point& pos) const
 {
 	Point p = pos;
+	int iterations = 0;
 	for (const Widget* cur = this; cur != nullptr; cur = cur->Parent())
 	{
+		iterations++;
 		if (cur == parent)
+		{
 			return p;
+		}
 		p -= cur->ContentGeometry.topLeft();
+		if (iterations > 100)
+		{
+			throw std::runtime_error("MapFrom: infinite loop detected");
+		}
 	}
 	throw std::runtime_error("MapFrom: not a parent of widget");
 }
@@ -791,18 +812,37 @@ void Widget::OnWindowMouseDown(const Point& pos, InputKey key)
 {
 	if (CursorLockWidget)
 	{
-		CursorLockWidget->OnMouseDown(CursorLockWidget->MapFrom(this, pos), key);
+		try
+		{
+			Point mappedPos = CursorLockWidget->MapFrom(this, pos);
+			CursorLockWidget->OnMouseDown(mappedPos, key);
+		}
+		catch (const std::exception& e)
+		{
+			// Silently handle MapFrom errors for cursor-locked widgets
+		}
 	}
 	else
 	{
 		Widget* widget = ChildAt(pos);
+
 		if (!widget)
 			widget = this;
+
 		while (widget)
 		{
-			bool stopPropagation = widget->OnMouseDown(widget->MapFrom(this, pos), key);
-			if (stopPropagation || widget == this)
+			try
+			{
+				Point mappedPos = widget->MapFrom(this, pos);
+				bool stopPropagation = widget->OnMouseDown(mappedPos, key);
+
+				if (stopPropagation || widget == this)
+					break;
+			}
+			catch (const std::exception& e)
+			{
 				break;
+			}
 			widget = widget->Parent();
 		}
 	}
@@ -833,7 +873,15 @@ void Widget::OnWindowMouseUp(const Point& pos, InputKey key)
 {
 	if (CursorLockWidget)
 	{
-		CursorLockWidget->OnMouseUp(CursorLockWidget->MapFrom(this, pos), key);
+		try
+		{
+			Point mappedPos = CursorLockWidget->MapFrom(this, pos);
+			CursorLockWidget->OnMouseUp(mappedPos, key);
+		}
+		catch (const std::exception& e)
+		{
+			// Silently handle MapFrom errors for cursor-locked widgets
+		}
 	}
 	else
 	{
@@ -842,9 +890,17 @@ void Widget::OnWindowMouseUp(const Point& pos, InputKey key)
 			widget = this;
 		while (widget)
 		{
-			bool stopPropagation = widget->OnMouseUp(widget->MapFrom(this, pos), key);
-			if (stopPropagation || widget == this)
+			try
+			{
+				Point mappedPos = widget->MapFrom(this, pos);
+				bool stopPropagation = widget->OnMouseUp(mappedPos, key);
+				if (stopPropagation || widget == this)
+					break;
+			}
+			catch (const std::exception& e)
+			{
 				break;
+			}
 			widget = widget->Parent();
 		}
 	}

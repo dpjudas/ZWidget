@@ -296,7 +296,9 @@ bool TextEdit::OnMouseDown(const Point& pos, InputKey key)
 	{
 		SetPointerCapture();
 		mouse_selecting = true;
+
 		cursor_pos = GetCharacterIndex(pos);
+
 		selection_start = cursor_pos;
 		selection_length = 0;
 
@@ -554,17 +556,35 @@ void TextEdit::OnKeyUp(InputKey key)
 void TextEdit::OnSetFocus()
 {
 	if (!readonly)
+	{
 		timer->Start(500);
+	}
+
 	if (select_all_on_focus_gain)
+	{
 		SelectAll();
+	}
+
 	ignore_mouse_events = true;
-	cursor_pos.y = lines.size() - 1;
-	cursor_pos.x = lines[cursor_pos.y].text.length();
+
+	// Safety check: ensure lines is not empty before accessing
+	if (!lines.empty())
+	{
+		cursor_pos.y = lines.size() - 1;
+		cursor_pos.x = lines[cursor_pos.y].text.length();
+	}
+	else
+	{
+		cursor_pos.x = 0;
+		cursor_pos.y = 0;
+	}
 
 	Update();
 
 	if (FuncFocusGained)
+	{
 		FuncFocusGained();
+	}
 }
 
 void TextEdit::OnLostFocus()
@@ -907,6 +927,12 @@ bool TextEdit::InputMaskAcceptsInput(ivec2 cursor_pos, const std::string& str)
 
 std::string::size_type TextEdit::ToOffset(ivec2 pos) const
 {
+	if (lines.empty())
+		return 0;
+
+	if (pos.y < 0)
+		return 0;
+
 	if (pos.y < (int)lines.size())
 	{
 		std::string::size_type offset = 0;
@@ -914,7 +940,7 @@ std::string::size_type TextEdit::ToOffset(ivec2 pos) const
 		{
 			offset += lines[line].text.size() + 1;
 		}
-		return offset + std::min((size_t)pos.x, lines[pos.y].text.size());
+		return offset + std::min((size_t)std::max(0, pos.x), lines[pos.y].text.size());
 	}
 	else
 	{
@@ -923,12 +949,15 @@ std::string::size_type TextEdit::ToOffset(ivec2 pos) const
 		{
 			offset += lines[line].text.size() + 1;
 		}
-		return offset - 1;
+		return offset > 0 ? offset - 1 : 0;
 	}
 }
 
 TextEdit::ivec2 TextEdit::FromOffset(std::string::size_type offset) const
 {
+	if (lines.empty())
+		return ivec2(0, 0);
+
 	int line_offset = 0;
 	for (int line = 0; line < (int)lines.size(); line++)
 	{
@@ -1027,7 +1056,19 @@ void TextEdit::OnPaint(Canvas* canvas)
 
 TextEdit::ivec2 TextEdit::GetCharacterIndex(Point mouse_wincoords)
 {
+	// Safety check: handle empty lines
+	if (lines.empty())
+	{
+		return ivec2(0, 0);
+	}
+
+	// Safety check: handle null canvas
 	Canvas* canvas = GetCanvas();
+	if (!canvas)
+	{
+		return ivec2(0, 0);
+	}
+
 	for (size_t i = 0; i < lines.size(); i++)
 	{
 		Line& line = lines[i];
@@ -1047,5 +1088,6 @@ TextEdit::ivec2 TextEdit::GetCharacterIndex(Point mouse_wincoords)
 		}
 	}
 
+	// lines is guaranteed non-empty here due to check above
 	return ivec2(lines.back().text.size(), lines.size() - 1);
 }
