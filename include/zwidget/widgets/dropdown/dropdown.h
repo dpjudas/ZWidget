@@ -20,7 +20,6 @@ class Dropdown : public Widget
 {
 public:
 	Dropdown(Widget* parent);
-	~Dropdown();
 
 	void AddItem(const std::string& text, int index = -1);
 	bool UpdateItem(const std::string& text, int index);
@@ -62,7 +61,6 @@ private:
 	bool dropdownOpen = false;
 	Widget* dropdown = nullptr;
 	DropdownList* listView = nullptr;
-	Widget* pendingDeleteDropdown = nullptr;
 
 	int maxDisplayItems = 0;
 	bool dropdownDirection = true;

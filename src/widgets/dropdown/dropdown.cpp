@@ -13,13 +13,6 @@ Dropdown::Dropdown(Widget* parent) : Widget(parent)
 		p->Subscribe(this);
 }
 
-Dropdown::~Dropdown()
-{
-	// Clean up any pending dropdown deletion
-	delete pendingDeleteDropdown;
-	pendingDeleteDropdown = nullptr;
-}
-
 DropdownList::DropdownList(Widget* parent, Dropdown* owner) : ListView(parent), owner(owner)
 {
 }
@@ -306,20 +299,12 @@ void Dropdown::OnLostFocus()
 
 bool Dropdown::OpenDropdown()
 {
-	if (dropdownOpen || items.empty())
-	{
-		return false;
-	}
-
-	// Clean up any pending dropdown deletion from previous close
-	delete pendingDeleteDropdown;
-	pendingDeleteDropdown = nullptr;
+	if (dropdownOpen || items.empty()) return false;
 
 	dropdownOpen = true;
 
 	dropdown = new Widget(Window());
 	listView = new DropdownList(dropdown, this);
-
 	for (const auto& item : items)
 	{
 		listView->AddItem(item);
@@ -336,9 +321,10 @@ bool Dropdown::OpenDropdown()
 		GetWidth() + GetNoncontentLeft() + GetNoncontentRight(),
 		GetDisplayItems() * 20.0 + 20
 	);
-
 	OnGeometryChanged();
+
 	dropdown->Show();
+
 	listView->ScrollToItem(selectedItem);
 
 	return true;
@@ -346,23 +332,12 @@ bool Dropdown::OpenDropdown()
 
 bool Dropdown::CloseDropdown()
 {
-	if (!dropdownOpen || !dropdown)
-	{
-		return false;
-	}
+	if (!dropdownOpen || !dropdown) return false;
 
-	// Hide the dropdown immediately and mark as closed
-	// This prevents it from receiving further mouse events
-	dropdown->SetVisible(false);
-	dropdownOpen = false;
-
-	// Mark dropdown for deferred deletion - we'll delete it when:
-	// 1. The Dropdown itself is destroyed
-	// 2. A new dropdown is opened
-	// This avoids deleting widgets during event processing
-	pendingDeleteDropdown = dropdown;
+	dropdown->Close();
 	dropdown = nullptr;
 	listView = nullptr;
+	dropdownOpen = false;
 
 	Update();
 
@@ -373,10 +348,8 @@ void Dropdown::OnDropdownActivated()
 {
 	if (listView)
 	{
-		int selectedItem = listView->GetSelectedItem();
-		SetSelectedItem(selectedItem);
+		SetSelectedItem(listView->GetSelectedItem());
 	}
-
 	CloseDropdown();
 	SetFocus();
 }

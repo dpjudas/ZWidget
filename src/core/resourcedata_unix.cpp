@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cmath>
+#include <gio/gio.h>
 #include <fontconfig/fontconfig.h>
 
 static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
@@ -22,18 +23,24 @@ static std::vector<uint8_t> ReadAllBytes(const std::string& filename)
 	return buffer;
 }
 
-// Use fontconfig directly instead of GTK to find system fonts
-// This works on all Linux desktop environments (GNOME, KDE, XFCE, etc.)
-// and doesn't require GTK/GNOME desktop settings
-static std::vector<SingleFontData> GetSystemFont(const char* fcName)
+static std::vector<SingleFontData> GetGtkUIFont(const std::string& propertyName)
 {
-	std::string filename;
+	// Ask GTK what the UI font is:
 
-	// Use fontconfig to find the font
+	GSettings *settings = g_settings_new ("org.gnome.desktop.interface");
+	gchar* str = g_settings_get_string(settings, propertyName.c_str());
+	if (!str)
+		throw std::runtime_error("Could not get gtk font property");
+	std::string fontname = str;
+	g_free(str);
+
+	// Find the font filename using fontconfig:
+
+	std::string filename;
 	FcConfig* config = FcInitLoadConfigAndFonts();
 	if (config)
 	{
-		FcPattern* pat = FcNameParse((const FcChar8*)fcName);
+		FcPattern* pat = FcNameParse((const FcChar8*)(fontname.c_str()));
 		if (pat)
 		{
 			FcConfigSubstitute(config, pat, FcMatchPattern);
@@ -49,20 +56,9 @@ static std::vector<SingleFontData> GetSystemFont(const char* fcName)
 			}
 			FcPatternDestroy(pat);
 		}
-		FcConfigDestroy(config);
 	}
-
-	// Fallback to DejaVu fonts if fontconfig fails
 	if (filename.empty())
-	{
-		if (std::string(fcName) == "monospace")
-			filename = "/usr/share/fonts/truetype/dejavu/DejaVuSansMono.ttf";
-		else
-			filename = "/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf";
-	}
-
-	if (filename.empty())
-		throw std::runtime_error(std::string("Could not find font: ") + fcName);
+		throw std::runtime_error("Could not find font filename for: " + fontname);
 
 	SingleFontData fontdata;
 	fontdata.fontdata = ReadAllBytes(filename);
@@ -71,12 +67,12 @@ static std::vector<SingleFontData> GetSystemFont(const char* fcName)
 
 std::vector<SingleFontData> ResourceData::LoadSystemFont()
 {
-	return GetSystemFont("sans-serif");
+	return GetGtkUIFont("font-name");
 }
 
 std::vector<SingleFontData> ResourceData::LoadMonospaceSystemFont()
 {
-	return GetSystemFont("monospace");
+	return GetGtkUIFont("monospace-font-name");
 }
 
 double ResourceData::GetSystemFontSize()
