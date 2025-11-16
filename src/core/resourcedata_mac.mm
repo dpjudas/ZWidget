@@ -24,49 +24,31 @@ std::vector<SingleFontData> ResourceData::LoadSystemFont()
 
 		CTFontRef ctFont = (__bridge CTFontRef)systemFont;
 		CFURLRef fontURL = (CFURLRef)CTFontCopyAttribute(ctFont, kCTFontURLAttribute);
+		if (!fontURL)
+			throw std::runtime_error("Failed to get font URL from system font");
 
-		std::string fontPath;
+		// __bridge_transfer transfers ownership to ARC, so no manual CFRelease is needed
+		NSString* fontPath = (NSString*)CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
+		if (!fontPath)
+			throw std::runtime_error("Failed to convert font URL to file path");
 
-		if (fontURL)
+		// Read the font file data
+		try
 		{
-			CFStringRef cfPath = CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
-			if (cfPath)
-			{
-				fontPath = std::string([(NSString*)cfPath UTF8String]);
-				CFRelease(cfPath);
-			}
+			fontData.fontdata = ReadAllBytes(std::string([fontPath UTF8String]));
+		}
+		catch (const std::exception& e)
+		{
 			CFRelease(fontURL);
+			throw std::runtime_error(std::string("Error reading system font file: ") + e.what());
 		}
-
-		// Fallback to known macOS font paths if system font URL lookup fails
-		// This handles newer macOS versions where system fonts might be embedded
-		if (fontPath.empty())
+		catch (...)
 		{
-			// Try common macOS system font locations
-			const char* fallbackPaths[] = {
-				"/System/Library/Fonts/SFNS.ttf",                    // San Francisco (newer macOS)
-				"/System/Library/Fonts/SFNSText.ttf",                // San Francisco Text
-				"/System/Library/Fonts/Helvetica.ttc",               // Helvetica
-				"/System/Library/Fonts/HelveticaNeue.ttc",           // Helvetica Neue
-				"/System/Library/Fonts/LucidaGrande.ttc",            // Lucida Grande (older macOS)
-				"/Library/Fonts/Arial.ttf",                          // Arial fallback
-			};
-
-			for (const char* path : fallbackPaths)
-			{
-				std::ifstream test(path);
-				if (test.good())
-				{
-					fontPath = path;
-					break;
-				}
-			}
+			CFRelease(fontURL);
+			throw;
 		}
 
-		if (fontPath.empty())
-			throw std::runtime_error("Could not find system font");
-
-		fontData.fontdata = ReadAllBytes(fontPath);
+		CFRelease(fontURL);
 	}
 	return { fontData };
 }
@@ -76,59 +58,47 @@ std::vector<SingleFontData> ResourceData::LoadMonospaceSystemFont()
 	SingleFontData fontData;
 	@autoreleasepool
 	{
-					NSFont* systemFont = nil;
-					if (@available(macOS 10.15, *)) {
-						systemFont = [NSFont monospacedSystemFontOfSize:13.0 weight:NSFontWeightRegular]; // Use a default size
-					}
-					if (!systemFont) {
-						// Fallback for older macOS versions
-						systemFont = [NSFont systemFontOfSize:13.0];
-					}
-					if (!systemFont) // Double check after fallback
-						throw std::runtime_error("Failed to get system font");
-		
-					CTFontRef ctFont = (__bridge CTFontRef)systemFont;		CFURLRef fontURL = (CFURLRef)CTFontCopyAttribute(ctFont, kCTFontURLAttribute);
+		NSFont* systemFont = nil;
+		if (@available(macOS 10.15, *)) {
+			systemFont = [NSFont monospacedSystemFontOfSize:13.0 weight:NSFontWeightRegular]; // Use a default size
+		}
 
-		std::string fontPath;
 
-		if (fontURL)
+		if (!systemFont) {
+			// Fallback for older macOS versions
+			systemFont = [NSFont systemFontOfSize:13.0];
+		}
+
+		if (!systemFont) 
+			// Double check after fallback
+			throw std::runtime_error("Failed to get system font");
+
+		CTFontRef ctFont = (__bridge CTFontRef)systemFont;
+		CFURLRef fontURL = (CFURLRef)CTFontCopyAttribute(ctFont, kCTFontURLAttribute);
+		if (!fontURL)
+			throw std::runtime_error("Failed to get font URL from system font");
+
+		NSString* fontPath = (NSString*)CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
+		if (!fontPath)
+			throw std::runtime_error("Failed to convert font URL to file path");
+
+		// Read the font file data
+		try
 		{
-			CFStringRef cfPath = CFURLCopyFileSystemPath(fontURL, kCFURLPOSIXPathStyle);
-			if (cfPath)
-			{
-				fontPath = std::string([(NSString*)cfPath UTF8String]);
-				CFRelease(cfPath);
-			}
+			fontData.fontdata = ReadAllBytes(std::string([fontPath UTF8String]));
+		}
+		catch (const std::exception& e)
+		{
 			CFRelease(fontURL);
+			throw std::runtime_error(std::string("Error reading system font file: ") + e.what());
 		}
-
-		// Fallback to known macOS monospace font paths if system font URL lookup fails
-		if (fontPath.empty())
+		catch (...)
 		{
-			// Try common macOS monospace font locations
-			const char* fallbackPaths[] = {
-				"/System/Library/Fonts/SFNSMono.ttf",                // SF Mono (newer macOS)
-				"/System/Library/Fonts/Monaco.ttf",                  // Monaco
-				"/Library/Fonts/Courier New.ttf",                    // Courier New
-				"/System/Library/Fonts/Courier.dfont",               // Courier fallback
-				"/Library/Fonts/Menlo.ttc",                          // Menlo
-			};
-
-			for (const char* path : fallbackPaths)
-			{
-				std::ifstream test(path);
-				if (test.good())
-				{
-					fontPath = path;
-					break;
-				}
-			}
+			CFRelease(fontURL);
+			throw;
 		}
 
-		if (fontPath.empty())
-			throw std::runtime_error("Could not find monospace system font");
-
-		fontData.fontdata = ReadAllBytes(fontPath);
+		CFRelease(fontURL);
 	}
 	return { std::move(fontData) };
 }

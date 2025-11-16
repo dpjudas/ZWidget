@@ -98,9 +98,7 @@ void ListView::RemoveItem(int index)
 void ListView::Activate()
 {
 	if (OnActivated)
-	{
 		OnActivated();
-	}
 }
 
 void ListView::SetSelectedItem(int index)
@@ -109,11 +107,8 @@ void ListView::SetSelectedItem(int index)
 	{
 		selectedItem = index;
 		Update();
-
 		if (OnChanged)
-		{
 			OnChanged(selectedItem);
-		}
 	}
 }
 
@@ -193,10 +188,7 @@ bool ListView::OnMouseDown(const Point& pos, InputKey key)
 
 	if (key == InputKey::LeftMouse)
 	{
-		double itemHeight = getItemHeight();
-		double scrollPos = scrollbar->GetPosition();
-		int index = (int)((pos.y - 5.0 + scrollPos) / itemHeight);
-
+		int index = (int)((pos.y - 5.0 + scrollbar->GetPosition()) / getItemHeight());
 		if (index >= 0 && (size_t)index < items.size())
 		{
 			ScrollToItem(index);
