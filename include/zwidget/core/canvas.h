@@ -98,8 +98,9 @@ protected:
 
 	std::unique_ptr<CanvasTexture> whiteTexture;
 
-private:
 	void setLanguage(const char* lang) { language = lang; }
+
+private:
 	void drawLineUnclipped(const Point& p0, const Point& p1, const Colorf& color);
 
 	CanvasFontGroup* GetFontGroup(const std::shared_ptr<Font>& font);
