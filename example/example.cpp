@@ -150,13 +150,10 @@ LauncherWindow::LauncherWindow(): Widget(nullptr, WidgetType::Window)
 
 	buttonAreaLayout->AddStretch();
 	buttonAreaLayout->AddWidget(ExitButton);
-	buttonAreaLayout->SetNoncontentSizes(20, 0, 20, 10);
 
 	mainLayout->AddWidget(Logo);
 	mainLayout->AddWidget(Pages);
 	mainLayout->AddLayout(buttonAreaLayout);
-
-	mainLayout->SetNoncontentSizes(0, 0, 0, 0);
 
 	SetLayout(mainLayout);
 
@@ -189,7 +186,6 @@ LauncherWindowTab1::LauncherWindowTab1(Widget parent): Widget(nullptr)
 	auto layout = new VBoxLayout();
 
 	layout->AddWidget(Text);
-	layout->SetNoncontentSizes(0, 20, 0, 20);
 
 	SetLayout(layout);
 }
@@ -262,8 +258,6 @@ LauncherWindowTab2::LauncherWindowTab2(Widget parent): Widget(nullptr)
 
 	layout->AddWidget(ExtrasLabel);
 	layout->AddLayout(panelLine);
-
-	//layout->SetNoncontentSizes(0, 0, 0, 0);
 
 	//layout->AddStretch();
 
