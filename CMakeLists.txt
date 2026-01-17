@@ -58,6 +58,9 @@ set(ZWIDGET_SOURCES
 	src/core/nanosvg/nanosvg.cpp
 	src/core/nanosvg/nanosvg.h
 	src/core/nanosvg/nanosvgrast.h
+	src/widgets/dialog/dialog.cpp
+	src/widgets/dialog/messagebox.cpp
+	src/widgets/dialog/textinputdialog.cpp
 	src/widgets/lineedit/lineedit.cpp
 	src/widgets/mainwindow/mainwindow.cpp
 	src/widgets/menubar/menubar.cpp
@@ -102,6 +105,9 @@ set(ZWIDGET_INCLUDES
 	include/zwidget/core/theme.h
 	include/zwidget/core/utf8reader.h
 	include/zwidget/core/resourcedata.h
+	include/zwidget/widgets/dialog/dialog.h
+	include/zwidget/widgets/dialog/messagebox.h
+	include/zwidget/widgets/dialog/textinputdialog.h
 	include/zwidget/widgets/lineedit/lineedit.h
 	include/zwidget/widgets/mainwindow/mainwindow.h
 	include/zwidget/widgets/menubar/menubar.h
@@ -209,6 +215,7 @@ source_group("src\\core" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/src/cor
 source_group("src\\core\\picopng" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/src/core/picopng/.+")
 source_group("src\\core\\nanosvg" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/src/core/nanosvg/.+")
 source_group("src\\widgets" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/src/widgets/.+")
+source_group("src\\widgets\\dialog" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/src/widgets/dialog/.+")
 source_group("src\\widgets\\lineedit" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/src/widgets/lineedit/.+")
 source_group("src\\widgets\\mainwindow" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/src/widgets/mainwindow/.+")
 source_group("src\\widgets\\menubar" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/src/widgets/menubar/.+")
