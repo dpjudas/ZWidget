@@ -186,6 +186,8 @@ public:
 	Point MapToGlobal(const Point& pos) const;
 	Point MapToParent(const Point& pos) const { return MapTo(Parent(), pos); }
 
+	static Widget* CommonAncestor(Widget* a, Widget* b);
+
 	static Size GetScreenSize();
 
 	void SetCanvas(std::unique_ptr<Canvas> canvas);

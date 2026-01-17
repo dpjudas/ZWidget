@@ -734,6 +734,43 @@ void Widget::OnWindowPaint()
 	Repaint();
 }
 
+Widget* Widget::CommonAncestor(Widget* a, Widget* b)
+{
+	if (a == b)
+		return a;
+
+	std::vector<Widget*> list1;
+	std::vector<Widget*> list2;
+	list1.reserve(16);
+	list2.reserve(16);
+	for (Widget* w = a; w != nullptr; w = w->Parent())
+		list1.push_back(w);
+	for (Widget* w = b; w != nullptr; w = w->Parent())
+		list2.push_back(w);
+
+	if (list1.empty() || list2.empty() || list1.back() != list2.back())
+		return nullptr;
+
+	auto it1 = list1.rbegin();
+	auto it2 = list2.rbegin();
+	while (it1 != list1.rend() && it2 != list2.rend())
+	{
+		if (*it1 != *it2)
+		{
+			return *(--it1);
+		}
+		++it1;
+		++it2;
+	}
+
+	if (it1 == list1.rend())
+		return *(--it1);
+	else if (it2 == list2.rend())
+		return *(--it2);
+
+	return nullptr;
+}
+
 void Widget::OnWindowMouseMove(const Point& pos)
 {
 	if (CursorLockWidget)
@@ -751,10 +788,9 @@ void Widget::OnWindowMouseMove(const Point& pos)
 		{
 			if (HoverWidget)
 			{
-				for (Widget* w = HoverWidget; w != widget && w != this; w = w->Parent())
+				if (Widget* ancestor = CommonAncestor(HoverWidget, widget))
 				{
-					Widget* p = w->Parent();
-					if (!w->FrameGeometry.contains(p->MapFrom(this, pos)))
+					for (Widget* w = HoverWidget; w != ancestor; w = w->Parent())
 					{
 						w->OnMouseLeave();
 					}
