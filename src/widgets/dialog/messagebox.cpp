@@ -72,26 +72,26 @@ MessageBox::MessageBox(Widget* owner, const std::string& windowTitle, const std:
     SetFrameGeometry(geometry);
 }
 
-DialogButton MessageBox::Information(Widget* owner, const std::string& message, const std::string& windowTitle, DialogButton buttons)
+DialogButton MessageBox::Information(Widget* owner, const std::string& message, const std::string& windowTitle)
 {
-    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Information, buttons);
+    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Information, DialogButton::Ok);
     return static_cast<DialogButton>(msgBox.Exec());
 }
 
-DialogButton MessageBox::Question(Widget* owner, const std::string& message, const std::string& windowTitle, DialogButton buttons)
+DialogButton MessageBox::Question(Widget* owner, const std::string& message, const std::string& windowTitle)
 {
-    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Question, buttons);
+    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Question, DialogButton::Yes | DialogButton::No);
     return static_cast<DialogButton>(msgBox.Exec());
 }
 
-DialogButton MessageBox::Warning(Widget* owner, const std::string& message, const std::string& windowTitle, DialogButton buttons)
+DialogButton MessageBox::Warning(Widget* owner, const std::string& message, const std::string& windowTitle)
 {
-    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Warning, buttons);
+    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Warning, DialogButton::Ok);
     return static_cast<DialogButton>(msgBox.Exec());
 }
 
-DialogButton MessageBox::Error(Widget* owner, const std::string& message, const std::string& windowTitle, DialogButton buttons)
+DialogButton MessageBox::Error(Widget* owner, const std::string& message, const std::string& windowTitle)
 {
-    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Error, buttons);
+    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Error, DialogButton::Ok);
     return static_cast<DialogButton>(msgBox.Exec());
 }
