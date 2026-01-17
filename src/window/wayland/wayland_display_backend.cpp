@@ -612,13 +612,13 @@ void WaylandDisplayBackend::ProcessEvents()
 
 void WaylandDisplayBackend::RunLoop()
 {
-	exitRunLoop = false;
-
 	while (!exitRunLoop && !s_Windows.empty())
 	{
 		ProcessEvents();
 		WaitForEvents(GetTimerTimeout());
 	}
+
+	exitRunLoop = false; // So that closing a dialog doesn't close everything else
 }
 
 void WaylandDisplayBackend::WaitForEvents(int timeout)
