@@ -5,11 +5,20 @@
 class PushButton;
 class TextLabel;
 
+enum class MessageBoxIcon
+{
+    None,
+    Information,
+    Question,
+    Warning,
+    Error
+};
+
 /* Generic MessageBox class */
 class MessageBox : public Dialog
 {
 public:
-    explicit MessageBox(Widget* owner, const std::string& windowTitle, const std::string& message, DialogButton buttons);
+    explicit MessageBox(Widget* owner, const std::string& windowTitle, const std::string& message, MessageBoxIcon icon, DialogButton buttons);
     static DialogButton Information(Widget* owner, const std::string& message, const std::string& windowTitle = "Information", DialogButton buttons = DialogButton::Ok);
     static DialogButton Question(Widget* owner, const std::string& message, const std::string& windowTitle = "Question", DialogButton buttons = DialogButton::Yes | DialogButton::No);
     static DialogButton Warning(Widget* owner, const std::string& message, const std::string& windowTitle = "Warning", DialogButton buttons = DialogButton::Ok);
