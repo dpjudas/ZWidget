@@ -7,7 +7,7 @@
 #include "zwidget/widgets/layout/hboxlayout.h"
 #include "zwidget/widgets/layout/vboxlayout.h"
 
-MessageBox::MessageBox(Widget* owner, const std::string& windowTitle, const std::string& message, DialogButton buttons)
+MessageBox::MessageBox(Widget* owner, const std::string& windowTitle, const std::string& message, MessageBoxIcon icon, DialogButton buttons)
         : Dialog(owner), m_MessageLabel(new TextLabel(this)), m_DialogButtons({})
 {
     SetWindowTitle(windowTitle);
@@ -74,24 +74,24 @@ MessageBox::MessageBox(Widget* owner, const std::string& windowTitle, const std:
 
 DialogButton MessageBox::Information(Widget* owner, const std::string& message, const std::string& windowTitle, DialogButton buttons)
 {
-    auto msgBox = MessageBox(owner, windowTitle, message, buttons);
+    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Information, buttons);
     return static_cast<DialogButton>(msgBox.Exec());
 }
 
 DialogButton MessageBox::Question(Widget* owner, const std::string& message, const std::string& windowTitle, DialogButton buttons)
 {
-    auto msgBox = MessageBox(owner, windowTitle, message, buttons);
+    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Question, buttons);
     return static_cast<DialogButton>(msgBox.Exec());
 }
 
 DialogButton MessageBox::Warning(Widget* owner, const std::string& message, const std::string& windowTitle, DialogButton buttons)
 {
-    auto msgBox = MessageBox(owner, windowTitle, message, buttons);
+    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Warning, buttons);
     return static_cast<DialogButton>(msgBox.Exec());
 }
 
 DialogButton MessageBox::Error(Widget* owner, const std::string& message, const std::string& windowTitle, DialogButton buttons)
 {
-    auto msgBox = MessageBox(owner, windowTitle, message, buttons);
+    auto msgBox = MessageBox(owner, windowTitle, message, MessageBoxIcon::Error, buttons);
     return static_cast<DialogButton>(msgBox.Exec());
 }
