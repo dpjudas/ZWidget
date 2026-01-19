@@ -4,6 +4,14 @@ project(zwidget)
 option(ENABLE_METAL "Enable Metal support for application rendering" ON)
 option(ENABLE_OPENGL "Enable OpenGL support for application rendering" ON)
 
+if(WIN32)
+	option(ENABLE_SDL3 "Enable SDL3 backend. Optional on all platforms" OFF)
+	option(ENABLE_SDL2 "Enable SDL2 backend. Optional on all platforms" OFF)
+else()
+	option(ENABLE_SDL3 "Enable SDL3 backend. Optional on all platforms" ON)
+	option(ENABLE_SDL2 "Enable SDL2 backend. Optional on all platforms" ON)
+endif()
+
 if (UNIX AND NOT APPLE)
 	include(FindPkgConfig)
 	pkg_check_modules(DBUS dbus-1)
@@ -25,18 +33,22 @@ endif()
 # SDL3 finding stuff
 # Optional on all platforms
 # If both SDL3 and SDL2 are available, only SDL3 support will be enabled.
-find_package(SDL3 QUIET)
-if(NOT ${SDL3_FOUND})
-	include(FindPkgConfig)
-	pkg_search_module(SDL3 sdl3)
+if(ENABLE_SDL3)
+	find_package(SDL3 QUIET)
+	if(NOT ${SDL3_FOUND})
+		include(FindPkgConfig)
+		pkg_search_module(SDL3 sdl3)
+	endif()
 endif()
 
 # SDL2 finding stuff
 # Optional on all platforms
-find_package(SDL2 QUIET)
-if(NOT ${SDL2_FOUND})
-	include(FindPkgConfig)
-	pkg_search_module(SDL2 sdl2)
+if(ENABLE_SDL2)
+	find_package(SDL2 QUIET)
+	if(NOT ${SDL2_FOUND})
+		include(FindPkgConfig)
+		pkg_search_module(SDL2 sdl2)
+	endif()
 endif()
 
 set(ZWIDGET_SOURCES
@@ -351,12 +363,12 @@ else()
 	set(ZWIDGET_LIBS ${ZWIDGET_LIBS} ${FONTCONFIG_LDFLAGS})
 endif()
 
-if(SDL3_FOUND AND NOT WIN32)
+if(SDL3_FOUND)
 	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_SDL3_SOURCES})
 	set(ZWIDGET_DEFINES ${ZWIDGET_DEFINES} -DUSE_SDL3)
 endif()
 
-if(SDL2_FOUND AND NOT SDL3_FOUND AND NOT WIN32)
+if(SDL2_FOUND AND NOT SDL3_FOUND)
 	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_SDL2_SOURCES})
 	set(ZWIDGET_DEFINES ${ZWIDGET_DEFINES} -DUSE_SDL2)
 endif()
