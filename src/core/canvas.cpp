@@ -282,11 +282,20 @@ void Canvas::drawImage(const std::shared_ptr<Image>& image, const Rect& box)
 {
 	auto& texture = imageTextures[image];
 	if (!texture)
-	{
 		texture = createTexture(image->GetWidth(), image->GetHeight(), image->GetData(), image->GetFormat());
-	}
+
 	Colorf color(1.0f, 1.0f, 1.0f);
 	drawTile(texture.get(), (float)((origin.x + box.x) * uiscale), (float)((origin.y + box.y) * uiscale), (float)(box.width * uiscale), (float)(box.height * uiscale), 0.0, 0.0, (float)texture->Width, (float)texture->Height, color);
+}
+
+void Canvas::drawImage(const std::shared_ptr<Image>& image, const Rect& src, const Rect& dest)
+{
+	auto& texture = imageTextures[image];
+	if (!texture)
+		texture = createTexture(image->GetWidth(), image->GetHeight(), image->GetData(), image->GetFormat());
+
+	Colorf color(1.0f, 1.0f, 1.0f);
+	drawTile(texture.get(), (float)((origin.x + dest.x) * uiscale), (float)((origin.y + dest.y) * uiscale), (float)(dest.width * uiscale), (float)(dest.height * uiscale), (float)src.x, (float)src.y, (float)src.width, (float)src.height, color);
 }
 
 void Canvas::line(const Point& p0, const Point& p1, const Colorf& color)

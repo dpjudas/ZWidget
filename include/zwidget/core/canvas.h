@@ -75,6 +75,7 @@ public:
 
 	void drawImage(const std::shared_ptr<Image>& image, const Point& pos);
 	void drawImage(const std::shared_ptr<Image>& image, const Rect& box);
+	void drawImage(const std::shared_ptr<Image>& image, const Rect& src, const Rect& dest);
 
 	void setLanguage(const char* lang) { language = lang; }
 
