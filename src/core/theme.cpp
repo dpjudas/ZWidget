@@ -136,6 +136,31 @@ void BasicWidgetStyle::Paint(Widget* widget, Canvas* canvas, Size size)
 		canvas->fillRect(Rect::xywh(0.0, 0.0, borderwidth, size.height), borderleft);
 	if (borderright.a > 0.0f)
 		canvas->fillRect(Rect::xywh(size.width - borderwidth, 0.0, borderwidth, size.height), borderright);
+
+	auto image = widget->GetStyleImage("border-image-source");
+	if (image)
+	{
+		BorderGeometry geo;
+		geo.box = Rect::xywh(0.0, 0.0, size.width, size.height);
+		geo.border.left = widget->GetStyleDouble("border-left-width");
+		geo.border.right = widget->GetStyleDouble("border-right-width");
+		geo.border.top = widget->GetStyleDouble("border-top-width");
+		geo.border.bottom = widget->GetStyleDouble("border-bottom-width");
+
+		BorderImage style;
+		style.source = image;
+		style.width.left = widget->GetStyleDouble("border-left-image-width");
+		style.width.top = widget->GetStyleDouble("border-top-image-width");
+		style.width.right = widget->GetStyleDouble("border-right-image-width");
+		style.width.bottom = widget->GetStyleDouble("border-bottom-image-width");
+		style.slice.left = BorderImageValue(widget->GetStyleDouble("border-left-image-slice"), BorderImageValueType::number);
+		style.slice.top = BorderImageValue(widget->GetStyleDouble("border-top-image-slice"), BorderImageValueType::number);
+		style.slice.right = BorderImageValue(widget->GetStyleDouble("border-right-image-slice"), BorderImageValueType::number);
+		style.slice.bottom = BorderImageValue(widget->GetStyleDouble("border-bottom-image-slice"), BorderImageValueType::number);
+		style.slice.center = widget->GetStyleBool("border-center-image-slice");
+
+		BorderImageRenderer::render(canvas, geo, style);
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -218,6 +243,8 @@ SimpleTheme::SimpleTheme(const ThemeColors& theme)
 	pushbutton->SetDouble("noncontent-right", 10.0);
 	pushbutton->SetDouble("noncontent-bottom", 5.0);
 	pushbutton->SetColor("color", fgAction);
+
+#if 1
 	pushbutton->SetColor("background-color", bgAction);
 	pushbutton->SetColor("border-left-color", border);
 	pushbutton->SetColor("border-top-color", border);
@@ -227,6 +254,23 @@ SimpleTheme::SimpleTheme(const ThemeColors& theme)
 	pushbutton->SetColor("hover", "background-color", bgHover);
 	pushbutton->SetColor("down", "color", fgActive);
 	pushbutton->SetColor("down", "background-color", bgActive);
+#else
+	pushbutton->SetImage("border-image-source", Image::LoadResource("button_normal.png"));
+	pushbutton->SetImage("hover", "border-image-source", Image::LoadResource("button_hot.png"));
+	pushbutton->SetDouble("border-top-width", 6.0);
+	pushbutton->SetDouble("border-bottom-width", 6.0);
+	pushbutton->SetDouble("border-left-width", 5.0);
+	pushbutton->SetDouble("border-right-width", 5.0);
+	pushbutton->SetDouble("border-top-image-slice", 6.0);
+	pushbutton->SetDouble("border-bottom-image-slice", 6.0);
+	pushbutton->SetDouble("border-left-image-slice", 5.0);
+	pushbutton->SetDouble("border-right-image-slice", 5.0);
+	pushbutton->SetDouble("border-top-image-width", 6.0);
+	pushbutton->SetDouble("border-bottom-image-width", 6.0);
+	pushbutton->SetDouble("border-left-image-width", 5.0);
+	pushbutton->SetDouble("border-right-image-width", 5.0);
+	pushbutton->SetBool("border-center-image-slice", true);
+#endif
 
 	lineedit->SetDouble("noncontent-left", 5.0);
 	lineedit->SetDouble("noncontent-top", 3.0);
@@ -544,7 +588,7 @@ float BorderImageRenderer::get_left_grid(float image_area_width, float auto_widt
 	if (border_image_width.is_percentage())
 		return border_image_width.number() * image_area_width / 100.0f;
 	else if (border_image_width.is_number())
-		return border_image_width.number() * geometry.border.left;
+		return border_image_width.number() * (float)geometry.border.left;
 	else
 		return auto_width;
 }
@@ -556,7 +600,7 @@ float BorderImageRenderer::get_right_grid(float image_area_width, float auto_wid
 	if (border_image_width.is_percentage())
 		return border_image_width.number() * image_area_width / 100.0f;
 	else if (border_image_width.is_number())
-		return border_image_width.number() * geometry.border.right;
+		return border_image_width.number() * (float)geometry.border.right;
 	else
 		return auto_width;
 }
@@ -568,7 +612,7 @@ float BorderImageRenderer::get_top_grid(float image_area_height, float auto_heig
 	if (border_image_width.is_percentage())
 		return border_image_width.number() * image_area_height / 100.0f;
 	else if (border_image_width.is_number())
-		return border_image_width.number() * geometry.border.top;
+		return border_image_width.number() * (float)geometry.border.top;
 	else
 		return auto_height;
 }
@@ -580,7 +624,7 @@ float BorderImageRenderer::get_bottom_grid(float image_area_height, float auto_h
 	if (border_image_width.is_percentage())
 		return border_image_width.number() * image_area_height / 100.0f;
 	else if (border_image_width.is_number())
-		return border_image_width.number() * geometry.border.bottom;
+		return border_image_width.number() * (float)geometry.border.bottom;
 	else
 		return auto_height;
 }

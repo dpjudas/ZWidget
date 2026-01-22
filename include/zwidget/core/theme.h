@@ -122,7 +122,7 @@ class BorderImageValue
 {
 public:
 	BorderImageValue() = default;
-	BorderImageValue(float value, BorderImageValueType type = BorderImageValueType::px) : v(value), type(type) {}
+	BorderImageValue(double value, BorderImageValueType type = BorderImageValueType::px) : v((float)value), type(type) {}
 
 	bool is_percentage() const { return type == BorderImageValueType::percentage; }
 	bool is_number() const { return type == BorderImageValueType::number; }
@@ -185,10 +185,10 @@ public:
 	Rect box;
 	struct
 	{
-		float left = 0.0f;
-		float right = 0.0f;
-		float top = 0.0f;
-		float bottom = 0.0f;
+		double left = 0.0;
+		double right = 0.0;
+		double top = 0.0;
+		double bottom = 0.0;
 	} border;
 };
 
