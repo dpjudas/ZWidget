@@ -252,12 +252,6 @@ void Win32DisplayWindow::SetCaptionTextColor(uint32_t bgra8)
 	DwmSetWindowAttribute(WindowHandle.hwnd, 36/*DWMWA_TEXT_COLOR*/, &bgra8, sizeof(uint32_t));
 }
 
-void Win32DisplayWindow::SetWindowFrame(const Rect& box)
-{
-	double dpiscale = GetDpiScale();
-	SetWindowPos(WindowHandle.hwnd, nullptr, (int)std::round(box.x * dpiscale), (int)std::round(box.y * dpiscale), (int)std::round(box.width * dpiscale), (int)std::round(box.height * dpiscale), SWP_NOACTIVATE | SWP_NOZORDER);
-}
-
 void Win32DisplayWindow::SetClientFrame(const Rect& box)
 {
 	double dpiscale = GetDpiScale();
@@ -433,12 +427,14 @@ void Win32DisplayWindow::SetCursor(StandardCursor cursor, std::shared_ptr<Custom
 	}
 }
 
-Rect Win32DisplayWindow::GetWindowFrame() const
+Rect Win32DisplayWindow::GetClientFrame() const
 {
+	POINT point = {};
 	RECT box = {};
-	GetWindowRect(WindowHandle.hwnd, &box);
+	ClientToScreen(WindowHandle.hwnd, &point);
+	GetClientRect(WindowHandle.hwnd, &box);
 	double dpiscale = GetDpiScale();
-	return Rect(box.left / dpiscale, box.top / dpiscale, (box.right - box.left) / dpiscale, (box.bottom - box.top) / dpiscale);
+	return Rect::xywh(point.x / dpiscale, point.y / dpiscale, box.right / dpiscale, box.bottom / dpiscale);
 }
 
 Point Win32DisplayWindow::MapFromGlobal(const Point& pos) const

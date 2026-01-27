@@ -796,6 +796,7 @@ void CocoaDisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>
     }
 }
 
+/*
 void CocoaDisplayWindow::SetWindowFrame(const Rect& box)
 {
     if (impl->window)
@@ -804,15 +805,38 @@ void CocoaDisplayWindow::SetWindowFrame(const Rect& box)
         [impl->window setFrame:frame display:YES animate:NO];
     }
 }
+*/
 
 void CocoaDisplayWindow::SetClientFrame(const Rect& box)
 {
     if (impl->window)
     {
+	// Tbd: should this be done using frameRectForContentRect? Using the method below is not atomic
+
         NSRect contentRect = NSMakeRect(box.x, [[NSScreen mainScreen] frame].size.height - box.y - box.height, box.width, box.height);
         [impl->window setContentSize:contentRect.size];
         [impl->window setFrameOrigin:contentRect.origin];
     }
+}
+
+Rect CocoaDisplayWindow::GetClientFrame() const
+{
+    if (impl->window)
+    {
+        NSRect frame = [impl->window contentRectForFrameRect:[impl->window frame]];
+        return Rect(frame.origin.x, [[NSScreen mainScreen] frame].size.height - frame.origin.y - frame.size.height, frame.size.width, frame.size.height);
+    }
+    return {};
+}
+
+Size CocoaDisplayWindow::GetClientSize() const
+{
+    if (impl->window)
+    {
+        NSRect contentRect = [[impl->window contentView] frame];
+        return Size(contentRect.size.width, contentRect.size.height);
+    }
+    return {};
 }
 
 void CocoaDisplayWindow::Show()
@@ -1039,16 +1063,6 @@ void CocoaDisplayWindow::SetCursor(StandardCursor cursor, std::shared_ptr<Custom
     {
         [nsCursor set];
     }
-}
-
-Rect CocoaDisplayWindow::GetWindowFrame() const
-{
-    if (impl->window)
-    {
-        NSRect frame = [impl->window frame];
-        return Rect(frame.origin.x, [[NSScreen mainScreen] frame].size.height - frame.origin.y - frame.size.height, frame.size.width, frame.size.height);
-    }
-    return {};
 }
 
 Size CocoaDisplayWindow::GetClientSize() const

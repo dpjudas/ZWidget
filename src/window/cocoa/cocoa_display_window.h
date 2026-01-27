@@ -16,7 +16,6 @@ public:
 
     void SetWindowTitle(const std::string& text) override;
     void SetWindowIcon(const std::vector<std::shared_ptr<Image>>& images) override;
-    void SetWindowFrame(const Rect& box) override;
     void SetClientFrame(const Rect& box) override;
 
     void Show() override;
@@ -42,7 +41,7 @@ public:
 
     void SetCursor(StandardCursor cursor, std::shared_ptr<CustomCursor> custom) override;
 
-    Rect GetWindowFrame() const override;
+    Rect GetClientFrame() const override;
     Size GetClientSize() const override;
     int GetPixelWidth() const override;
     int GetPixelHeight() const override;

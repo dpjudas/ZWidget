@@ -90,13 +90,6 @@ void SDL2DisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>&
 	// To do: when this is upgraded to SDL3, call SDL_AddSurfaceAlternateImage for all the images
 }
 
-void SDL2DisplayWindow::SetWindowFrame(const Rect& box)
-{
-	// SDL2 doesn't really seem to have an API for this.
-	// The docs aren't clear what you're setting when calling SDL_SetWindowSize.
-	SetClientFrame(box);
-}
-
 void SDL2DisplayWindow::SetClientFrame(const Rect& box)
 {
 	// Is there a way to set both in one call?
@@ -220,7 +213,7 @@ bool SDL2DisplayWindow::GetKeyState(InputKey key)
 	return (index < numkeys) ? state[index] != 0 : false;
 }
 
-Rect SDL2DisplayWindow::GetWindowFrame() const
+Rect SDL2DisplayWindow::GetClientFrame() const
 {
 	int x = 0;
 	int y = 0;

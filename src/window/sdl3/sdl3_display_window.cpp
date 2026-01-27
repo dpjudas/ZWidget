@@ -120,13 +120,6 @@ void SDL3DisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>&
 	SDL_SetWindowIcon(Handle.window, iconSurface);
 }
 
-void SDL3DisplayWindow::SetWindowFrame(const Rect& box)
-{
-	// Does SDL have a function to set this?
-	// Will just call SetClientFrame() for the time being.
-	SetClientFrame(box);
-}
-
 void SDL3DisplayWindow::SetClientFrame(const Rect& box)
 {
 	// Is there a way to set both in one call?
@@ -250,7 +243,7 @@ bool SDL3DisplayWindow::GetKeyState(InputKey key)
 	return (index < numkeys) ? state[index] != 0 : false;
 }
 
-Rect SDL3DisplayWindow::GetWindowFrame() const
+Rect SDL3DisplayWindow::GetClientFrame() const
 {
 	int x = 0;
 	int y = 0;

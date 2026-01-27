@@ -230,13 +230,6 @@ void X11DisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>& 
 	XChangeProperty(display, window, property, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)data, size);
 }
 
-void X11DisplayWindow::SetWindowFrame(const Rect& box)
-{
-	// To do: this requires cooperation with the window manager
-
-	SetClientFrame(box);
-}	
-
 void X11DisplayWindow::SetClientFrame(const Rect& box)
 {
 	double dpiscale = GetDpiScale();
@@ -418,10 +411,8 @@ void X11DisplayWindow::UpdateCursor()
 	}
 }
 
-Rect X11DisplayWindow::GetWindowFrame() const
+Rect X11DisplayWindow::GetClientFrame() const
 {
-	// To do: this needs to include the window manager frame
-
 	double dpiscale = GetDpiScale();
 
 	Window root = {};

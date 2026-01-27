@@ -158,18 +158,13 @@ void WaylandDisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image
 	}
 }
 
-void WaylandDisplayWindow::SetWindowFrame(const Rect& box)
+void WaylandDisplayWindow::SetClientFrame(const Rect& box)
 {
 	// Resizing will be shown on the next commit
 	CreateBuffers(box.width, box.height);
 	windowHost->OnWindowGeometryChanged();
 	m_NeedsUpdate = true;
 	m_AppSurface.commit();
-}
-
-void WaylandDisplayWindow::SetClientFrame(const Rect& box)
-{
-	SetWindowFrame(box);
 }
 
 void WaylandDisplayWindow::Show()
@@ -291,7 +286,7 @@ void WaylandDisplayWindow::SetCursor(StandardCursor cursor, std::shared_ptr<Cust
 	backend->SetCursor(cursor, custom);
 }
 
-Rect WaylandDisplayWindow::GetWindowFrame() const
+Rect WaylandDisplayWindow::GetClientFrame() const
 {
 	return Rect(m_WindowGlobalPos.x, m_WindowGlobalPos.y, m_WindowSize.width, m_WindowSize.height);
 }
@@ -390,10 +385,10 @@ void WaylandDisplayWindow::OnXDGToplevelConfigureEvent(int32_t width, int32_t he
 				 state == wayland::xdg_toplevel_state::tiled_right ||
 				 state == wayland::xdg_toplevel_state::tiled_top)
 		{
-			Rect rect = GetWindowFrame();
+			Rect rect = GetClientFrame();
 			rect.width = width / m_ScaleFactor;
 			rect.height = height / m_ScaleFactor;
-			SetWindowFrame(rect);
+			SetClientFrame(rect);
 			windowHost->OnWindowGeometryChanged();
 		}
 	}

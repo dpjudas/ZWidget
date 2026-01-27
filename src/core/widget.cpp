@@ -217,7 +217,7 @@ Rect Widget::GetFrameGeometry() const
 	}
 	else
 	{
-		return DispWindow->GetWindowFrame();
+		return DispWindow->GetClientFrame();
 	}
 }
 
@@ -255,7 +255,7 @@ void Widget::SetFrameGeometry(const Rect& geometry)
 	}
 	else
 	{
-		DispWindow->SetWindowFrame(geometry);
+		DispWindow->SetClientFrame(geometry);
 	}
 }
 
