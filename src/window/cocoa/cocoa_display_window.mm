@@ -1065,16 +1065,6 @@ void CocoaDisplayWindow::SetCursor(StandardCursor cursor, std::shared_ptr<Custom
     }
 }
 
-Size CocoaDisplayWindow::GetClientSize() const
-{
-    if (impl->window)
-    {
-        NSRect contentRect = [[impl->window contentView] frame];
-        return Size(contentRect.size.width, contentRect.size.height);
-    }
-    return {};
-}
-
 int CocoaDisplayWindow::GetPixelWidth() const
 {
     if (impl->window)
