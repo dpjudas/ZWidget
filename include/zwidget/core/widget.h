@@ -244,6 +244,7 @@ private:
 	void NotifySubscribers(const WidgetEvent type);
 	void Paint(Canvas* canvas);
 	void DetachFromParent();
+	void CheckInitialShow();
 
 	WidgetType Type = {};
 
@@ -263,6 +264,7 @@ private:
 	std::vector<std::shared_ptr<Image>> WindowIcon;
 	std::unique_ptr<DisplayWindow> DispWindow;
 	std::unique_ptr<Canvas> DispCanvas;
+	bool DispGeometrySet = false;
 	Widget* FocusWidget = nullptr;
 	Widget* KeyboardLockWidget = nullptr;
 	Widget* CursorLockWidget = nullptr;

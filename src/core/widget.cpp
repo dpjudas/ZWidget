@@ -255,7 +255,37 @@ void Widget::SetFrameGeometry(const Rect& geometry)
 	}
 	else
 	{
+		DispGeometrySet = true;
 		DispWindow->SetClientFrame(geometry);
+	}
+}
+
+void Widget::CheckInitialShow()
+{
+	if (Type != WidgetType::Child && !DispGeometrySet)
+	{
+		// If there is not a size set up, try to get it from the layout attached to the widget
+		double layoutWidth = GetPreferredWidth();
+		double layoutHeight = GetPreferredHeight();
+		if (layoutWidth > 0.0 && layoutHeight > 0.0)
+		{
+			if (Widget* parentWindow = ParentObj ? ParentObj->Window() : nullptr)
+			{
+				// Center on parent
+				Rect parentBox = parentWindow->GetFrameGeometry();
+				double x = parentBox.x + (parentBox.width - layoutWidth) * 0.5;
+				double y = parentBox.y + (parentBox.height - layoutHeight) * 0.5;
+				SetFrameGeometry(Rect::xywh(x, y, layoutWidth, layoutHeight));
+			}
+			else
+			{
+				// Center the window on primary screen
+				auto screenSize = DisplayWindow::GetScreenSize();
+				double x = (screenSize.width - layoutWidth) * 0.5;
+				double y = (screenSize.height - layoutHeight) * 0.5;
+				SetFrameGeometry(Rect::xywh(x, y, layoutWidth, layoutHeight));
+			}
+		}
 	}
 }
 
@@ -263,25 +293,7 @@ void Widget::Show()
 {
 	if (Type != WidgetType::Child)
 	{
-		auto size = DispWindow->GetClientSize();
-
-		if (size.width == 0 || size.height == 0)
-		{
-			// If there is not a size set up, try to get it from the layout attached to the widget
-			if (m_Layout)
-			{
-				auto layoutHeight = m_Layout->GetPreferredHeight();
-				auto layoutWidth = m_Layout->GetPreferredWidth();
-
-				auto screenSize = DisplayWindow::GetScreenSize();
-
-				// Center the window
-				auto x = (screenSize.width / 2) - (layoutWidth / 2);
-				auto y = (screenSize.height / 2) - (layoutHeight / 2);
-
-				DispWindow->SetClientFrame(Rect::xywh(x, y, layoutWidth, layoutHeight));
-			}
-		}
+		CheckInitialShow();
 		DispWindow->Show();
 		NotifySubscribers(WidgetEvent::VisibilityChange);
 	}
@@ -297,6 +309,7 @@ void Widget::ShowFullscreen()
 {
 	if (Type != WidgetType::Child)
 	{
+		CheckInitialShow();
 		DispWindow->ShowFullscreen();
 	}
 }
@@ -314,6 +327,7 @@ void Widget::ShowMaximized()
 {
 	if (Type != WidgetType::Child)
 	{
+		CheckInitialShow();
 		DispWindow->ShowMaximized();
 	}
 }
@@ -322,6 +336,7 @@ void Widget::ShowMinimized()
 {
 	if (Type != WidgetType::Child)
 	{
+		CheckInitialShow();
 		DispWindow->ShowMinimized();
 	}
 }
@@ -330,6 +345,7 @@ void Widget::ShowNormal()
 {
 	if (Type != WidgetType::Child)
 	{
+		CheckInitialShow();
 		DispWindow->ShowNormal();
 	}
 }
