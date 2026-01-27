@@ -122,7 +122,7 @@ class BorderImageValue
 {
 public:
 	BorderImageValue() = default;
-	BorderImageValue(double value, BorderImageValueType type = BorderImageValueType::px) : v((float)value), type(type) {}
+	BorderImageValue(double value, BorderImageValueType type = BorderImageValueType::px) : type(type), v((float)value) {}
 
 	bool is_percentage() const { return type == BorderImageValueType::percentage; }
 	bool is_number() const { return type == BorderImageValueType::number; }
