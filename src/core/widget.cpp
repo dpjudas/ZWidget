@@ -263,6 +263,25 @@ void Widget::Show()
 {
 	if (Type != WidgetType::Child)
 	{
+		auto size = DispWindow->GetClientSize();
+
+		if (size.width == 0 || size.height == 0)
+		{
+			// If there is not a size set up, try to get it from the layout attached to the widget
+			if (m_Layout)
+			{
+				auto layoutHeight = m_Layout->GetPreferredHeight();
+				auto layoutWidth = m_Layout->GetPreferredWidth();
+
+				auto screenSize = DisplayWindow::GetScreenSize();
+
+				// Center the window
+				auto x = (screenSize.width / 2) - (layoutWidth / 2);
+				auto y = (screenSize.height / 2) - (layoutHeight / 2);
+
+				DispWindow->SetClientFrame(Rect::xywh(x, y, layoutWidth, layoutHeight));
+			}
+		}
 		DispWindow->Show();
 		NotifySubscribers(WidgetEvent::VisibilityChange);
 	}

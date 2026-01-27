@@ -60,16 +60,16 @@ MessageBox::MessageBox(Widget* owner, const std::string& windowTitle, const std:
     mainLayout->AddStretch();
     mainLayout->AddLayout(buttonsLayout);
 
+    SetLayout(mainLayout);
+    /*
     auto width = messageLayout->GetPreferredWidth() + 50;
     auto height = messageLayout->GetPreferredHeight() + 50 + buttonsLayout->GetPreferredHeight();
-
-    SetLayout(mainLayout);
-
     auto geometry = GetFrameGeometry();
     geometry.width = width;
     geometry.height = height;
 
     SetFrameGeometry(geometry);
+    */
 }
 
 DialogButton MessageBox::Information(Widget* owner, const std::string& message, const std::string& windowTitle)
