@@ -19,7 +19,6 @@ MessageBox::MessageBox(Widget* owner, const std::string& windowTitle, const std:
     }
 
     m_MessageLabel->SetText(message);
-    m_MessageLabel->SetNoncontentSizes(10, 10, 10, 0);
 
     if (AllFlags(buttons, DialogButton::Ok))
         m_DialogButtons.push_back(AddDialogButton(DialogButton::Ok));
@@ -61,15 +60,7 @@ MessageBox::MessageBox(Widget* owner, const std::string& windowTitle, const std:
     mainLayout->AddLayout(buttonsLayout);
 
     SetLayout(mainLayout);
-    /*
-    auto width = messageLayout->GetPreferredWidth() + 50;
-    auto height = messageLayout->GetPreferredHeight() + 50 + buttonsLayout->GetPreferredHeight();
-    auto geometry = GetFrameGeometry();
-    geometry.width = width;
-    geometry.height = height;
-
-    SetFrameGeometry(geometry);
-    */
+    SetNoncontentSizes(15, 10, 15, 10);
 }
 
 DialogButton MessageBox::Information(Widget* owner, const std::string& message, const std::string& windowTitle)

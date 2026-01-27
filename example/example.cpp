@@ -146,14 +146,16 @@ LauncherWindow::LauncherWindow(): Widget(nullptr, WidgetType::Window)
 
 	auto mainLayout = new VBoxLayout();
 
+	auto buttonBar = new Widget(this);
 	auto buttonAreaLayout = new HBoxLayout();
-
 	buttonAreaLayout->AddStretch();
 	buttonAreaLayout->AddWidget(ExitButton);
+	buttonBar->SetLayout(buttonAreaLayout);
+	buttonBar->SetNoncontentSizes(20, 0, 20, 10);
 
 	mainLayout->AddWidget(Logo);
 	mainLayout->AddWidget(Pages);
-	mainLayout->AddLayout(buttonAreaLayout);
+	mainLayout->AddWidget(buttonBar);
 
 	SetLayout(mainLayout);
 
@@ -396,7 +398,7 @@ int example(Backend backend = Backend::Default, Theme theme = Theme::Default)
 	}
 
 	auto launcher = new LauncherWindow();
-	launcher->SetFrameGeometry(100.0, 100.0, 615.0, 668.0);
+	launcher->SetFrameGeometry((Widget::GetScreenSize().width - 615.0) * 0.5, (Widget::GetScreenSize().height - 668.0) * 0.5, 615.0, 668.0);
 	launcher->Show();
 
 	DisplayWindow::RunLoop();

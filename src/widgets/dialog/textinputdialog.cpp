@@ -41,16 +41,7 @@ TextInputDialog::TextInputDialog(Widget* owner, const std::string& message, cons
     mainLayout->AddLayout(buttonsLayout);
 
     SetLayout(mainLayout);
-    /*
-    auto width = mainLayout->GetPreferredWidth() + 20;
-    auto height = mainLayout->GetPreferredHeight() + 20;
-
-    auto geometry = GetFrameGeometry();
-    geometry.width = width;
-    geometry.height = height;
-
-    SetFrameGeometry(geometry);
-    */
+    SetNoncontentSizes(15, 10, 15, 10);
 }
 
 std::string TextInputDialog::GetText() const

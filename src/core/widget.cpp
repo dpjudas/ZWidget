@@ -269,21 +269,23 @@ void Widget::CheckInitialShow()
 		double layoutHeight = GetPreferredHeight();
 		if (layoutWidth > 0.0 && layoutHeight > 0.0)
 		{
+			double frameWidth = layoutWidth + GetNoncontentLeft() + GetNoncontentRight();
+			double frameHeight = layoutHeight + GetNoncontentTop() + GetNoncontentBottom();
 			if (Widget* parentWindow = ParentObj ? ParentObj->Window() : nullptr)
 			{
 				// Center on parent
 				Rect parentBox = parentWindow->GetFrameGeometry();
-				double x = parentBox.x + (parentBox.width - layoutWidth) * 0.5;
-				double y = parentBox.y + (parentBox.height - layoutHeight) * 0.5;
-				SetFrameGeometry(Rect::xywh(x, y, layoutWidth, layoutHeight));
+				double x = parentBox.x + (parentBox.width - frameWidth) * 0.5;
+				double y = parentBox.y + (parentBox.height - frameHeight) * 0.5;
+				SetFrameGeometry(Rect::xywh(x, y, frameWidth, frameHeight));
 			}
 			else
 			{
 				// Center the window on primary screen
 				auto screenSize = DisplayWindow::GetScreenSize();
-				double x = (screenSize.width - layoutWidth) * 0.5;
-				double y = (screenSize.height - layoutHeight) * 0.5;
-				SetFrameGeometry(Rect::xywh(x, y, layoutWidth, layoutHeight));
+				double x = (screenSize.width - frameWidth) * 0.5;
+				double y = (screenSize.height - frameHeight) * 0.5;
+				SetFrameGeometry(Rect::xywh(x, y, frameWidth, frameHeight));
 			}
 		}
 	}
