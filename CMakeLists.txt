@@ -61,6 +61,8 @@ set(ZWIDGET_SOURCES
 	src/core/timer.cpp
 	src/core/widget.cpp
 	src/core/theme.cpp
+	src/core/theme_style_tokenizer.cpp
+	src/core/theme_style_tokenizer.h
 	src/core/utf8reader.cpp
 	src/core/pathfill.cpp
 	src/core/truetypefont.cpp
