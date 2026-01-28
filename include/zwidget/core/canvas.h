@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 #include <map>
-#include <algorithm>
+#include <cmath>
 #include "image.h"
 #include "rect.h"
 
