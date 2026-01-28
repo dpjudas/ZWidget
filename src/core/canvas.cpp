@@ -265,7 +265,7 @@ void Canvas::popClip()
 
 void Canvas::fillRect(const Rect& box, const Colorf& color)
 {
-	fillTile((float)((origin.x + box.x) * uiscale), (float)((origin.y + box.y) * uiscale), (float)(box.width * uiscale), (float)(box.height * uiscale), color);
+	fillTile(gridFit(origin.x + box.x), gridFit(origin.y + box.y), gridFit(box.width), gridFit(box.height), color);
 }
 
 void Canvas::drawImage(const std::shared_ptr<Image>& image, const Point& pos)
@@ -275,7 +275,7 @@ void Canvas::drawImage(const std::shared_ptr<Image>& image, const Point& pos)
 		texture = createTexture(image->GetWidth(), image->GetHeight(), image->GetData(), image->GetFormat());
 
 	Colorf color(1.0f, 1.0f, 1.0f, 1.0f);
-	drawTile(texture.get(), (float)((origin.x + pos.x) * uiscale), (float)((origin.y + pos.y) * uiscale), (float)(texture->Width * uiscale), (float)(texture->Height * uiscale), 0.0, 0.0, (float)texture->Width, (float)texture->Height, color);
+	drawTile(texture.get(), gridFit(origin.x + pos.x), gridFit(origin.y + pos.y), gridFit(texture->Width), gridFit(texture->Height), 0.0, 0.0, (float)texture->Width, (float)texture->Height, color);
 }
 
 void Canvas::drawImage(const std::shared_ptr<Image>& image, const Rect& box)
@@ -285,7 +285,7 @@ void Canvas::drawImage(const std::shared_ptr<Image>& image, const Rect& box)
 		texture = createTexture(image->GetWidth(), image->GetHeight(), image->GetData(), image->GetFormat());
 
 	Colorf color(1.0f, 1.0f, 1.0f);
-	drawTile(texture.get(), (float)((origin.x + box.x) * uiscale), (float)((origin.y + box.y) * uiscale), (float)(box.width * uiscale), (float)(box.height * uiscale), 0.0, 0.0, (float)texture->Width, (float)texture->Height, color);
+	drawTile(texture.get(), gridFit(origin.x + box.x), gridFit(origin.y + box.y), gridFit(box.width), gridFit(box.height), 0.0, 0.0, (float)texture->Width, (float)texture->Height, color);
 }
 
 void Canvas::drawImage(const std::shared_ptr<Image>& image, const Rect& src, const Rect& dest)
@@ -295,7 +295,7 @@ void Canvas::drawImage(const std::shared_ptr<Image>& image, const Rect& src, con
 		texture = createTexture(image->GetWidth(), image->GetHeight(), image->GetData(), image->GetFormat());
 
 	Colorf color(1.0f, 1.0f, 1.0f);
-	drawTile(texture.get(), (float)((origin.x + dest.x) * uiscale), (float)((origin.y + dest.y) * uiscale), (float)(dest.width * uiscale), (float)(dest.height * uiscale), (float)src.x, (float)src.y, (float)src.width, (float)src.height, color);
+	drawTile(texture.get(), gridFit(origin.x + dest.x), gridFit(origin.y + dest.y), gridFit(dest.width), gridFit(dest.height), (float)src.x, (float)src.y, (float)src.width, (float)src.height, color);
 }
 
 void Canvas::line(const Point& p0, const Point& p1, const Colorf& color)
@@ -389,8 +389,8 @@ void Canvas::drawText(const std::shared_ptr<Font>& font, const Point& pos, const
 {
 	CanvasFontGroup* canvasFont = GetFontGroup(font);
 
-	double x = std::round((origin.x + pos.x) * uiscale);
-	double y = std::round((origin.y + pos.y) * uiscale);
+	double x = gridFit(origin.x + pos.x);
+	double y = gridFit(origin.y + pos.y);
 
 	UTF8Reader reader(text.data(), text.size());
 	while (!reader.is_end())
@@ -493,7 +493,7 @@ CanvasFontGroup* Canvas::GetFontGroup(const std::shared_ptr<Font>& font)
 
 	std::shared_ptr<CanvasFontGroup>& group = fontCache[{fontImpl->Name, fontImpl->Height}];
 	if (!group)
-		group = std::make_unique<CanvasFontGroup>(fontImpl->Name, fontImpl->Height * uiscale);
+		group = std::make_unique<CanvasFontGroup>(fontImpl->Name, std::round(fontImpl->Height * uiscale));
 	fontImpl->FontGroup = group;
 	return group.get();
 }
@@ -502,15 +502,15 @@ void Canvas::drawLineUnclipped(const Point& p0, const Point& p1, const Colorf& c
 {
 	if (p0.x == p1.x)
 	{
-		fillTile((float)((p0.x - 0.5) * uiscale), (float)(p0.y * uiscale), (float)uiscale, (float)((p1.y - p0.y) * uiscale), color);
+		fillTile(gridFit(p0.x - 0.5), gridFit(p0.y), (float)uiscale, gridFit(p1.y - p0.y), color);
 	}
 	else if (p0.y == p1.y)
 	{
-		fillTile((float)(p0.x * uiscale), (float)((p0.y - 0.5) * uiscale), (float)((p1.x - p0.x) * uiscale), (float)uiscale, color);
+		fillTile(gridFit(p0.x), gridFit(p0.y - 0.5), gridFit(p1.x - p0.x), (float)uiscale, color);
 	}
 	else
 	{
-		drawLineAntialiased((float)(p0.x * uiscale), (float)(p0.y * uiscale), (float)(p1.x * uiscale), (float)(p1.y * uiscale), color);
+		drawLineAntialiased(gridFit(p0.x), gridFit(p0.y), gridFit(p1.x), gridFit(p1.y), color);
 	}
 }
 

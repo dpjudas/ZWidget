@@ -3,10 +3,11 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
-#include "image.h"
-#include "rect.h"
 #include <vector>
 #include <map>
+#include <algorithm>
+#include "image.h"
+#include "rect.h"
 
 class Font;
 class Point;
@@ -91,13 +92,15 @@ protected:
 	int getClipMaxX() const;
 	int getClipMaxY() const;
 
+	float gridFit(double v) { return (float)std::round(v * uiscale); }
+
 	template<typename T>
 	static T clamp(T val, T minval, T maxval) { return std::max<T>(std::min<T>(val, maxval), minval); }
 
 	DisplayWindow* window = nullptr;
 	int width = 0;
 	int height = 0;
-	double uiscale = 1.0f;
+	double uiscale = 1.0;
 
 	std::unique_ptr<CanvasTexture> whiteTexture;
 

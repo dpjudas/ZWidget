@@ -998,6 +998,10 @@ void Widget::OnWindowGeometryChanged()
 	top = std::min(top, FrameGeometry.bottom());
 	right = std::max(right, FrameGeometry.left());
 	bottom = std::max(bottom, FrameGeometry.top());
+	left = GridFitPoint(left);
+	top = GridFitPoint(top);
+	right = GridFitPoint(right);
+	bottom = GridFitPoint(bottom);
 	ContentGeometry = Rect::ltrb(left, top, right, bottom);
 
 	if (m_Layout)
