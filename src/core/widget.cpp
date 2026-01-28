@@ -810,14 +810,15 @@ Widget* Widget::CommonAncestor(Widget* a, Widget* b)
 
 void Widget::OnWindowMouseMove(const Point& pos)
 {
+	Point contentPos = pos - ContentGeometry.topLeft();
 	if (CursorLockWidget)
 	{
 		DispWindow->SetCursor(CursorLockWidget->CurrentCursor, CursorLockWidget->CurrentCustomCursor);
-		CursorLockWidget->OnMouseMove(CursorLockWidget->MapFrom(this, pos));
+		CursorLockWidget->OnMouseMove(CursorLockWidget->MapFrom(this, contentPos));
 	}
 	else
 	{
-		Widget* widget = ChildAt(pos);
+		Widget* widget = ChildAt(contentPos);
 		if (!widget)
 			widget = this;
 
@@ -840,7 +841,7 @@ void Widget::OnWindowMouseMove(const Point& pos)
 
 		do
 		{
-			widget->OnMouseMove(widget->MapFrom(this, pos));
+			widget->OnMouseMove(widget->MapFrom(this, contentPos));
 			if (widget == this)
 				break;
 			widget = widget->Parent();
@@ -862,18 +863,19 @@ void Widget::OnWindowMouseLeave()
 
 void Widget::OnWindowMouseDown(const Point& pos, InputKey key)
 {
+	Point contentPos = pos - ContentGeometry.topLeft();
 	if (CursorLockWidget)
 	{
-		CursorLockWidget->OnMouseDown(CursorLockWidget->MapFrom(this, pos), key);
+		CursorLockWidget->OnMouseDown(CursorLockWidget->MapFrom(this, contentPos), key);
 	}
 	else
 	{
-		Widget* widget = ChildAt(pos);
+		Widget* widget = ChildAt(contentPos);
 		if (!widget)
 			widget = this;
 		while (widget)
 		{
-			bool stopPropagation = widget->OnMouseDown(widget->MapFrom(this, pos), key);
+			bool stopPropagation = widget->OnMouseDown(widget->MapFrom(this, contentPos), key);
 			if (stopPropagation || widget == this)
 				break;
 			widget = widget->Parent();
@@ -883,18 +885,19 @@ void Widget::OnWindowMouseDown(const Point& pos, InputKey key)
 
 void Widget::OnWindowMouseDoubleclick(const Point& pos, InputKey key)
 {
+	Point contentPos = pos - ContentGeometry.topLeft();
 	if (CursorLockWidget)
 	{
-		CursorLockWidget->OnMouseDoubleclick(CursorLockWidget->MapFrom(this, pos), key);
+		CursorLockWidget->OnMouseDoubleclick(CursorLockWidget->MapFrom(this, contentPos), key);
 	}
 	else
 	{
-		Widget* widget = ChildAt(pos);
+		Widget* widget = ChildAt(contentPos);
 		if (!widget)
 			widget = this;
 		while (widget)
 		{
-			bool stopPropagation = widget->OnMouseDoubleclick(widget->MapFrom(this, pos), key);
+			bool stopPropagation = widget->OnMouseDoubleclick(widget->MapFrom(this, contentPos), key);
 			if (stopPropagation || widget == this)
 				break;
 			widget = widget->Parent();
@@ -904,18 +907,19 @@ void Widget::OnWindowMouseDoubleclick(const Point& pos, InputKey key)
 
 void Widget::OnWindowMouseUp(const Point& pos, InputKey key)
 {
+	Point contentPos = pos - ContentGeometry.topLeft();
 	if (CursorLockWidget)
 	{
-		CursorLockWidget->OnMouseUp(CursorLockWidget->MapFrom(this, pos), key);
+		CursorLockWidget->OnMouseUp(CursorLockWidget->MapFrom(this, contentPos), key);
 	}
 	else
 	{
-		Widget* widget = ChildAt(pos);
+		Widget* widget = ChildAt(contentPos);
 		if (!widget)
 			widget = this;
 		while (widget)
 		{
-			bool stopPropagation = widget->OnMouseUp(widget->MapFrom(this, pos), key);
+			bool stopPropagation = widget->OnMouseUp(widget->MapFrom(this, contentPos), key);
 			if (stopPropagation || widget == this)
 				break;
 			widget = widget->Parent();
@@ -925,18 +929,19 @@ void Widget::OnWindowMouseUp(const Point& pos, InputKey key)
 
 void Widget::OnWindowMouseWheel(const Point& pos, InputKey key)
 {
+	Point contentPos = pos - ContentGeometry.topLeft();
 	if (CursorLockWidget)
 	{
-		CursorLockWidget->OnMouseWheel(CursorLockWidget->MapFrom(this, pos), key);
+		CursorLockWidget->OnMouseWheel(CursorLockWidget->MapFrom(this, contentPos), key);
 	}
 	else
 	{
-		Widget* widget = ChildAt(pos);
+		Widget* widget = ChildAt(contentPos);
 		if (!widget)
 			widget = this;
 		while (widget)
 		{
-			bool stopPropagation = widget->OnMouseWheel(widget->MapFrom(this, pos), key);
+			bool stopPropagation = widget->OnMouseWheel(widget->MapFrom(this, contentPos), key);
 			if (stopPropagation || widget == this)
 				break;
 			widget = widget->Parent();
