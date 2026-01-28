@@ -382,7 +382,7 @@ int example(Backend backend = Backend::Default, Theme theme = Theme::Default)
 	// just for testing themes
 	switch (theme)
 	{
-		case Theme::Default: WidgetTheme::SetTheme(std::make_unique<LightWidgetTheme>()); break;
+		case Theme::Default: WidgetTheme::SetTheme(std::make_unique<DarkWidgetTheme>()); break;
 		case Theme::Dark:    WidgetTheme::SetTheme(std::make_unique<DarkWidgetTheme>()); break;
 		case Theme::Light:   WidgetTheme::SetTheme(std::make_unique<LightWidgetTheme>()); break;
 	}
