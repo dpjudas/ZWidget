@@ -59,7 +59,6 @@ pushbutton {
 	border-bottom-color: var(--border);
 /*
 	border-image-source: url("button_normal.png");
-	border-image-source: url("button_hot.png");
 	border-top-width: 6;
 	border-bottom-width: 6;
 	border-left-width: 5;
@@ -79,6 +78,9 @@ pushbutton {
 pushbutton:hover {
 	color: var(--fgHover);
 	background-color: var(--bgHover);
+/*
+	border-image-source: url("button_hot.png");
+*/
 }
 
 pushbutton:down {
