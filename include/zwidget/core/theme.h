@@ -111,6 +111,12 @@ public:
 	LightWidgetTheme();
 };
 
+class StylesheetTheme : public WidgetTheme
+{
+public:
+	StylesheetTheme(const std::string& stylesheet);
+};
+
 enum class BorderImageValueType
 {
 	px,

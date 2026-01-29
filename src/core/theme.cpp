@@ -3,6 +3,8 @@
 #include "core/widget.h"
 #include "core/canvas.h"
 #include "core/font.h"
+#include "theme_style_tokenizer.h"
+#include <stdexcept>
 
 void WidgetStyle::SetBool(const std::string& state, const std::string& propertyName, bool value)
 {
@@ -429,6 +431,347 @@ LightWidgetTheme::LightWidgetTheme() : SimpleTheme({
 	Colorf::fromRgb(0xB9B9B9)  // between elements
 	})
 {
+}
+
+/////////////////////////////////////////////////////////////////////////////
+
+static ThemeStyleToken next_token(size_t& pos, const std::vector<ThemeStyleToken>& tokens, bool skip_whitespace = true)
+{
+	ThemeStyleToken token;
+	do
+	{
+		if (pos != tokens.size())
+		{
+			token = tokens[pos];
+			pos++;
+		}
+		else
+		{
+			token = ThemeStyleToken();
+		}
+	} while (token.type == ThemeStyleTokenType::whitespace);
+	return token;
+}
+
+static bool equals(const std::string& a, const std::string& b)
+{
+	return ThemeStyleTokenizer::compare_case_insensitive(a, b);
+}
+
+static bool parse_color(const std::vector<ThemeStyleToken>& tokens, size_t& in_out_pos, Colorf& out_color)
+{
+	size_t pos = in_out_pos;
+	ThemeStyleToken token = next_token(pos, tokens);
+	if (token.type == ThemeStyleTokenType::ident)
+	{
+		if (equals(token.value, "transparent"))
+		{
+			out_color = Colorf(0.0f, 0.0f, 0.0f, 0.0f);
+			in_out_pos = pos;
+			return true;
+		}
+	}
+	else if (token.type == ThemeStyleTokenType::function && equals(token.value, "rgb"))
+	{
+		int color[3] = { 0, 0, 0 };
+		for (int channel = 0; channel < 3; channel++)
+		{
+			token = next_token(pos, tokens);
+			if (token.type == ThemeStyleTokenType::number)
+			{
+				int value = std::atoi(token.value.c_str());
+				value = std::min(255, value);
+				value = std::max(0, value);
+				color[channel] = value;
+			}
+			else if (token.type == ThemeStyleTokenType::percentage)
+			{
+				float value = (float)std::atof(token.value.c_str()) / 100.0f;
+				value = std::min(1.0f, value);
+				value = std::max(0.0f, value);
+				color[channel] = (int)(value * 255.0f);
+			}
+			else
+			{
+				return false;
+			}
+
+			if (channel < 2)
+			{
+				token = next_token(pos, tokens);
+				if (token.type != ThemeStyleTokenType::delim || token.value != ",")
+					return false;
+			}
+		}
+		token = next_token(pos, tokens);
+		if (token.type == ThemeStyleTokenType::bracket_end)
+		{
+			out_color = Colorf(color[0] / 255.0f, color[1] / 255.0f, color[2] / 255.0f, 1.0f);
+			in_out_pos = pos;
+			return true;
+		}
+	}
+	else if (token.type == ThemeStyleTokenType::function && equals(token.value, "rgba"))
+	{
+		float color[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+		for (int channel = 0; channel < 4; channel++)
+		{
+			token = next_token(pos, tokens);
+			if (token.type == ThemeStyleTokenType::number)
+			{
+				if (channel < 3)
+				{
+					int value = std::atoi(token.value.c_str());
+					value = std::min(255, value);
+					value = std::max(0, value);
+					color[channel] = value / 255.0f;
+				}
+				else
+				{
+					color[channel] = (float)std::atof(token.value.c_str());
+				}
+			}
+			else if (token.type == ThemeStyleTokenType::percentage)
+			{
+				float value = (float)std::atof(token.value.c_str()) / 100.0f;
+				value = std::min(1.0f, value);
+				value = std::max(0.0f, value);
+				color[channel] = value;
+			}
+			else
+			{
+				return false;
+			}
+
+			if (channel < 3)
+			{
+				token = next_token(pos, tokens);
+				if (token.type != ThemeStyleTokenType::delim || token.value != ",")
+					return false;
+			}
+		}
+		token = next_token(pos, tokens);
+		if (token.type == ThemeStyleTokenType::bracket_end)
+		{
+			out_color = Colorf(color[0], color[1], color[2], color[3]);
+			in_out_pos = pos;
+			return true;
+		}
+	}
+	else if (token.type == ThemeStyleTokenType::hash)
+	{
+		if (token.value.length() == 3)
+		{
+			float channels[3] = { 0.0f, 0.0f, 0.0f };
+			for (int c = 0; c < 3; c++)
+			{
+				int v = 0;
+				if (token.value[c] >= '0' && token.value[c] <= '9')
+					v = token.value[c] - '0';
+				else if (token.value[c] >= 'a' && token.value[c] <= 'f')
+					v = token.value[c] - 'a' + 10;
+				else if (token.value[c] >= 'A' && token.value[c] <= 'F')
+					v = token.value[c] - 'A' + 10;
+				else
+					return false;
+				v = (v << 4) + v;
+				channels[c] = v / 255.0f;
+			}
+			out_color = Colorf(channels[0], channels[1], channels[2]);
+			in_out_pos = pos;
+			return true;
+		}
+		else if (token.value.length() == 4)
+		{
+			float channels[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+			for (int c = 0; c < 4; c++)
+			{
+				int v = 0;
+				if (token.value[c] >= '0' && token.value[c] <= '9')
+					v = token.value[c] - '0';
+				else if (token.value[c] >= 'a' && token.value[c] <= 'f')
+					v = token.value[c] - 'a' + 10;
+				else if (token.value[c] >= 'A' && token.value[c] <= 'F')
+					v = token.value[c] - 'A' + 10;
+				else
+					return false;
+				v = (v << 4) + v;
+				channels[c] = v / 255.0f;
+			}
+			out_color = Colorf(channels[0], channels[1], channels[2], channels[3]);
+			in_out_pos = pos;
+			return true;
+		}
+		else if (token.value.length() == 6)
+		{
+			float channels[3] = { 0.0f, 0.0f, 0.0f };
+			for (int c = 0; c < 3; c++)
+			{
+				int v = 0;
+				if (token.value[c * 2] >= '0' && token.value[c * 2] <= '9')
+					v = token.value[c * 2] - '0';
+				else if (token.value[c * 2] >= 'a' && token.value[c * 2] <= 'f')
+					v = token.value[c * 2] - 'a' + 10;
+				else if (token.value[c * 2] >= 'A' && token.value[c * 2] <= 'F')
+					v = token.value[c * 2] - 'A' + 10;
+				else
+					return false;
+
+				v <<= 4;
+
+				if (token.value[c * 2 + 1] >= '0' && token.value[c * 2 + 1] <= '9')
+					v += token.value[c * 2 + 1] - '0';
+				else if (token.value[c * 2 + 1] >= 'a' && token.value[c * 2 + 1] <= 'f')
+					v += token.value[c * 2 + 1] - 'a' + 10;
+				else if (token.value[c * 2 + 1] >= 'A' && token.value[c * 2 + 1] <= 'F')
+					v += token.value[c * 2 + 1] - 'A' + 10;
+				else
+					return false;
+
+				channels[c] = v / 255.0f;
+			}
+			out_color = Colorf(channels[0], channels[1], channels[2]);
+			in_out_pos = pos;
+			return true;
+		}
+		else if (token.value.length() == 8)
+		{
+			float channels[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
+			for (int c = 0; c < 4; c++)
+			{
+				int v = 0;
+				if (token.value[c * 2] >= '0' && token.value[c * 2] <= '9')
+					v = token.value[c * 2] - '0';
+				else if (token.value[c * 2] >= 'a' && token.value[c * 2] <= 'f')
+					v = token.value[c * 2] - 'a' + 10;
+				else if (token.value[c * 2] >= 'A' && token.value[c * 2] <= 'F')
+					v = token.value[c * 2] - 'A' + 10;
+				else
+					return false;
+
+				v <<= 4;
+
+				if (token.value[c * 2 + 1] >= '0' && token.value[c * 2 + 1] <= '9')
+					v += token.value[c * 2 + 1] - '0';
+				else if (token.value[c * 2 + 1] >= 'a' && token.value[c * 2 + 1] <= 'f')
+					v += token.value[c * 2 + 1] - 'a' + 10;
+				else if (token.value[c * 2 + 1] >= 'A' && token.value[c * 2 + 1] <= 'F')
+					v += token.value[c * 2 + 1] - 'A' + 10;
+				else
+					return false;
+
+				channels[c] = v / 255.0f;
+			}
+			out_color = Colorf(channels[0], channels[1], channels[2], channels[3]);
+			in_out_pos = pos;
+			return true;
+		}
+	}
+
+	return false;
+}
+
+StylesheetTheme::StylesheetTheme(const std::string& stylesheet)
+{
+	std::unordered_map<std::string, WidgetStyle*> classes;
+	ThemeStyleTokenizer tokenizer(stylesheet);
+	ThemeStyleToken token;
+	while (true)
+	{
+		tokenizer.read(token, true);
+		if (token.type == ThemeStyleTokenType::null)
+			break;
+
+		if (token.type != ThemeStyleTokenType::ident)
+			continue;
+
+		std::string className, partName;
+
+		className = token.value;
+		tokenizer.read(token, true);
+
+		if (token.type == ThemeStyleTokenType::delim)
+		{
+			tokenizer.read(token, true);
+			if (token.type != ThemeStyleTokenType::colon)
+				break;
+
+			partName = token.value;
+			tokenizer.read(token, true);
+		}
+
+		if (token.type != ThemeStyleTokenType::curly_brace_begin)
+			break;
+
+		WidgetStyle* style = classes[className];
+		if (!style)
+		{
+			style = RegisterStyle(std::make_unique<BasicWidgetStyle>(), className);
+			classes[className] = style;
+		}
+
+		while (true)
+		{
+			tokenizer.read(token, true);
+			if (token.type == ThemeStyleTokenType::null)
+				break;
+			
+			if (token.type == ThemeStyleTokenType::ident)
+			{
+				std::string name = token.value;
+				tokenizer.read(token, true);
+				if (token.type == ThemeStyleTokenType::colon)
+				{
+					tokenizer.read(token, true);
+					bool importantFlag = false;
+					std::vector<ThemeStyleToken> tokens = tokenizer.read_property_value(token, importantFlag);
+					if (tokens.empty())
+						continue;
+
+					// To do: maybe use property parsers like ClanLib and UICore does?
+					// That would allow for short form properties
+
+					if (tokens[0].type == ThemeStyleTokenType::ident && (tokens[0].value == "true" || tokens[0].value == "false"))
+					{
+						if (tokens[0].value == "true")
+						{
+							style->SetBool(partName, name, true);
+						}
+						else if (tokens[0].value == "false")
+						{
+							style->SetBool(partName, name, false);
+						}
+					}
+					else if (tokens[0].type == ThemeStyleTokenType::number)
+					{
+						style->SetDouble(partName, name, std::stod(tokens[0].value));
+					}
+					else if (tokens[0].type == ThemeStyleTokenType::string)
+					{
+						style->SetString(partName, name, tokens[0].value);
+					}
+					else if (tokens[0].type == ThemeStyleTokenType::uri)
+					{
+						style->SetImage(partName, name, Image::LoadResource(tokens[0].value));
+					}
+					else
+					{
+						size_t pos = 0;
+						Colorf color;
+						if (parse_color(tokens, pos, color))
+						{
+							style->SetColor(partName, name, color);
+						}
+					}
+				}
+				else
+				{
+					bool important_flag = false;
+					tokenizer.read_property_value(token, important_flag);
+				}
+			}
+		}
+	}
 }
 
 /////////////////////////////////////////////////////////////////////////////

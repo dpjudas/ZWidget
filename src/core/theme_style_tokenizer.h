@@ -54,6 +54,8 @@ public:
 	void read(ThemeStyleToken& out_token, bool eat_whitespace, bool eat_comments = true);
 	std::vector<ThemeStyleToken> read_property_value(ThemeStyleToken& token, bool& out_important_flag);
 
+	static bool compare_case_insensitive(const std::string& a, const std::string& b);
+
 private:
 	void read(ThemeStyleToken& out_token);
 	void peek(ThemeStyleToken& out_token);
@@ -77,7 +79,6 @@ private:
 	size_t read_invalid(size_t p) const;
 	size_t read_uri_nonquoted_string(size_t p, std::string& out_str) const;
 	inline static bool is_whitespace(std::string::value_type c);
-	static bool compare_case_insensitive(const std::string& a, const std::string& b);
 
 	std::string doc;
 	size_t pos = 0;
