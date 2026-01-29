@@ -425,8 +425,10 @@ endif()
 option(ZWIDGET_BUILD_EXAMPLE "Build the zwidget example application" ON)
 
 if(ZWIDGET_BUILD_EXAMPLE)
+	source_group("example" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/example/.+")
 	add_executable(zwidget_example WIN32
 		example/example.cpp
+		example/stylesheet.h
 	)
 	target_compile_options(zwidget_example PRIVATE ${CXX_WARNING_FLAGS})
 
