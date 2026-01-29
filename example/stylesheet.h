@@ -88,9 +88,9 @@ pushbutton:down {
 
 lineedit {
 	noncontent-left: 5;
-	noncontent-top", 3;
-	noncontent-right", 5;
-	noncontent-bottom", 3;
+	noncontent-top: 3;
+	noncontent-right: 5;
+	noncontent-bottom: 3;
 	color: var(--fgLight);
 	background-color: var(--bgLight);
 	border-left-color: var(--border);

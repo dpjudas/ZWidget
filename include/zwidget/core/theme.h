@@ -114,7 +114,7 @@ public:
 class StylesheetTheme : public WidgetTheme
 {
 public:
-	StylesheetTheme(const std::string& stylesheet);
+	StylesheetTheme(const std::string& stylesheet, const std::string& themeClass);
 };
 
 enum class BorderImageValueType

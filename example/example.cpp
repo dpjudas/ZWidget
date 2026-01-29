@@ -21,6 +21,7 @@
 #include <zwidget/widgets/lineedit/lineedit.h>
 #include <zwidget/widgets/tabwidget/tabwidget.h>
 #include <zwidget/widgets/dialog/textinputdialog.h>
+#include "stylesheet.h"
 
 // ************************************************************
 // Prototypes
@@ -379,6 +380,14 @@ int example(Backend backend = Backend::Default, Theme theme = Theme::Default)
 {
 	ResourceLoader::Set(std::make_unique<ExampleResourceLoader>());
 
+#if 1
+	switch (theme)
+	{
+	case Theme::Default: WidgetTheme::SetTheme(std::make_unique<StylesheetTheme>(stylesheet, "dark")); break;
+	case Theme::Dark:    WidgetTheme::SetTheme(std::make_unique<StylesheetTheme>(stylesheet, "dark")); break;
+	case Theme::Light:   WidgetTheme::SetTheme(std::make_unique<StylesheetTheme>(stylesheet, "light")); break;
+	}
+#else
 	// just for testing themes
 	switch (theme)
 	{
@@ -386,6 +395,7 @@ int example(Backend backend = Backend::Default, Theme theme = Theme::Default)
 		case Theme::Dark:    WidgetTheme::SetTheme(std::make_unique<DarkWidgetTheme>()); break;
 		case Theme::Light:   WidgetTheme::SetTheme(std::make_unique<LightWidgetTheme>()); break;
 	}
+#endif
 
 	// just for testing backends
 	switch (backend)

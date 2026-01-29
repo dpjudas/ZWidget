@@ -671,9 +671,12 @@ static bool parse_color(const std::vector<ThemeStyleToken>& tokens, size_t& in_o
 	return false;
 }
 
-StylesheetTheme::StylesheetTheme(const std::string& stylesheet)
+StylesheetTheme::StylesheetTheme(const std::string& stylesheet, const std::string& usedThemeClass)
 {
 	std::unordered_map<std::string, WidgetStyle*> classes;
+	std::unordered_map<std::string, std::vector<ThemeStyleToken>> variables;
+	auto widget = RegisterStyle(std::make_unique<BasicWidgetStyle>(), "widget");
+	classes["widget"] = widget;
 	ThemeStyleTokenizer tokenizer(stylesheet);
 	ThemeStyleToken token;
 	while (true)
@@ -681,6 +684,60 @@ StylesheetTheme::StylesheetTheme(const std::string& stylesheet)
 		tokenizer.read(token, true);
 		if (token.type == ThemeStyleTokenType::null)
 			break;
+
+		// To do: really should parse a full selector chain with properties
+		if (token.type == ThemeStyleTokenType::delim && token.value == ".")
+		{
+			tokenizer.read(token, true);
+			if (token.type != ThemeStyleTokenType::ident)
+				continue;
+			std::string themeClass = token.value;
+			tokenizer.read(token, true);
+
+			if (token.type != ThemeStyleTokenType::curly_brace_begin)
+				break;
+
+			while (true)
+			{
+				tokenizer.read(token, true);
+				if (token.type == ThemeStyleTokenType::null || token.type == ThemeStyleTokenType::curly_brace_end)
+					break;
+
+				std::string name;
+				if (token.type == ThemeStyleTokenType::delim && token.value == "-")
+				{
+					tokenizer.read(token, true);
+					if (token.type == ThemeStyleTokenType::ident)
+					{
+						name = "-" + token.value;
+						tokenizer.read(token, true);
+					}
+				}
+				else if (token.type == ThemeStyleTokenType::ident)
+				{
+					name = token.value;
+					tokenizer.read(token, true);
+				}
+
+				if (!name.empty() && token.type == ThemeStyleTokenType::colon)
+				{
+					tokenizer.read(token, true);
+					bool importantFlag = false;
+					std::vector<ThemeStyleToken> value = tokenizer.read_property_value(token, importantFlag);
+
+					if (themeClass == usedThemeClass)
+					{
+						if (name.size() > 2 && name.substr(0, 2) == "--")
+							variables[name] = std::move(value);
+					}
+				}
+				else
+				{
+					bool important_flag = false;
+					tokenizer.read_property_value(token, important_flag);
+				}
+			}
+		}
 
 		if (token.type != ThemeStyleTokenType::ident)
 			continue;
@@ -690,12 +747,11 @@ StylesheetTheme::StylesheetTheme(const std::string& stylesheet)
 		className = token.value;
 		tokenizer.read(token, true);
 
-		if (token.type == ThemeStyleTokenType::delim)
+		if (token.type == ThemeStyleTokenType::colon)
 		{
 			tokenizer.read(token, true);
-			if (token.type != ThemeStyleTokenType::colon)
+			if (token.type != ThemeStyleTokenType::ident)
 				break;
-
 			partName = token.value;
 			tokenizer.read(token, true);
 		}
@@ -706,14 +762,14 @@ StylesheetTheme::StylesheetTheme(const std::string& stylesheet)
 		WidgetStyle* style = classes[className];
 		if (!style)
 		{
-			style = RegisterStyle(std::make_unique<BasicWidgetStyle>(), className);
+			style = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), className);
 			classes[className] = style;
 		}
 
 		while (true)
 		{
 			tokenizer.read(token, true);
-			if (token.type == ThemeStyleTokenType::null)
+			if (token.type == ThemeStyleTokenType::null || token.type == ThemeStyleTokenType::curly_brace_end)
 				break;
 			
 			if (token.type == ThemeStyleTokenType::ident)
@@ -722,12 +778,50 @@ StylesheetTheme::StylesheetTheme(const std::string& stylesheet)
 				tokenizer.read(token, true);
 				if (token.type == ThemeStyleTokenType::colon)
 				{
+					// Grab property value tokens
 					tokenizer.read(token, true);
 					bool importantFlag = false;
-					std::vector<ThemeStyleToken> tokens = tokenizer.read_property_value(token, importantFlag);
+					std::vector<ThemeStyleToken> origtokens = tokenizer.read_property_value(token, importantFlag);
+
+					// Insert variables (to do: move to function and clean this up!)
+					std::vector<ThemeStyleToken> tokens;
+					for (auto it = origtokens.begin(); it != origtokens.end(); ++it)
+					{
+						const ThemeStyleToken& t = *it;
+						if (t.type == ThemeStyleTokenType::function && t.value == "var")
+						{
+							++it;
+							if (it == origtokens.end() || (*it).type != ThemeStyleTokenType::delim || (*it).value != "-")
+							{
+								tokens.clear();
+								break;
+							}
+
+							++it;
+							if (it == origtokens.end() || (*it).type != ThemeStyleTokenType::ident)
+							{
+								tokens.clear();
+								break;
+							}
+							const auto& variable = variables["-" + (*it).value];
+							tokens.insert(tokens.end(), variable.begin(), variable.end());
+							++it;
+							if (it == origtokens.end() || (*it).type != ThemeStyleTokenType::bracket_end)
+							{
+								tokens.clear();
+								break;
+							}
+						}
+						else
+						{
+							tokens.push_back(t);
+						}
+					}
+
 					if (tokens.empty())
 						continue;
 
+					// Parse the tokens:
 					// To do: maybe use property parsers like ClanLib and UICore does?
 					// That would allow for short form properties
 
@@ -744,7 +838,7 @@ StylesheetTheme::StylesheetTheme(const std::string& stylesheet)
 					}
 					else if (tokens[0].type == ThemeStyleTokenType::number)
 					{
-						style->SetDouble(partName, name, std::stod(tokens[0].value));
+						style->SetDouble(partName, name, std::atof(tokens[0].value.c_str()));
 					}
 					else if (tokens[0].type == ThemeStyleTokenType::string)
 					{
