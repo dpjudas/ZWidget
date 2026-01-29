@@ -11,8 +11,8 @@ static const char* stylesheet = R"xxxx(
 	--fgAction: #FFFFFF;
 	--bgHover:  #003C88; /* hover / highlight */
 	--fgHover:  #FFFFFF;
-	--bgActive: #BBBBBB; /* click */
-	--fgActive: #000000;
+	--bgActive: #004FB4; /* click */
+	--fgActive: #FFFFFF;
 	--border:   #646464; /* around elements */
 	--divider:  #555555; /* between elements */
 }

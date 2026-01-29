@@ -406,8 +406,8 @@ DarkWidgetTheme::DarkWidgetTheme() : SimpleTheme({
 	Colorf::fromRgb(0xFFFFFF), //
 	Colorf::fromRgb(0x003C88), // hover / highlight
 	Colorf::fromRgb(0xFFFFFF), //
-	Colorf::fromRgb(0xBBBBBB), // click
-	Colorf::fromRgb(0x000000), //
+	Colorf::fromRgb(0x004FB4), // click
+	Colorf::fromRgb(0xFFFFFF), //
 	Colorf::fromRgb(0x646464), // around elements
 	Colorf::fromRgb(0x555555)  // between elements
 	})
