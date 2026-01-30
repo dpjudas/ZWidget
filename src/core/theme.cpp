@@ -840,6 +840,10 @@ StylesheetTheme::StylesheetTheme(const std::string& stylesheet, const std::strin
 					{
 						style->SetDouble(partName, name, std::atof(tokens[0].value.c_str()));
 					}
+					else if (tokens.size() == 2 && tokens[0].type == ThemeStyleTokenType::delim && tokens[0].value == "-" && tokens[1].type == ThemeStyleTokenType::number)
+					{
+						style->SetDouble(partName, name, -std::atof(tokens[1].value.c_str()));
+					}
 					else if (tokens[0].type == ThemeStyleTokenType::string)
 					{
 						style->SetString(partName, name, tokens[0].value);

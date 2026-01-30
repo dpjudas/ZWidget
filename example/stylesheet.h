@@ -51,7 +51,6 @@ pushbutton {
 	noncontent-right: 10;
 	noncontent-bottom: 5;
 	color: var(--fgAction);
-
 	background-color: var(--bgAction);
 	border-left-color: var(--border);
 	border-top-color: var(--border);
@@ -196,6 +195,12 @@ tabwidget-stack {
 }
 
 checkbox-label {
+/*
+	checked-image: url("checkbox_checked_normal.png");
+	checked-align: -3;
+	unchecked-image: url("checkbox_unchecked_normal.png");
+	unchecked-align: -3;
+*/
 	checked-outer-border-color: var(--border);
 	checked-inner-border-color: var(--bgMain);
 	checked-color: var(--fgMain);
