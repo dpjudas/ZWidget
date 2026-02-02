@@ -1028,6 +1028,8 @@ float BorderImageRenderer::get_left_grid(float image_area_width, float auto_widt
 
 	if (border_image_width.is_percentage())
 		return border_image_width.number() * image_area_width / 100.0f;
+	else if (border_image_width.is_length())
+		return border_image_width.number();
 	else if (border_image_width.is_number())
 		return border_image_width.number() * (float)geometry.border.left;
 	else
@@ -1040,6 +1042,8 @@ float BorderImageRenderer::get_right_grid(float image_area_width, float auto_wid
 
 	if (border_image_width.is_percentage())
 		return border_image_width.number() * image_area_width / 100.0f;
+	else if (border_image_width.is_length())
+		return border_image_width.number();
 	else if (border_image_width.is_number())
 		return border_image_width.number() * (float)geometry.border.right;
 	else
@@ -1052,6 +1056,8 @@ float BorderImageRenderer::get_top_grid(float image_area_height, float auto_heig
 
 	if (border_image_width.is_percentage())
 		return border_image_width.number() * image_area_height / 100.0f;
+	else if (border_image_width.is_length())
+		return border_image_width.number();
 	else if (border_image_width.is_number())
 		return border_image_width.number() * (float)geometry.border.top;
 	else
@@ -1064,6 +1070,8 @@ float BorderImageRenderer::get_bottom_grid(float image_area_height, float auto_h
 
 	if (border_image_width.is_percentage())
 		return border_image_width.number() * image_area_height / 100.0f;
+	else if (border_image_width.is_length())
+		return border_image_width.number();
 	else if (border_image_width.is_number())
 		return border_image_width.number() * (float)geometry.border.bottom;
 	else
