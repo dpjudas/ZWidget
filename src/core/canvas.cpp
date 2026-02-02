@@ -856,7 +856,9 @@ void BitmapCanvas::drawTile(CanvasTexture* tex, float left, float top, float wid
 
 		uint32_t ty = (int)(vfrac * 128.0f);
 		uint32_t invty = 128 - ty;
+#ifdef USE_SSE2
 		__m128i tyy = _mm_set_epi16(invty, invty, ty, ty, invty, invty, ty, ty);
+#endif
 
 		int x = x0;
 
