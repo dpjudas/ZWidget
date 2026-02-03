@@ -65,9 +65,9 @@ CocoaDisplayBackend::~CocoaDisplayBackend()
 {
 }
 
-std::unique_ptr<DisplayWindow> CocoaDisplayBackend::Create(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI)
+std::unique_ptr<DisplayWindow> CocoaDisplayBackend::Create(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI)
 {
-    return std::make_unique<CocoaDisplayWindow>(windowHost, popupWindow, owner, renderAPI);
+    return std::make_unique<CocoaDisplayWindow>(windowHost, type, owner, renderAPI);
 }
 
 void CocoaDisplayBackend::ProcessEvents()

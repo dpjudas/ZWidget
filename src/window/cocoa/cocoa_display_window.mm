@@ -692,7 +692,7 @@ CVReturn CocoaDisplayWindowImpl::displayLinkOutputCallback(CVDisplayLinkRef disp
     return kCVReturnSuccess;
 }
 
-CocoaDisplayWindow::CocoaDisplayWindow(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI)
+CocoaDisplayWindow::CocoaDisplayWindow(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI)
 {
     impl = std::make_unique<CocoaDisplayWindowImpl>();
     impl->windowHost = windowHost;
@@ -700,7 +700,7 @@ CocoaDisplayWindow::CocoaDisplayWindow(DisplayWindowHost* windowHost, bool popup
 
     NSRect contentRect = NSMakeRect(0, 0, 640, 480);
     NSWindowStyleMask style = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable;
-    if (popupWindow)
+    if (type == WidgetType::Popup)
         style = NSWindowStyleMaskBorderless;
 
     impl->window = [[NSWindow alloc] initWithContentRect:contentRect styleMask:style backing:NSBackingStoreBuffered defer:NO];

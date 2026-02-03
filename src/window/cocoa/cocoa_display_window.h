@@ -11,7 +11,7 @@ struct CocoaDisplayWindowImpl;
 class CocoaDisplayWindow : public DisplayWindow
 {
 public:
-    CocoaDisplayWindow(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI);
+    CocoaDisplayWindow(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI);
     ~CocoaDisplayWindow();
 
     void SetWindowTitle(const std::string& text) override;
