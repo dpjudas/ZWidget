@@ -275,6 +275,14 @@ enum class RenderAPI
 	Metal
 };
 
+enum class WidgetType
+{
+	Child,
+	Window,
+	Popup,
+	Dialog
+};
+
 class DisplayWindow;
 
 class DisplayWindowHost
@@ -302,7 +310,7 @@ public:
 class DisplayWindow
 {
 public:
-	static std::unique_ptr<DisplayWindow> Create(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI);
+	static std::unique_ptr<DisplayWindow> Create(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI);
 
 	static void ProcessEvents();
 	static void RunLoop();
@@ -388,7 +396,7 @@ public:
 	virtual bool IsWayland() { return false; }
 	virtual bool IsCocoa() { return false; }
 
-	virtual std::unique_ptr<DisplayWindow> Create(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI) = 0;
+	virtual std::unique_ptr<DisplayWindow> Create(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI) = 0;
 	virtual void ProcessEvents() = 0;
 	virtual void RunLoop() = 0;
 	virtual void ExitLoop() = 0;

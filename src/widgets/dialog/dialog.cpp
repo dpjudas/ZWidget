@@ -1,9 +1,8 @@
 #include <zwidget/widgets/dialog/dialog.h>
 #include <zwidget/widgets/pushbutton/pushbutton.h>
 
-Dialog::Dialog(Widget* owner) : Widget(owner, WidgetType::Window)
+Dialog::Dialog(Widget* owner) : Widget(owner, WidgetType::Dialog)
 {
-
 }
 
 int Dialog::Exec()

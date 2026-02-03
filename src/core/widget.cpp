@@ -12,7 +12,7 @@ Widget::Widget(Widget* parent, WidgetType type, RenderAPI renderAPI) : Type(type
 	if (type != WidgetType::Child)
 	{
 		Widget* owner = parent ? parent->Window() : nullptr;
-		DispWindow = DisplayWindow::Create(this, type == WidgetType::Popup, owner ? owner->DispWindow.get() : nullptr, renderAPI);
+		DispWindow = DisplayWindow::Create(this, type, owner ? owner->DispWindow.get() : nullptr, renderAPI);
 		if (renderAPI == RenderAPI::Unspecified || renderAPI == RenderAPI::Bitmap)
 		{
 			DispCanvas = Canvas::create();

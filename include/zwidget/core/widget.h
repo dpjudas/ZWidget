@@ -18,13 +18,6 @@ class Layout;
 class Font;
 class Image;
 
-enum class WidgetType
-{
-	Child,
-	Window,
-	Popup
-};
-
 enum class WidgetEvent
 {
 	VisibilityChange,

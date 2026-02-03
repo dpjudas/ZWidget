@@ -85,7 +85,7 @@ private:
 class WaylandDisplayWindow : public DisplayWindow
 {
 public:
-	WaylandDisplayWindow(WaylandDisplayBackend* backend, DisplayWindowHost* windowHost, bool popupWindow, WaylandDisplayWindow* owner, RenderAPI renderAPI);
+	WaylandDisplayWindow(WaylandDisplayBackend* backend, DisplayWindowHost* windowHost, WidgetType type, WaylandDisplayWindow* owner, RenderAPI renderAPI);
 	~WaylandDisplayWindow();
 
 	void SetWindowTitle(const std::string& text) override;

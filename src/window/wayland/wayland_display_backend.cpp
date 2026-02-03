@@ -558,9 +558,9 @@ void WaylandDisplayBackend::ShowCursor(bool enable)
 	m_waylandPointer.set_cursor(m_MouseSerial, enable ? m_cursorSurface : nullptr, 0, 0);
 }
 
-std::unique_ptr<DisplayWindow> WaylandDisplayBackend::Create(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI)
+std::unique_ptr<DisplayWindow> WaylandDisplayBackend::Create(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI)
 {
-	return std::make_unique<WaylandDisplayWindow>(this, windowHost, popupWindow, static_cast<WaylandDisplayWindow*>(owner), renderAPI);
+	return std::make_unique<WaylandDisplayWindow>(this, windowHost, type, static_cast<WaylandDisplayWindow*>(owner), renderAPI);
 }
 
 void WaylandDisplayBackend::OnWindowCreated(WaylandDisplayWindow* window)

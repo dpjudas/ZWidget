@@ -84,7 +84,7 @@ static double DelayLoadGetDpiScale(HWND hwnd)
 	}
 }
 
-Win32DisplayWindow::Win32DisplayWindow(DisplayWindowHost* windowHost, bool popupWindow, Win32DisplayWindow* owner, RenderAPI renderAPI) : WindowHost(windowHost), PopupWindow(popupWindow)
+Win32DisplayWindow::Win32DisplayWindow(DisplayWindowHost* windowHost, WidgetType type, Win32DisplayWindow* owner, RenderAPI renderAPI) : WindowHost(windowHost), PopupWindow(type == WidgetType::Popup)
 {
 	Windows.push_front(this);
 	WindowsIterator = Windows.begin();
@@ -99,23 +99,25 @@ Win32DisplayWindow::Win32DisplayWindow(DisplayWindowHost* windowHost, bool popup
 		classdesc.hbrBackground = (HBRUSH)GetStockObject(BLACK_BRUSH); // Use a black initial color for the window if not using GDI bitmap painting
 	RegisterClassEx(&classdesc);
 
-	// Microsoft logic at its finest:
-	// WS_EX_DLGMODALFRAME hides the sysmenu icon
-	// WS_CAPTION shows the caption (yay! actually a flag that does what it says it does!)
-	// WS_SYSMENU shows the min/max/close buttons
-	// WS_THICKFRAME makes the window resizable
-
 	DWORD style = 0, exstyle = 0;
-	if (popupWindow)
+	if (type == WidgetType::Popup)
 	{
 		exstyle = WS_EX_NOACTIVATE;
 		style = WS_POPUP;
 	}
+	else if (type == WidgetType::Dialog)
+	{
+		exstyle = WS_EX_DLGMODALFRAME | WS_EX_WINDOWEDGE;
+		style = WS_POPUP | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME;
+	}
 	else
 	{
-		exstyle = WS_EX_APPWINDOW | WS_EX_DLGMODALFRAME;
 		style = WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
 	}
+
+	if (!owner)
+		exstyle |= WS_EX_APPWINDOW;
+
 	CreateWindowEx(exstyle, L"ZWidgetWindow", L"", style, 0, 0, 100, 100, owner ? owner->WindowHandle.hwnd : 0, 0, GetModuleHandle(0), this);
 }
 

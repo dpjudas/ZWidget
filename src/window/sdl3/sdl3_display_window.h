@@ -10,7 +10,7 @@
 class SDL3DisplayWindow : public DisplayWindow
 {
 public:
-	SDL3DisplayWindow(DisplayWindowHost* windowHost, bool popupWindow, SDL3DisplayWindow* owner, RenderAPI renderAPI, double uiscale);
+	SDL3DisplayWindow(DisplayWindowHost* windowHost, WidgetType type, SDL3DisplayWindow* owner, RenderAPI renderAPI, double uiscale);
 	~SDL3DisplayWindow();
 
 	void SetWindowTitle(const std::string& text) override;

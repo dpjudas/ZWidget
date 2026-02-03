@@ -8,7 +8,7 @@ Uint32 SDL2DisplayWindow::PaintEventNumber = 0xffffffff;
 bool SDL2DisplayWindow::ExitRunLoop;
 std::unordered_map<int, SDL2DisplayWindow*> SDL2DisplayWindow::WindowList;
 
-SDL2DisplayWindow::SDL2DisplayWindow(DisplayWindowHost* windowHost, bool popupWindow, SDL2DisplayWindow* owner, RenderAPI renderAPI, double uiscale) : WindowHost(windowHost), UIScale(uiscale)
+SDL2DisplayWindow::SDL2DisplayWindow(DisplayWindowHost* windowHost, WidgetType type, SDL2DisplayWindow* owner, RenderAPI renderAPI, double uiscale) : WindowHost(windowHost), UIScale(uiscale)
 {
 	unsigned int flags = SDL_WINDOW_HIDDEN | SDL_WINDOW_RESIZABLE /*| SDL_WINDOW_ALLOW_HIGHDPI*/;
 	if (renderAPI == RenderAPI::Vulkan)
@@ -19,7 +19,7 @@ SDL2DisplayWindow::SDL2DisplayWindow(DisplayWindowHost* windowHost, bool popupWi
 	else if (renderAPI == RenderAPI::Metal)
 		flags |= SDL_WINDOW_METAL;
 #endif
-	if (popupWindow)
+	if (type == WidgetType::Popup)
 		flags |= SDL_WINDOW_BORDERLESS;
 
 	if (renderAPI == RenderAPI::Vulkan || renderAPI == RenderAPI::OpenGL || renderAPI == RenderAPI::Metal)

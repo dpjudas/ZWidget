@@ -7,9 +7,11 @@
 #include "core/widget.h"
 #include <stdexcept>
 
-std::unique_ptr<DisplayWindow> DisplayWindow::Create(DisplayWindowHost* windowHost, bool popupWindow, DisplayWindow* owner, RenderAPI renderAPI)
+std::unique_ptr<DisplayWindow> DisplayWindow::Create(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI)
 {
-	return DisplayBackend::Get()->Create(windowHost, popupWindow, owner, renderAPI);
+	if (type == WidgetType::Child)
+		throw std::runtime_error("WidgetType.Child not allowed for DisplayWindow");
+	return DisplayBackend::Get()->Create(windowHost, type, owner, renderAPI);
 }
 
 void DisplayWindow::ProcessEvents()

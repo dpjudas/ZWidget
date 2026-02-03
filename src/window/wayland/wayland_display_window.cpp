@@ -5,8 +5,8 @@
 
 #include "core/image.h"
 
-WaylandDisplayWindow::WaylandDisplayWindow(WaylandDisplayBackend* backend, DisplayWindowHost* windowHost, bool popupWindow, WaylandDisplayWindow* owner, RenderAPI renderAPI)
-	: backend(backend), m_owner(owner), windowHost(windowHost), m_PopupWindow(popupWindow), m_renderAPI(renderAPI)
+WaylandDisplayWindow::WaylandDisplayWindow(WaylandDisplayBackend* backend, DisplayWindowHost* windowHost, WidgetType type, WaylandDisplayWindow* owner, RenderAPI renderAPI)
+	: backend(backend), m_owner(owner), windowHost(windowHost), m_PopupWindow(type == WidgetType::Popup), m_renderAPI(renderAPI)
 {
 	m_AppSurface = backend->m_waylandCompositor.create_surface();
 
@@ -39,7 +39,7 @@ WaylandDisplayWindow::WaylandDisplayWindow(WaylandDisplayBackend* backend, Displ
 
 	m_WindowActivationToken.set_surface(m_AppSurface);
 
-	if (popupWindow)
+	if (type == WidgetType::Popup)
 	{
 		InitializePopup();
 	}
