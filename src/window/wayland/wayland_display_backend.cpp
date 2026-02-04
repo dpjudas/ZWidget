@@ -33,6 +33,8 @@ WaylandDisplayBackend::WaylandDisplayBackend()
 			 * Presumably referring to wm_capabilities event.
 			 */
 			s_waylandRegistry.bind(name, m_XDGWMBase, 4);
+		if (interface == wayland::xdg_wm_dialog_v1_t::interface_name)
+			s_waylandRegistry.bind(name, m_XDGWMDialog, version);
 		if (interface == wayland::zxdg_output_manager_v1_t::interface_name)
 			s_waylandRegistry.bind(name, m_XDGOutputManager, version);
 		if (interface == wayland::zxdg_exporter_v2_t::interface_name)
@@ -566,7 +568,7 @@ std::unique_ptr<DisplayWindow> WaylandDisplayBackend::Create(DisplayWindowHost* 
 void WaylandDisplayBackend::OnWindowCreated(WaylandDisplayWindow* window)
 {
 	s_Windows.push_back(window);
-	if (!window->m_PopupWindow)
+	if (!window->IsPopupWindow())
 	{
 		m_FocusWindow = window;
 		m_MouseFocusWindow = window;
