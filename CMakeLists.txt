@@ -220,6 +220,8 @@ set(ZWIDGET_WAYLAND_SOURCES
 	src/window/wayland/wl_fractional_scaling_protocol.hpp
 	src/window/wayland/wl_cursor_shape.cpp
 	src/window/wayland/wl_cursor_shape.hpp
+	src/window/wayland/wl_xdg_dialog_v1.cpp
+	src/window/wayland/wl_xdg_dialog_v1.hpp
 	src/window/wayland/wl_xdg_toplevel_icon.cpp
 	src/window/wayland/wl_xdg_toplevel_icon.hpp
 )
