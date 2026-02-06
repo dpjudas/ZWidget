@@ -225,6 +225,9 @@ LauncherWindowTab2::LauncherWindowTab2(Widget parent): Widget(nullptr)
 	GamesList->AddItem("The Doom");
 	GamesList->AddItem("Doom 2");
 
+	GamesList->ShowHeaders(true);
+	GamesList->SetHeaderText(0, "Game");
+
 	GeneralLabel->SetText("General");
 	ExtrasLabel->SetText("Extra Graphics");
 	FullscreenCheckbox->SetText("Fullscreen");
