@@ -14,6 +14,8 @@ public:
 	ListView(Widget* parent = nullptr);
 
 	void SetColumnWidths(const std::vector<double>& widths);
+	void SetHeaderText(int index, const std::string& headerText);
+	void ShowHeaders(bool value) { m_ShowHeaders = value; }
 	void AddItem(const std::string& text, int index = -1, int column = 0);
 	void UpdateItem(const std::string& text, int index, int column = 0);
 	void RemoveItem(int index = -1);
@@ -45,9 +47,13 @@ protected:
 
 	Scrollbar* scrollbar = nullptr;
 
+	std::vector<std::string> m_HeaderTexts = {""};
 	std::vector<std::vector<std::string>> items;
 	std::vector<double> columnwidths;
 	int selectedItem = 0;
 
 	friend Dropdown;
+
+private:
+	bool m_ShowHeaders = false;
 };
