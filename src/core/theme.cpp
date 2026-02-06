@@ -194,20 +194,20 @@ WidgetTheme* WidgetTheme::GetTheme()
 
 /////////////////////////////////////////////////////////////////////////////
 
-SimpleTheme::SimpleTheme(const ThemeColors& theme)
+SimpleTheme::SimpleTheme(const ThemeColors& colors)
 {
-	auto bgMain   = theme.bgMain;   // background
-	auto fgMain   = theme.fgMain;   //
-	auto bgLight  = theme.bgLight;  // headers / inputs
-	auto fgLight  = theme.fgLight;  //
-	auto bgAction = theme.bgAction; // interactive elements
-	auto fgAction = theme.fgAction; //
-	auto bgHover  = theme.bgHover;  // hover / highlight
-	auto fgHover  = theme.fgHover;  //
-	auto bgActive = theme.bgActive; // click
-	auto fgActive = theme.fgActive; //
-	auto border   = theme.border;   // around elements
-	auto divider  = theme.divider;  // between elements
+	auto bgMain   = colors.bgMain;   // background
+	auto fgMain   = colors.fgMain;   //
+	auto bgLight  = colors.bgLight;  // headers / inputs
+	auto fgLight  = colors.fgLight;  //
+	auto bgAction = colors.bgAction; // interactive elements
+	auto fgAction = colors.fgAction; //
+	auto bgHover  = colors.bgHover;  // hover / highlight
+	auto fgHover  = colors.fgHover;  //
+	auto bgActive = colors.bgActive; // click
+	auto fgActive = colors.fgActive; //
+	auto border   = colors.border;   // around elements
+	auto divider  = colors.divider;  // between elements
 
 	auto none   = Colorf::transparent();
 
@@ -311,6 +311,8 @@ SimpleTheme::SimpleTheme(const ThemeColors& theme)
 	listview->SetColor("border-right-color", border);
 	listview->SetColor("border-bottom-color", border);
 	listview->SetColor("selection-color", bgHover);
+	listview->SetColor("header-background-color", bgLight);
+	listview->SetColor("header-text-color", fgLight);
 
 	dropdown->SetDouble("noncontent-left", 5.0);
 	dropdown->SetDouble("noncontent-top", 5.0);
