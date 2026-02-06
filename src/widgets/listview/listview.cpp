@@ -24,16 +24,26 @@ void ListView::SetColumnWidths(const std::vector<double>& widths)
 		{
 			updated = true;
 			column.push_back("");
+			m_HeaderTexts.push_back("");
 		}
 		while (column.size() > newWidth)
 		{
 			updated = true;
 			column.pop_back();
+			m_HeaderTexts.pop_back();
 		}
 	}
 
 	if (updated)
 		Update();
+}
+
+void ListView::SetHeaderText(const int index, const std::string& headerText)
+{
+	if (index < 0 || index >= m_HeaderTexts.size())
+		return;
+
+	m_HeaderTexts[index] = headerText;
 }
 
 void ListView::AddItem(const std::string& text, int index, int column)
@@ -158,6 +168,27 @@ void ListView::OnPaint(Canvas* canvas)
 	// Make sure the text doesn't enter the scrollbar's area.
 	canvas->pushClip({ 0.0, 0.0, w, GetHeight() });
 
+	if (m_ShowHeaders)
+	{
+		// Draw the header rectangles and header texts
+		// This is drawn last so that the elements don't appear on top of the header
+		Colorf headerColor = GetStyleColor("header-background-color");
+		Colorf headerTextColor = GetStyleColor("header-text-color");
+		double cx = x;
+
+		for (size_t idx = 0 ; idx < columnwidths.size() ; idx++)
+		{
+			canvas->fillRect(Rect::xywh(x, 0, columnwidths[idx], h), headerColor);
+			canvas->drawText(GetFont(), Point(cx, h / 2), m_HeaderTexts[idx], headerTextColor);
+			cx += columnwidths[idx];
+		}
+
+		y += h;
+
+		// So that the elements don't overlap with the header area
+		canvas->pushClip({ 0.0, h, w, GetHeight() });
+	}
+
 	int index = 0;
 	for (const std::vector<std::string>& item : items)
 	{
@@ -179,6 +210,12 @@ void ListView::OnPaint(Canvas* canvas)
 		index++;
 	}
 
+	if (m_ShowHeaders)
+	{
+		// Delete the header clip
+		canvas->popClip();
+	}
+
 	canvas->popClip();
 }
 
@@ -188,7 +225,13 @@ bool ListView::OnMouseDown(const Point& pos, InputKey key)
 
 	if (key == InputKey::LeftMouse)
 	{
-		int index = (int)((pos.y - 5.0 + scrollbar->GetPosition()) / getItemHeight());
+		auto y = pos.y;
+
+		// If the headers are shown, push the y position a bit.
+		if (m_ShowHeaders)
+			y -= getItemHeight();
+
+		int index = (int)((y - 5.0 + scrollbar->GetPosition()) / getItemHeight());
 		if (index >= 0 && (size_t)index < items.size())
 		{
 			ScrollToItem(index);
