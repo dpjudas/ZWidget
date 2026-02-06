@@ -129,6 +129,8 @@ listview {
 	border-right-color: var(--border);
 	border-bottom-color: var(--border);
 	selection-color: var(--bgHover);
+	header-background-color: var(--bgLight);
+	header-text-color: var(--fgLight);
 }
 
 dropdown {
