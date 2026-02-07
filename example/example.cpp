@@ -217,16 +217,17 @@ LauncherWindowTab2::LauncherWindowTab2(Widget parent): Widget(nullptr)
 	VersionLabel->SetText("Version 0xdeadbabe.");
 	SelectLabel->SetText("Select which game file (IWAD) to run.");
 
-	GamesList->AddItem("Doom");
-	GamesList->AddItem("Doom 2: Electric Boogaloo");
-	GamesList->AddItem("Doom 3D");
-	GamesList->AddItem("Doom 4: The Quest for Peace");
-	GamesList->AddItem("Doom on Ice");
-	GamesList->AddItem("The Doom");
-	GamesList->AddItem("Doom 2");
+	GamesList->AddItem({ "Doom", "The OG game" });
+	GamesList->AddItem({ "Doom 2: Electric Boogaloo", "For musicians" });
+	GamesList->AddItem({ "Doom 3D", "Not just 2.5D anymore!" });
+	GamesList->AddItem({ "Doom 4: The Quest for Peace", "Did they find it?"});
+	GamesList->AddItem({ "Doom on Ice", "Ice ice baby!" });
+	GamesList->AddItem({ "The Doom", "The one and only" });
+	GamesList->AddItem({ "Doom 2", "Moar monsters" });
 
-	GamesList->ShowHeaders(true);
-	GamesList->SetHeaderText(0, "Game");
+	GamesList->ShowHeader(true);
+	GamesList->SetColumn(0, "Game", 250.0);
+	GamesList->SetColumn(1, "Description", 500.0);
 
 	GeneralLabel->SetText("General");
 	ExtrasLabel->SetText("Extra Graphics");
@@ -283,7 +284,7 @@ LauncherWindowTab3::LauncherWindowTab3(Widget parent): Widget(nullptr)
 	QuestionPopup->SetText("Pop up a question...");
 	TextInputPopup->SetText("Pop up a Text Input Dialog");
 
-	Choices->SetMaxDisplayItems(2);
+	Choices->SetMaxDisplayItems(3);
 	Choices->AddItem("First");
 	Choices->AddItem("Second");
 	Choices->AddItem("Third");
@@ -383,7 +384,7 @@ int example(Backend backend = Backend::Default, Theme theme = Theme::Default)
 {
 	ResourceLoader::Set(std::make_unique<ExampleResourceLoader>());
 
-#if 1
+#if 0
 	switch (theme)
 	{
 	case Theme::Default: WidgetTheme::SetTheme(std::make_unique<StylesheetTheme>(stylesheet, "dark")); break;

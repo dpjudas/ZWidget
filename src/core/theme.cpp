@@ -217,6 +217,8 @@ SimpleTheme::SimpleTheme(const ThemeColors& colors)
 	auto lineedit = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "lineedit");
 	auto textedit = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "textedit");
 	auto listview = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "listview");
+	auto listviewheader = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "listview-header");
+	auto listviewbody = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "listview-body");
 	auto dropdown = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "dropdown");
 	auto scrollbar = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "scrollbar");
 	auto tabbar = RegisterStyle(std::make_unique<BasicWidgetStyle>(widget), "tabbar");
@@ -304,15 +306,20 @@ SimpleTheme::SimpleTheme(const ThemeColors& colors)
 	listview->SetDouble("noncontent-top", 10.0);
 	listview->SetDouble("noncontent-right", 3.0);
 	listview->SetDouble("noncontent-bottom", 10.0);
-	listview->SetColor("color", fgLight);
 	listview->SetColor("background-color", bgLight);
 	listview->SetColor("border-left-color", border);
 	listview->SetColor("border-top-color", border);
 	listview->SetColor("border-right-color", border);
 	listview->SetColor("border-bottom-color", border);
-	listview->SetColor("selection-color", bgHover);
-	listview->SetColor("header-background-color", bgLight);
-	listview->SetColor("header-text-color", fgLight);
+
+	listviewheader->SetDouble("noncontent-left", 2.0);
+	listviewheader->SetDouble("noncontent-right", 2.0);
+	listviewheader->SetColor("background-color", bgAction);
+	listviewheader->SetColor("color", fgLight);
+
+	listviewbody->SetDouble("noncontent-top", 2.0);
+	listviewbody->SetColor("color", fgLight);
+	listviewbody->SetColor("selection-color", bgHover);
 
 	dropdown->SetDouble("noncontent-left", 5.0);
 	dropdown->SetDouble("noncontent-top", 5.0);

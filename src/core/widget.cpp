@@ -246,7 +246,7 @@ void Widget::SetFrameGeometry(const Rect& geometry)
 		top = GridFitPoint(top);
 		right = GridFitPoint(right);
 		bottom = GridFitPoint(bottom);
-		ContentGeometry = Rect::ltrb(left, top, right, bottom);
+		ContentGeometry = Rect::ltrb(left, top, std::max(right, left), std::max(bottom, top));
 
 		if (m_Layout)
 			m_Layout->OnGeometryChanged();
@@ -1002,7 +1002,7 @@ void Widget::OnWindowGeometryChanged()
 	top = GridFitPoint(top);
 	right = GridFitPoint(right);
 	bottom = GridFitPoint(bottom);
-	ContentGeometry = Rect::ltrb(left, top, right, bottom);
+	ContentGeometry = Rect::ltrb(left, top, std::max(left, right), std::max(bottom, top));
 
 	if (m_Layout)
 		m_Layout->OnGeometryChanged();

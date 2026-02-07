@@ -122,15 +122,24 @@ listview {
 	noncontent-top: 10;
 	noncontent-right: 3;
 	noncontent-bottom: 10;
-	color: var(--fgLight);
 	background-color: var(--bgLight);
 	border-left-color: var(--border);
 	border-top-color: var(--border);
 	border-right-color: var(--border);
 	border-bottom-color: var(--border);
+}
+
+listview-body {
+	color: var(--fgLight);
 	selection-color: var(--bgHover);
-	header-background-color: var(--bgLight);
-	header-text-color: var(--fgLight);
+	noncontent-top: 2;
+}
+
+listview-header {
+	background-color: var(--bgAction);
+	color: var(--fgLight);
+	noncontent-left: 2;
+	noncontent-right: 2;
 }
 
 dropdown {
