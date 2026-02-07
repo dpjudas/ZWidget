@@ -118,10 +118,10 @@ textedit {
 }
 
 listview {
-	noncontent-left: 10;
-	noncontent-top: 10;
-	noncontent-right: 3;
-	noncontent-bottom: 10;
+	noncontent-left: 1;
+	noncontent-top: 1;
+	noncontent-right: 1;
+	noncontent-bottom: 1;
 	background-color: var(--bgLight);
 	border-left-color: var(--border);
 	border-top-color: var(--border);
@@ -133,12 +133,14 @@ listview-body {
 	color: var(--fgLight);
 	selection-color: var(--bgHover);
 	noncontent-top: 2;
+	noncontent-left: 8;
+	noncontent-bottom: 9;
 }
 
 listview-header {
 	background-color: var(--bgAction);
 	color: var(--fgLight);
-	noncontent-left: 2;
+	noncontent-left: 10;
 	noncontent-right: 2;
 }
 
@@ -159,6 +161,8 @@ dropdown {
 scrollbar {
 	track-color: var(--divider);
 	thumb-color: var(--border);
+	noncontent-top: 5;
+	noncontent-bottom: 5;
 }
 
 tabbar {

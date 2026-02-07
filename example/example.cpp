@@ -384,7 +384,7 @@ int example(Backend backend = Backend::Default, Theme theme = Theme::Default)
 {
 	ResourceLoader::Set(std::make_unique<ExampleResourceLoader>());
 
-#if 0
+#if 1
 	switch (theme)
 	{
 	case Theme::Default: WidgetTheme::SetTheme(std::make_unique<StylesheetTheme>(stylesheet, "dark")); break;
