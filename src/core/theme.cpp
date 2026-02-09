@@ -179,7 +179,11 @@ WidgetStyle* WidgetTheme::RegisterStyle(std::unique_ptr<WidgetStyle> widgetStyle
 WidgetStyle* WidgetTheme::GetStyle(const std::string& widgetClass)
 {
 	auto it = Styles.find(widgetClass);
-	return it != Styles.end() ? it->second.get() : nullptr;
+	if (it != Styles.end())
+		return it->second.get();
+	if (widgetClass != "widget")
+		return GetStyle("widget");
+	return nullptr;
 }
 
 void WidgetTheme::SetTheme(std::unique_ptr<WidgetTheme> theme)
