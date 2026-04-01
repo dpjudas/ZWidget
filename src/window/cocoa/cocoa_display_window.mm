@@ -56,10 +56,9 @@ typedef VkResult(VKAPI_PTR* PFN_vkCreateMetalSurfaceEXT)(
 #endif
 
 #ifdef HAVE_OPENGL
+#define GL_SILENCE_DEPRECATION
 #import <OpenGL/gl.h>
 #import <OpenGL/glu.h>
-
-#define GL_SILENCE_DEPRECATION
 #endif
 
 // Forward declarations
@@ -637,6 +636,8 @@ void CocoaDisplayWindowImpl::stopDisplayLink()
 void CocoaDisplayWindowImpl::initOpenGL(ZWidgetView* view)
 {
 #ifdef HAVE_OPENGL
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
     NSOpenGLPixelFormatAttribute attrs[] = { NSOpenGLPFAAccelerated, NSOpenGLPFANoRecovery, NSOpenGLPFADoubleBuffer, NSOpenGLPFAColorSize, 24, NSOpenGLPFAAlphaSize, 8, NSOpenGLPFADepthSize, 24, 0 };
     NSOpenGLPixelFormat* pixelFormat = [[NSOpenGLPixelFormat alloc] initWithAttributes:attrs];
     openglContext = [[NSOpenGLContext alloc] initWithFormat:pixelFormat shareContext:nil];
@@ -649,6 +650,7 @@ void CocoaDisplayWindowImpl::initOpenGL(ZWidgetView* view)
     {
         renderAPI = RenderAPI::Bitmap; // Fallback if OpenGL not available
     }
+#pragma clang diagnostic pop
 #else
     renderAPI = RenderAPI::Bitmap; // Fallback if OpenGL not available
 #endif
