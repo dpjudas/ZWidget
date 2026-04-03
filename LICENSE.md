@@ -2,7 +2,7 @@
 
 ## License for ZWidget itself
 
-	// Copyright (c) 2023-2026 Magnus Norddahl, Luper Everett and contributors
+	// Copyright (c) 2023-2026 Magnus Norddahl, Lupert Everett and contributors
 	// 
 	// This software is provided 'as-is', without any express or implied
 	// warranty.  In no event will the authors be held liable for any damages
