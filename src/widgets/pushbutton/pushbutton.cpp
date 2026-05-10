@@ -59,7 +59,7 @@ bool PushButton::OnMouseUp(const Point& pos, InputKey key)
 	if (GetStyleState() == "down")
 	{
 		SetStyleState("");
-		Repaint();
+		Update();
 		Click();
 	}
 	return true;
@@ -84,7 +84,7 @@ void PushButton::OnKeyUp(InputKey key)
 	if (key == InputKey::Space || key == InputKey::Enter)
 	{
 		SetStyleState("");
-		Repaint();
+		Update();
 		Click();
 	}
 }

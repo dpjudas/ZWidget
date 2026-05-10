@@ -8,7 +8,11 @@ Dialog::Dialog(Widget* owner) : Widget(owner, WidgetType::Dialog)
 int Dialog::Exec()
 {
     Show();
-    DisplayWindow::RunLoop();
+    m_Running = true;
+    while (m_Running)
+    {
+        DisplayWindow::ProcessEvents();
+    }
     Hide();
     return m_ExitCode;
 }
@@ -16,7 +20,7 @@ int Dialog::Exec()
 void Dialog::ExitLoop(const int code)
 {
     m_ExitCode = code;
-    DisplayWindow::ExitLoop();
+    m_Running = false;
 }
 
 void Dialog::Accept()

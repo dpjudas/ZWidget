@@ -59,4 +59,5 @@ protected:
 
 private:
     int m_ExitCode = 0;
+    bool m_Running = false;
 };

@@ -335,17 +335,37 @@ elseif(APPLE)
 	if (NOT UNIFORMTYPEIDENTIFIERS_FRAMEWORK)
 		message(FATAL_ERROR "UniformTypeIdentifiers framework not found")
 	endif()
-elseif(HAIKU)
-	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_UNIX_SOURCES})
-	set(ZWIDGET_LIBS ${CMAKE_DL_LIBS})
-	set(ZWIDGET_DEFINES -DUNIX -D_UNIX)
+endif()
+
+if(HAIKU)
+	set(ZWIDGET_HAIKU_SOURCES
+		src/window/haiku/haiku_display_backend.cpp
+		src/window/haiku/haiku_display_backend.h
+		src/window/haiku/haiku_display_window.cpp
+		src/window/haiku/haiku_display_window.h
+		src/window/haiku/haiku_window.cpp
+		src/window/haiku/haiku_window.h
+		src/window/haiku/haiku_app.cpp
+		src/window/haiku/haiku_app.h
+		src/window/haiku/haiku_open_file_dialog.h
+		src/window/haiku/haiku_open_file_dialog.cpp
+		src/window/haiku/haiku_save_file_dialog.h
+		src/window/haiku/haiku_save_file_dialog.cpp
+		src/window/haiku/haiku_open_folder_dialog.h
+		src/window/haiku/haiku_open_folder_dialog.cpp
+		src/core/resourcedata_haiku.cpp
+		src/core/theme_haiku.cpp
+	)
+	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_HAIKU_SOURCES})
+	set(ZWIDGET_LIBS ${CMAKE_DL_LIBS} be tracker game GL)
+	set(ZWIDGET_DEFINES -D__HAIKU__)
 	set(ZWIDGET_LINK_OPTIONS -pthread)
 else()
-	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_UNIX_SOURCES})
-	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_X11_SOURCES})
+	set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_UNIX_SOURCES} ${ZWIDGET_X11_SOURCES})
 	set(ZWIDGET_LIBS ${CMAKE_DL_LIBS} -lX11 -lXi)
 	set(ZWIDGET_DEFINES -DUNIX -D_UNIX -DUSE_X11)
 	set(ZWIDGET_LINK_OPTIONS -pthread)
+
 	if (DBUS_FOUND)
 		include_directories("/usr/lib64/dbus-1.0/include") # Bazzite (and probably Fedora 42) keeps the platform-specific dbus headers in this folder
 		set(ZWIDGET_SOURCES ${ZWIDGET_SOURCES} ${ZWIDGET_DBUS_SOURCES})
@@ -474,5 +494,19 @@ if(ZWIDGET_BUILD_EXAMPLE)
 
 	if(MSVC)
 		set_property(TARGET zwidget_example PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+	endif()
+endif()
+
+option(ZWIDGET_BUILD_TESTS "Build the zwidget test applications" ON)
+
+if(ZWIDGET_BUILD_TESTS)
+	source_group("tests" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/tests/.+")
+	add_executable(test_key_scan test_key_scan.cpp)
+	target_link_libraries(test_key_scan PRIVATE zwidget)
+	target_compile_options(test_key_scan PRIVATE ${CXX_WARNING_FLAGS})
+	set_target_properties(test_key_scan PROPERTIES CXX_STANDARD 20)
+
+	if(MSVC)
+		set_property(TARGET test_key_scan PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	endif()
 endif()
