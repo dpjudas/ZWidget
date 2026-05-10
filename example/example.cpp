@@ -384,6 +384,13 @@ int example(Backend backend = Backend::Default, Theme theme = Theme::Default)
 {
 	ResourceLoader::Set(std::make_unique<ExampleResourceLoader>());
 
+#ifdef __HAIKU__
+	if (theme == Theme::Default)
+	{
+		WidgetTheme::SetTheme(std::make_unique<HaikuWidgetTheme>());
+	}
+	else
+#endif
 #if 1
 	switch (theme)
 	{

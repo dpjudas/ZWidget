@@ -111,6 +111,14 @@ public:
 	LightWidgetTheme();
 };
 
+#ifdef __HAIKU__
+class HaikuWidgetTheme : public SimpleTheme
+{
+public:
+	HaikuWidgetTheme();
+};
+#endif
+
 class StylesheetTheme : public WidgetTheme
 {
 public:
