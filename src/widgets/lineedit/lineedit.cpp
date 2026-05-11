@@ -354,17 +354,12 @@ bool LineEdit::OnMouseUp(const Point& pos, InputKey key)
 
 void LineEdit::OnKeyChar(std::string chars)
 {
-	printf("LineEdit::OnKeyChar: received '%s'\n", chars.c_str());
 	if (FuncFilterKeyChar)
 	{
 		chars = FuncFilterKeyChar(chars);
 		if (chars.empty())
-		{
-			printf("LineEdit::OnKeyChar: filtered out\n");
 			return;
-		}
 	}
-    // ... existing logic ...
 
 	if (!chars.empty() && !(chars[0] >= 0 && chars[0] < 32))
 	{
@@ -420,10 +415,8 @@ void LineEdit::OnKeyChar(std::string chars)
 
 void LineEdit::OnKeyDown(InputKey key)
 {
-	printf("LineEdit::OnKeyDown: key=%d\n", (int)key);
 	if (FuncIgnoreKeyDown && FuncIgnoreKeyDown(key))
 		return;
-    // ... rest of the function ...
 
 	if (key == InputKey::Enter)
 	{

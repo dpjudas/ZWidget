@@ -59,5 +59,7 @@ protected:
 
 private:
     int m_ExitCode = 0;
+#ifdef __HAIKU__
     bool m_Running = false;
+#endif
 };

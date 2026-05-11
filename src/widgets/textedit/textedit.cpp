@@ -337,8 +337,12 @@ bool TextEdit::OnMouseUp(const Point& pos, InputKey key)
 
 void TextEdit::OnKeyChar(std::string chars)
 {
+#ifdef __HAIKU__
 	if (!readonly && !chars.empty())
-{
+#else
+	if (!readonly && !chars.empty() && !(chars[0] >= 0 && chars[0] < 32))
+#endif
+	{
 		if (FuncBeforeEditChanged)
 			FuncBeforeEditChanged();
 

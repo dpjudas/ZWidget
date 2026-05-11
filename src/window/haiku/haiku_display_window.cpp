@@ -11,7 +11,6 @@
 HaikuDisplayWindow::HaikuDisplayWindow(DisplayWindowHost* windowHost, WidgetType type, HaikuDisplayWindow* owner, RenderAPI renderAPI)
 	: windowHost(windowHost)
 {
-    std::cout << "HaikuDisplayWindow constructor called" << std::endl;
 	BRect frame(100, 100, 715, 768); // Default initial frame
 	
     window_look look = B_TITLED_WINDOW_LOOK;
@@ -29,8 +28,7 @@ HaikuDisplayWindow::HaikuDisplayWindow(DisplayWindowHost* windowHost, WidgetType
         feel = B_MODAL_APP_WINDOW_FEEL;
     }
 
-	std::cout << "Creating ZWindow" << std::endl; 
-    window = new ZWindow(frame, "ZWidget", this, look, feel, flags, renderAPI == RenderAPI::OpenGL);
+	window = new ZWindow(frame, "ZWidget", this, look, feel, flags, renderAPI == RenderAPI::OpenGL);
 	
     if (renderAPI == RenderAPI::Bitmap || renderAPI == RenderAPI::Unspecified)
         bitmap = new BBitmap(window->Bounds(), B_RGB32);
@@ -68,7 +66,7 @@ void HaikuDisplayWindow::SetClientFrame(const Rect& box)
 void HaikuDisplayWindow::Show() 
 {
     if (window) {
-        std::cout << "Showing ZWindow" << std::endl; window->Show();
+        window->Show();
     }
 }
 

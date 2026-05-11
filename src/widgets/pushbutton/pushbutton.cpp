@@ -1,5 +1,5 @@
-
 #include "widgets/pushbutton/pushbutton.h"
+#include <zwidget/core/canvas.h>
 
 PushButton::PushButton(Widget* parent) : Widget(parent)
 {
@@ -32,6 +32,12 @@ double PushButton::GetPreferredHeight()
 	return std::max(20.0, canvas->measureText(GetFont(), text).height);
 }
 
+void PushButton::Click()
+{
+	if (OnClick)
+		OnClick();
+}
+
 void PushButton::OnPaint(Canvas* canvas)
 {
 	FontMetrics metrics = canvas->getFontMetrics(GetFont());
@@ -45,6 +51,11 @@ void PushButton::OnMouseMove(const Point& pos)
 	{
 		SetStyleState("hover");
 	}
+}
+
+void PushButton::OnMouseLeave()
+{
+	SetStyleState("");
 }
 
 bool PushButton::OnMouseDown(const Point& pos, InputKey key)
@@ -65,11 +76,6 @@ bool PushButton::OnMouseUp(const Point& pos, InputKey key)
 	return true;
 }
 
-void PushButton::OnMouseLeave()
-{
-	SetStyleState("");
-}
-
 void PushButton::OnKeyDown(InputKey key)
 {
 	if (key == InputKey::Space || key == InputKey::Enter)
@@ -87,10 +93,4 @@ void PushButton::OnKeyUp(InputKey key)
 		Update();
 		Click();
 	}
-}
-
-void PushButton::Click()
-{
-	if (OnClick)
-		OnClick();
 }

@@ -3,8 +3,8 @@
 
 ZApplication::ZApplication() : BApplication("application/x-vnd.zwidget-example") {}
 
-void ZApplication::ReadyToRun() {
-    std::cout << "Application Ready!" << std::endl;
+void ZApplication::ReadyToRun()
+{
 }
 
 void ZApplication::MessageReceived(BMessage* message) {

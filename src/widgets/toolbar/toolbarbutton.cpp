@@ -91,7 +91,7 @@ bool ToolbarButton::OnMouseUp(const Point& pos, InputKey key)
 	if (GetStyleState() == "down")
 	{
 		SetStyleState("");
-		Repaint();
+		Update();
 		Click();
 	}
 	return true;
