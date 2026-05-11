@@ -496,17 +496,3 @@ if(ZWIDGET_BUILD_EXAMPLE)
 		set_property(TARGET zwidget_example PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 	endif()
 endif()
-
-option(ZWIDGET_BUILD_TESTS "Build the zwidget test applications" ON)
-
-if(ZWIDGET_BUILD_TESTS)
-	source_group("tests" REGULAR_EXPRESSION "${CMAKE_CURRENT_SOURCE_DIR}/tests/.+")
-	add_executable(test_key_scan test_key_scan.cpp)
-	target_link_libraries(test_key_scan PRIVATE zwidget)
-	target_compile_options(test_key_scan PRIVATE ${CXX_WARNING_FLAGS})
-	set_target_properties(test_key_scan PROPERTIES CXX_STANDARD 20)
-
-	if(MSVC)
-		set_property(TARGET test_key_scan PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-	endif()
-endif()
