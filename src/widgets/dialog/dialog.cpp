@@ -8,11 +8,15 @@ Dialog::Dialog(Widget* owner) : Widget(owner, WidgetType::Dialog)
 int Dialog::Exec()
 {
     Show();
+#ifdef __HAIKU__
     m_Running = true;
     while (m_Running)
     {
         DisplayWindow::ProcessEvents();
     }
+#else
+    DisplayWindow::RunLoop();
+#endif
     Hide();
     return m_ExitCode;
 }
@@ -20,7 +24,11 @@ int Dialog::Exec()
 void Dialog::ExitLoop(const int code)
 {
     m_ExitCode = code;
+#ifdef __HAIKU__
     m_Running = false;
+#else
+    DisplayWindow::ExitLoop();
+#endif
 }
 
 void Dialog::Accept()

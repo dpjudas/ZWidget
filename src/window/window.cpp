@@ -5,7 +5,6 @@
 #include "window/stub/stub_save_file_dialog.h"
 #include "window/sdlnativehandle.h"
 #include "core/widget.h"
-#include <iostream>
 #include <stdexcept>
 
 std::unique_ptr<DisplayWindow> DisplayWindow::Create(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI)
@@ -94,39 +93,39 @@ std::unique_ptr<DisplayBackend> DisplayBackend::TryCreateBackend()
 		std::string backendSelectionStr(backendSelectionEnv);
 		if (backendSelectionStr == "Win32")
 		{
-			std::cout << "Creating Win32" << std::endl; backend = TryCreateWin32();
+			backend = TryCreateWin32();
 		}
 		else if (backendSelectionStr == "Cocoa")
 		{
-			std::cout << "Creating Cocoa" << std::endl; backend = TryCreateCocoa();
+			backend = TryCreateCocoa();
 		}
 		else if (backendSelectionStr == "X11")
 		{
-			std::cout << "Creating X11" << std::endl; backend = TryCreateX11();
+			backend = TryCreateX11();
 		}
 		else if (backendSelectionStr == "SDL3")
 		{
-			std::cout << "Creating SDL3" << std::endl; backend = TryCreateSDL3();
+			backend = TryCreateSDL3();
 		}
 		else if (backendSelectionStr == "SDL2")
 		{
-			std::cout << "Creating SDL2" << std::endl; backend = TryCreateSDL2();
+			backend = TryCreateSDL2();
 		}
 		else if (backendSelectionStr == "Haiku")
 		{
-			std::cout << "Creating Haiku backend" << std::endl; backend = TryCreateHaiku();
+			backend = TryCreateHaiku();
 		}
 	}
 
 	if (!backend)
 	{
-		if (!backend) { std::cout << "Creating Win32" << std::endl; backend = TryCreateWin32(); }
-		if (!backend) { std::cout << "Creating Cocoa" << std::endl; backend = TryCreateCocoa(); }
-		if (!backend) { std::cout << "Creating Haiku backend" << std::endl; backend = TryCreateHaiku(); }
-		if (!backend) { std::cout << "Creating Wayland" << std::endl; backend = TryCreateWayland(); }
-		if (!backend) { std::cout << "Creating X11" << std::endl; backend = TryCreateX11(); }
-		if (!backend) { std::cout << "Creating SDL3" << std::endl; backend = TryCreateSDL3(); }
-		if (!backend) { std::cout << "Creating SDL2" << std::endl; backend = TryCreateSDL2(); }
+		if (!backend) { backend = TryCreateWin32(); }
+		if (!backend) { backend = TryCreateCocoa(); }
+		if (!backend) { backend = TryCreateHaiku(); }
+		if (!backend) { backend = TryCreateWayland(); }
+		if (!backend) { backend = TryCreateX11(); }
+		if (!backend) { backend = TryCreateSDL3(); }
+		if (!backend) { backend = TryCreateSDL2(); }
 	}
 
 	return backend;

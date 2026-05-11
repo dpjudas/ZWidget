@@ -39,7 +39,7 @@ void HaikuDisplayBackend::RunLoop()
 	if (!be_app) {
 		new ZApplication();
 	}
-	std::cout << "Starting be_app->Run()" << std::endl; be_app->Run(); std::cout << "be_app->Run() finished" << std::endl;
+	be_app->Run();
 }
 
 void HaikuDisplayBackend::ExitLoop()
