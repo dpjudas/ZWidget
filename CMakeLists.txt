@@ -335,9 +335,7 @@ elseif(APPLE)
 	if (NOT UNIFORMTYPEIDENTIFIERS_FRAMEWORK)
 		message(FATAL_ERROR "UniformTypeIdentifiers framework not found")
 	endif()
-endif()
-
-if(HAIKU)
+elseif(HAIKU)
 	set(ZWIDGET_HAIKU_SOURCES
 		src/window/haiku/haiku_display_backend.cpp
 		src/window/haiku/haiku_display_backend.h
