@@ -174,6 +174,10 @@ public:
 	// it accordingly. Only created for WidgetType::Dialog, and only when the
 	// compositor advertises the protocol.
 	struct xdg_dialog_v1* m_XDGDialog = nullptr;
+
+	// Set by LockKeyboard(). While locked the window also reports physical key
+	// positions through OnWindowRawKey, in addition to the translated events.
+	bool m_KeyboardLocked = false;
 	bool m_IsActivated = false;
 
 	bool m_NeedsUpdate = true;

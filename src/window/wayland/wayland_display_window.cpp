@@ -282,11 +282,12 @@ void WaylandDisplayWindow::ShowCursor(bool enable) { backend->ShowCursor(enable)
 
 void WaylandDisplayWindow::LockKeyboard()
 {
-	// Raw scancode events are not implemented for this backend yet.
+	m_KeyboardLocked = true;
 }
 
 void WaylandDisplayWindow::UnlockKeyboard()
 {
+	m_KeyboardLocked = false;
 }
 
 void WaylandDisplayWindow::LockCursor()

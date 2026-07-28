@@ -726,6 +726,14 @@ void keyboard_handle_key(void* data, struct wl_keyboard* wl_keyboard, uint32_t s
 	}
 
 	if (backend->m_ActiveWindow) {
+		// Physical key position, reported alongside the translated event while
+		// the keyboard is locked. wl_keyboard hands us the evdev code, which is
+		// the same PC scancode set RawKeycode uses, so no mapping is involved.
+		// Auto-repeat is deliberately excluded: repeats are not state changes,
+		// and a consumer tracking physical key state would see phantom presses.
+		if (backend->m_ActiveWindow->m_KeyboardLocked && !repeated)
+			backend->m_ActiveWindow->windowHost->OnWindowRawKey((RawKeycode)key, pressed);
+
 		if (pressed || repeated) {
 			backend->m_ActiveWindow->windowHost->OnWindowKeyDown(ik);
 			// Text input is intentionally modifier- and layout-dependent, so
