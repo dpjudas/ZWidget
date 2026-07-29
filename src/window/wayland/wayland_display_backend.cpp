@@ -464,6 +464,24 @@ void WaylandDisplayBackend::SetCursor(StandardCursor cursor)
 
 void WaylandDisplayBackend::ShowCursor(bool enable)
 {
+	if (!m_waylandPointer)
+		return;
+
+	m_CursorVisible = enable;
+
+	if (!enable)
+	{
+		// A null cursor surface is how Wayland hides the pointer: there is no
+		// separate hide request. This is what makes the cursor disappear during
+		// mouse-look in a windowed game, where the pointer is locked in place
+		// but would otherwise still be drawn.
+		wl_pointer_set_cursor(m_waylandPointer, m_PointerSerial, nullptr, 0, 0);
+	}
+	else if (m_cursorSurface && m_cursorImage)
+	{
+		wl_pointer_set_cursor(m_waylandPointer, m_PointerSerial, m_cursorSurface,
+			m_cursorImage->hotspot_x, m_cursorImage->hotspot_y);
+	}
 }
 
 bool WaylandDisplayBackend::GetKeyState(InputKey key)
@@ -804,6 +822,14 @@ void pointer_handle_button(void* data, struct wl_pointer* wl_pointer, uint32_t s
 	if (button == 0x110) ik = InputKey::LeftMouse;
 	else if (button == 0x111) ik = InputKey::RightMouse;
 	else if (button == 0x112) ik = InputKey::MiddleMouse;
+
+	if (ik != InputKey::None)
+	{
+		// Mouse buttons belong in the same state map as keys: GetKeyState() is
+		// the only way a caller can ask whether a button is currently held, and
+		// without this it always answered false for the mouse.
+		backend->inputKeyStates[ik] = (state == WL_POINTER_BUTTON_STATE_PRESSED);
+	}
 
 	if (backend->m_HoverWindow && ik != InputKey::None) {
 		if (state == WL_POINTER_BUTTON_STATE_PRESSED) {

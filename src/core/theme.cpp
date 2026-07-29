@@ -415,6 +415,19 @@ SimpleTheme::SimpleTheme(const ThemeColors& colors)
 
 /////////////////////////////////////////////////////////////////////////////
 
+// Shifts a colour toward white (positive) or black (negative) by a fraction,
+// used to derive related shades from a single detected background.
+static Colorf Shade(const Colorf& c, float amount)
+{
+	auto mix = [amount](float v) {
+		const float target = amount >= 0.0f ? 1.0f : 0.0f;
+		const float t = amount >= 0.0f ? amount : -amount;
+		float r = v + (target - v) * t;
+		return r < 0.0f ? 0.0f : (r > 1.0f ? 1.0f : r);
+	};
+	return Colorf(mix(c.r), mix(c.g), mix(c.b), c.a);
+}
+
 class POSIXNativeThemeImpl
 {
 public:
@@ -436,8 +449,8 @@ public:
 		Colorf border   = Colorf::fromRgb(0x646464);
 		Colorf divider  = Colorf::fromRgb(0x555555);
 
+bool detected = false;
 #if defined(UNIX) && !defined(__APPLE__)
-		bool detected = false;
 		const char* home = std::getenv("HOME");
 
 		// 1. KDE
@@ -509,6 +522,32 @@ public:
 			}
 		}
 #endif
+
+		// Only the window background and foreground can be read from the
+		// desktop. Deriving the rest from those keeps the palette internally
+		// consistent -- otherwise a light desktop background is combined with
+		// the dark defaults for inputs and headers, which is worse than either
+		// theme on its own.
+		if (detected)
+		{
+			const float lum = 0.2126f * bgMain.r + 0.7152f * bgMain.g + 0.0722f * bgMain.b;
+			const bool light = lum > 0.5f;
+
+			// Inputs and headers sit slightly away from the window background:
+			// recessed on a light theme, raised on a dark one.
+			bgLight  = Shade(bgMain, light ? -0.06f : 0.05f);
+			bgAction = Shade(bgMain, light ? -0.12f : 0.10f);
+			border   = Shade(bgMain, light ? -0.25f : 0.22f);
+			divider  = Shade(bgMain, light ? -0.16f : 0.14f);
+
+			fgLight  = fgMain;
+			fgAction = fgMain;
+
+			// Hover and click stay as accents, but their text has to contrast
+			// with the accent rather than with the window.
+			fgHover  = Colorf::white();
+			fgActive = Colorf::white();
+		}
 
 		return SimpleTheme::ThemeColors {
 			bgMain, fgMain, bgLight, fgLight, bgAction, fgAction,

@@ -175,6 +175,7 @@ public:
 	struct wl_cursor_image* m_cursorImage = nullptr;
 	struct wl_surface* m_cursorSurface = nullptr;
 	struct wl_buffer* m_cursorBuffer = nullptr;
+	bool m_CursorVisible = true;
 
 	std::map<InputKey, bool> inputKeyStates; // True when the key is pressed, false when isn't
 
