@@ -123,6 +123,7 @@ public:
 
 	std::string GetClipboardText();
 	void SetClipboardText(const std::string& text);
+	void EnsureDataDevice();
 
 	struct wl_data_device* GetDataDevice() { return m_DataDevice; }
 	uint32_t GetKeyboardSerial() const { return m_KeyboardSerial; }

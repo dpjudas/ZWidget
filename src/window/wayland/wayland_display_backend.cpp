@@ -13,6 +13,7 @@
 #include "cursor-shape-v1-client-protocol.h"
 #include "xdg-dialog-v1-client-protocol.h"
 #include <chrono>
+#include <algorithm>
 #include <sys/mman.h>
 #include <unistd.h>
 #include <poll.h>
@@ -504,46 +505,54 @@ std::string WaylandDisplayBackend::GetClipboardText()
 	return m_ClipboardContents;
 }
 
+void WaylandDisplayBackend::EnsureDataDevice()
+{
+	if (m_DataDevice || !m_DataDeviceManager || !m_waylandSeat)
+		return;
+
+	m_DataDevice = wl_data_device_manager_get_data_device(m_DataDeviceManager, m_waylandSeat);
+	if (m_DataDevice)
+		wl_data_device_add_listener(m_DataDevice, &data_device_listener, this);
+}
+
 void registry_handle_global(void* data, struct wl_registry* registry, uint32_t name, const char* interface, uint32_t version)
 {
 	WaylandDisplayBackend* backend = (WaylandDisplayBackend*)data;
-	if (strcmp(interface, "wl_compositor") == 0) backend->m_waylandCompositor = (struct wl_compositor*)wl_registry_bind(registry, name, &wl_compositor_interface, 4);
-	else if (strcmp(interface, "wl_shm") == 0) backend->m_waylandSHM = (struct wl_shm*)wl_registry_bind(registry, name, &wl_shm_interface, 1);
+	if (strcmp(interface, "wl_compositor") == 0) backend->m_waylandCompositor = (struct wl_compositor*)wl_registry_bind(registry, name, &wl_compositor_interface, std::min(version, 4u));
+	else if (strcmp(interface, "wl_shm") == 0) backend->m_waylandSHM = (struct wl_shm*)wl_registry_bind(registry, name, &wl_shm_interface, std::min(version, 1u));
 	else if (strcmp(interface, "wl_output") == 0) {
-		backend->m_waylandOutput = (struct wl_output*)wl_registry_bind(registry, name, &wl_output_interface, 3);
+		backend->m_waylandOutput = (struct wl_output*)wl_registry_bind(registry, name, &wl_output_interface, std::min(version, 3u));
 		wl_output_add_listener(backend->m_waylandOutput, &output_listener, backend);
 	}
 	else if (strcmp(interface, "wl_seat") == 0) {
-		backend->m_waylandSeat = (struct wl_seat*)wl_registry_bind(registry, name, &wl_seat_interface, 8);
+		backend->m_waylandSeat = (struct wl_seat*)wl_registry_bind(registry, name, &wl_seat_interface, std::min(version, 8u));
 		wl_seat_add_listener(backend->m_waylandSeat, &seat_listener, backend);
+		backend->EnsureDataDevice();
 	}
 	else if (strcmp(interface, "wl_data_device_manager") == 0) {
-		backend->m_DataDeviceManager = (struct wl_data_device_manager*)wl_registry_bind(registry, name, &wl_data_device_manager_interface, 3);
-		if (backend->m_waylandSeat) {
-			backend->m_DataDevice = wl_data_device_manager_get_data_device(backend->m_DataDeviceManager, backend->m_waylandSeat);
-			wl_data_device_add_listener(backend->m_DataDevice, &data_device_listener, backend);
-		}
+		backend->m_DataDeviceManager = (struct wl_data_device_manager*)wl_registry_bind(registry, name, &wl_data_device_manager_interface, std::min(version, 3u));
+		backend->EnsureDataDevice();
 	}
 	else if (strcmp(interface, "xdg_wm_base") == 0) {
-		backend->m_XDGWMBase = (struct xdg_wm_base*)wl_registry_bind(registry, name, &xdg_wm_base_interface, 4);
+		backend->m_XDGWMBase = (struct xdg_wm_base*)wl_registry_bind(registry, name, &xdg_wm_base_interface, std::min(version, 4u));
 		xdg_wm_base_add_listener(backend->m_XDGWMBase, &xdg_wm_base_listener, backend);
 	}
 	else if (strcmp(interface, "zxdg_output_manager_v1") == 0) {
-		backend->m_XDGOutputManager = (struct zxdg_output_manager_v1*)wl_registry_bind(registry, name, &zxdg_output_manager_v1_interface, 3);
+		backend->m_XDGOutputManager = (struct zxdg_output_manager_v1*)wl_registry_bind(registry, name, &zxdg_output_manager_v1_interface, std::min(version, 3u));
 		if (backend->m_waylandOutput) {
 			backend->m_XDGOutput = zxdg_output_manager_v1_get_xdg_output(backend->m_XDGOutputManager, backend->m_waylandOutput);
 			zxdg_output_v1_add_listener(backend->m_XDGOutput, &xdg_output_listener, backend);
 		}
 	}
-	else if (strcmp(interface, "wp_fractional_scale_manager_v1") == 0) backend->m_FractionalScaleManager = (struct wp_fractional_scale_manager_v1*)wl_registry_bind(registry, name, &wp_fractional_scale_manager_v1_interface, 1);
-	else if (strcmp(interface, "zxdg_decoration_manager_v1") == 0) backend->m_XDGDecorationManager = (struct zxdg_decoration_manager_v1*)wl_registry_bind(registry, name, &zxdg_decoration_manager_v1_interface, 1);
-	else if (strcmp(interface, "zwp_pointer_constraints_v1") == 0) backend->m_PointerConstraints = (struct zwp_pointer_constraints_v1*)wl_registry_bind(registry, name, &zwp_pointer_constraints_v1_interface, 1);
-	else if (strcmp(interface, "zwp_relative_pointer_manager_v1") == 0) backend->m_RelativePointerManager = (struct zwp_relative_pointer_manager_v1*)wl_registry_bind(registry, name, &zwp_relative_pointer_manager_v1_interface, 1);
-	else if (strcmp(interface, "xdg_toplevel_icon_manager_v1") == 0) backend->m_XDGToplevelIconManager = (struct xdg_toplevel_icon_manager_v1*)wl_registry_bind(registry, name, &xdg_toplevel_icon_manager_v1_interface, 1);
+	else if (strcmp(interface, "wp_fractional_scale_manager_v1") == 0) backend->m_FractionalScaleManager = (struct wp_fractional_scale_manager_v1*)wl_registry_bind(registry, name, &wp_fractional_scale_manager_v1_interface, std::min(version, 1u));
+	else if (strcmp(interface, "zxdg_decoration_manager_v1") == 0) backend->m_XDGDecorationManager = (struct zxdg_decoration_manager_v1*)wl_registry_bind(registry, name, &zxdg_decoration_manager_v1_interface, std::min(version, 1u));
+	else if (strcmp(interface, "zwp_pointer_constraints_v1") == 0) backend->m_PointerConstraints = (struct zwp_pointer_constraints_v1*)wl_registry_bind(registry, name, &zwp_pointer_constraints_v1_interface, std::min(version, 1u));
+	else if (strcmp(interface, "zwp_relative_pointer_manager_v1") == 0) backend->m_RelativePointerManager = (struct zwp_relative_pointer_manager_v1*)wl_registry_bind(registry, name, &zwp_relative_pointer_manager_v1_interface, std::min(version, 1u));
+	else if (strcmp(interface, "xdg_toplevel_icon_manager_v1") == 0) backend->m_XDGToplevelIconManager = (struct xdg_toplevel_icon_manager_v1*)wl_registry_bind(registry, name, &xdg_toplevel_icon_manager_v1_interface, std::min(version, 1u));
 	else if (strcmp(interface, "wp_cursor_shape_manager_v1") == 0) {
-		backend->m_CursorShapeManager = (struct wp_cursor_shape_manager_v1*)wl_registry_bind(registry, name, &wp_cursor_shape_manager_v1_interface, 1);
+		backend->m_CursorShapeManager = (struct wp_cursor_shape_manager_v1*)wl_registry_bind(registry, name, &wp_cursor_shape_manager_v1_interface, std::min(version, 1u));
 	}
-	else if (strcmp(interface, "xdg_wm_dialog_v1") == 0) backend->m_XDGWMDialog = (struct xdg_wm_dialog_v1*)wl_registry_bind(registry, name, &xdg_wm_dialog_v1_interface, 1);
+	else if (strcmp(interface, "xdg_wm_dialog_v1") == 0) backend->m_XDGWMDialog = (struct xdg_wm_dialog_v1*)wl_registry_bind(registry, name, &xdg_wm_dialog_v1_interface, std::min(version, 1u));
 }
 
 
@@ -1094,4 +1103,3 @@ std::string WaylandDisplayBackend::GetWaylandCursorName(StandardCursor cursor)
 {
 	return "left_ptr";
 }
-
