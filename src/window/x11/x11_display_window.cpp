@@ -339,11 +339,12 @@ void X11DisplayWindow::ShowCursor(bool enable)
 
 void X11DisplayWindow::LockKeyboard()
 {
-	// Enables raw keyboard scancode events (OnRawKeyboard should be called for keyboard input)
+	RawInput.KeyboardLocked = true;
 }
 
 void X11DisplayWindow::UnlockKeyboard()
 {
+	RawInput.KeyboardLocked = false;
 }
 
 void X11DisplayWindow::LockCursor()
@@ -1040,7 +1041,20 @@ void X11DisplayWindow::OnMotionNotify(XEvent* event)
 bool X11DisplayWindow::OnXInputEvent(XEvent* event)
 {
 	// This API is so horrible it makes Win32 look attractive!
-	if (event->xcookie.evtype == XI_ButtonPress || event->xcookie.evtype == XI_ButtonRelease)
+	if ((event->xcookie.evtype == XI_RawKeyPress || event->xcookie.evtype == XI_RawKeyRelease) &&
+		RawInput.KeyboardLocked && RawInput.Focused)
+	{
+		auto rawEvent = (XIRawEvent*)event->xcookie.data;
+		// X11 keycodes are the evdev scancode plus 8, matching Wayland's
+		// key + 8 input. RawKeycode uses the underlying evdev value.
+		if (rawEvent->detail < 8)
+			return false;
+
+		windowHost->OnWindowRawKey((RawKeycode)(rawEvent->detail - 8),
+			event->xcookie.evtype == XI_RawKeyPress);
+		return true;
+	}
+	else if (event->xcookie.evtype == XI_ButtonPress || event->xcookie.evtype == XI_ButtonRelease)
 	{
 		auto deviceEvent = (XIDeviceEvent*)event->xcookie.data;
 		if (deviceEvent->event != window)

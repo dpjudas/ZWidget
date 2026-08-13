@@ -67,6 +67,8 @@ X11Connection::X11Connection()
 	{
 		unsigned char mask[3] = { 0 };
 		XISetMask(mask, XI_RawMotion);
+		XISetMask(mask, XI_RawKeyPress);
+		XISetMask(mask, XI_RawKeyRelease);
 		XIEventMask eventmask;
 		eventmask.deviceid = MasterPointerID;
 		eventmask.mask_len = sizeof(mask);

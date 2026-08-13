@@ -119,6 +119,7 @@ private:
 		int LastX = -1;
 		int LastY = -1;
 		bool Focused = false;
+		bool KeyboardLocked = false;
 	} RawInput;
 
 	Pixmap cursor_bitmap = 0L;
