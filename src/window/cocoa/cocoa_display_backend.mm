@@ -114,13 +114,39 @@ void CocoaDisplayBackend::RunLoop()
     StartedRunLoop = false;
 }
 
+void CocoaDisplayBackend::RunModalLoop(DisplayWindow* modal)
+{
+    // The canonical AppKit modal loop. Unlike the manual pump in RunLoop(), this
+    // maintains a real modal session -- AppKit disables the application's other
+    // windows for its duration and nests correctly inside a host's own run loop,
+    // which is what a multi-window host (an editor with a document window behind
+    // a dialog) requires. RunLoop()'s pump merely delivers events, so a host
+    // like that would keep accepting clicks on the window behind the modal.
+    auto* cocoaWindow = static_cast<CocoaDisplayWindow*>(modal);
+    NSWindow* nsWindow = cocoaWindow ? (__bridge NSWindow*)cocoaWindow->GetNSWindow() : nil;
+    if (!nsWindow)
+    {
+        // No window to be modal for -- fall back rather than fail.
+        RunLoop();
+        return;
+    }
+
+    ExitRunLoop = false;
+    InModalSession = true;
+    [NSApp runModalForWindow:nsWindow];
+    InModalSession = false;
+}
+
 void CocoaDisplayBackend::ExitLoop()
 {
     ExitRunLoop = true;
 
-    // Only stop a run loop this backend actually started. Calling stop: on a
-    // host application's loop would terminate the host, not the modal window.
-    if (StartedRunLoop)
+    // Three terminations, and using the wrong one is destructive: stopModal on a
+    // non-modal loop does nothing, while stop: on a host application's run loop
+    // would terminate the host rather than the modal window.
+    if (InModalSession)
+        [NSApp stopModal];
+    else if (StartedRunLoop)
         [NSApp stop:nil];
 
     // Post a dummy event to wake up the event loop so stop: takes effect

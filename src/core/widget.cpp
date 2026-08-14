@@ -661,6 +661,12 @@ Widget* Widget::Window() const
 	return nullptr;
 }
 
+DisplayWindow* Widget::DisplayWindowPtr() const
+{
+	Widget* w = Window();
+	return w ? w->DispWindow.get() : nullptr;
+}
+
 Canvas* Widget::GetCanvas() const
 {
 	for (const Widget* w = this; w != nullptr; w = w->Parent())

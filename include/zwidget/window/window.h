@@ -315,6 +315,13 @@ public:
 
 	static void ProcessEvents();
 	static void RunLoop();
+	/// \brief Run a modal loop owned by `modal`.
+	///
+	/// Backends that can express real modality (a modal session that disables
+	/// the application's other windows) should do so here. The default simply
+	/// runs the ordinary loop, which is correct for single-window hosts and
+	/// merely permissive for multi-window ones.
+	static void RunModalLoop(DisplayWindow* modal);
 	static void ExitLoop();
 
 	static void* StartTimer(int timeoutMilliseconds, std::function<void()> onTimer);
@@ -407,6 +414,11 @@ public:
 	virtual std::unique_ptr<DisplayWindow> Create(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI) = 0;
 	virtual void ProcessEvents() = 0;
 	virtual void RunLoop() = 0;
+	/// \brief Run a modal loop for `modal`; see DisplayWindow::RunModalLoop.
+	///
+	/// Defaulted so existing backends keep compiling and behaving identically;
+	/// only backends with a native modal-session concept need override it.
+	virtual void RunModalLoop(DisplayWindow* modal) { RunLoop(); }
 	virtual void ExitLoop() = 0;
 
 	virtual void* StartTimer(int timeoutMilliseconds, std::function<void()> onTimer) = 0;

@@ -61,6 +61,10 @@ public:
 
     void* GetNativeHandle() override;
 
+    // The backing NSWindow, for CocoaDisplayBackend::RunModalLoop. Deliberately
+    // not GetNativeHandle(), which heap-allocates a CocoaNativeHandle per call.
+    void* GetNSWindow() const;
+
     std::vector<std::string> GetVulkanInstanceExtensions() override;
     VkSurfaceKHR CreateVulkanSurface(VkInstance instance) override;
 

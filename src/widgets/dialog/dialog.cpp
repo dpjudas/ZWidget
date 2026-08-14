@@ -15,7 +15,7 @@ int Dialog::Exec()
         DisplayWindow::ProcessEvents();
     }
 #else
-    DisplayWindow::RunLoop();
+    DisplayWindow::RunModalLoop(DisplayWindowPtr());
 #endif
     Hide();
     return m_ExitCode;

@@ -12,6 +12,7 @@ public:
 
     void ProcessEvents() override;
     void RunLoop() override;
+    void RunModalLoop(DisplayWindow* modal) override;
     void ExitLoop() override;
     
     bool IsCocoa() override { return true; }
@@ -35,4 +36,9 @@ private:
     // started and never tears down the host's.
     bool ExitRunLoop = false;
     bool StartedRunLoop = false;
+    // Set while inside -[NSApplication runModalForWindow:]. ExitLoop has three
+    // cases now and they need different terminations: a modal session ends with
+    // stopModal, a loop this backend started ends with stop:, and a manual pump
+    // ends by flipping ExitRunLoop.
+    bool InModalSession = false;
 };

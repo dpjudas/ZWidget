@@ -24,6 +24,11 @@ void DisplayWindow::RunLoop()
 	DisplayBackend::Get()->RunLoop();
 }
 
+void DisplayWindow::RunModalLoop(DisplayWindow* modal)
+{
+	DisplayBackend::Get()->RunModalLoop(modal);
+}
+
 void DisplayWindow::ExitLoop()
 {
 	DisplayBackend::Get()->ExitLoop();

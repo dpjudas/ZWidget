@@ -1231,6 +1231,11 @@ void CocoaDisplayWindow::SetClipboardText(const std::string& text)
     [pasteboard setString:[NSString stringWithUTF8String:text.c_str()] forType:NSPasteboardTypeString];
 }
 
+void* CocoaDisplayWindow::GetNSWindow() const
+{
+    return impl ? (__bridge void*)impl->window : nullptr;
+}
+
 void* CocoaDisplayWindow::GetNativeHandle()
 {
     // Create and return a CocoaNativeHandle for this window

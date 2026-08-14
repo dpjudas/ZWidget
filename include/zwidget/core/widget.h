@@ -158,6 +158,12 @@ public:
 	void SetClipboardText(const std::string& text);
 
 	Widget* Window() const;
+	/// \brief The DisplayWindow backing this widget's top-level window.
+	///
+	/// Needed by DisplayWindow::RunModalLoop, which has to tell the backend
+	/// *which* window is modal. Widget::Window() returns the top-level widget;
+	/// this returns the platform window underneath it.
+	DisplayWindow* DisplayWindowPtr() const;
 	Canvas* GetCanvas() const;
 	Widget* ChildAt(double x, double y) { return ChildAt(Point(x, y)); }
 	Widget* ChildAt(const Point& pos);
