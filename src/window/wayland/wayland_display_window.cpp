@@ -213,25 +213,14 @@ void WaylandDisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image
 	}
 }
 
-void WaylandDisplayWindow::SetWindowFrame(const Rect& box)
+
+void WaylandDisplayWindow::SetClientFrame(const Rect& box)
 {
-	// box is in logical pixels (unscaled). Allocate physical buffer and notify geometry.
-	CreateBuffers((int32_t)box.width, (int32_t)box.height);
-	m_LogicalSize = Size(box.width, box.height);
-	windowHost->OnWindowGeometryChanged();
-	m_NeedsUpdate = true;
-
-	if (m_renderAPI != RenderAPI::OpenGL && m_renderAPI != RenderAPI::Vulkan)
-	{
-		struct wl_region* region = wl_compositor_create_region(backend->m_waylandCompositor);
-		wl_region_add(region, 0, 0, (int32_t)m_LogicalSize.width, (int32_t)m_LogicalSize.height);
-		wl_surface_set_opaque_region(m_AppSurface, region);
-		wl_region_destroy(region);
-		wl_surface_commit(m_AppSurface);
-	}
+	// Wayland has no way for a client to position itself; only the size
+	// is actionable, and the compositor owns placement.
+	m_WindowSize = Size(box.width, box.height);
+	if (m_AppSurface) CreateBuffers(box.width, box.height);
 }
-
-void WaylandDisplayWindow::SetClientFrame(const Rect& box) { SetWindowFrame(box); }
 
 void WaylandDisplayWindow::Show()
 {
@@ -291,6 +280,15 @@ void WaylandDisplayWindow::Activate()
 
 void WaylandDisplayWindow::ShowCursor(bool enable) { backend->ShowCursor(enable); }
 
+void WaylandDisplayWindow::LockKeyboard()
+{
+	// Raw scancode events are not implemented for this backend yet.
+}
+
+void WaylandDisplayWindow::UnlockKeyboard()
+{
+}
+
 void WaylandDisplayWindow::LockCursor()
 {
 	if (backend->m_PointerConstraints)
@@ -324,8 +322,8 @@ void WaylandDisplayWindow::ReleaseMouseCapture()
 
 void WaylandDisplayWindow::Update() { m_NeedsUpdate = true; }
 bool WaylandDisplayWindow::GetKeyState(InputKey key) { return backend->GetKeyState(key); }
-void WaylandDisplayWindow::SetCursor(StandardCursor cursor) { backend->SetCursor(cursor); }
-Rect WaylandDisplayWindow::GetWindowFrame() const { return Rect(m_WindowGlobalPos.x, m_WindowGlobalPos.y, m_LogicalSize.width, m_LogicalSize.height); }
+void WaylandDisplayWindow::SetCursor(StandardCursor cursor, std::shared_ptr<CustomCursor> custom) { backend->SetCursor(cursor); }
+Rect WaylandDisplayWindow::GetClientFrame() const { return Rect(m_WindowGlobalPos.x, m_WindowGlobalPos.y, m_LogicalSize.width, m_LogicalSize.height); }
 Size WaylandDisplayWindow::GetClientSize() const { return m_LogicalSize; }
 int WaylandDisplayWindow::GetPixelWidth() const { return m_WindowSize.width; }
 int WaylandDisplayWindow::GetPixelHeight() const { return m_WindowSize.height; }

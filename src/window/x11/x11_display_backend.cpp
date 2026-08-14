@@ -13,7 +13,7 @@
 
 std::unique_ptr<DisplayWindow> X11DisplayBackend::Create(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI)
 {
-	return std::make_unique<X11DisplayWindow>(windowHost, popupWindow, static_cast<X11DisplayWindow*>(owner), renderAPI);
+	return std::make_unique<X11DisplayWindow>(windowHost, type, static_cast<X11DisplayWindow*>(owner), renderAPI);
 }
 
 void X11DisplayBackend::ProcessEvents()

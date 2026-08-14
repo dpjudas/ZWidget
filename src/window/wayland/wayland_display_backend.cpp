@@ -207,6 +207,35 @@ WaylandDisplayBackend::~WaylandDisplayBackend()
 	if (m_KeymapContext) WAYLAND->p_xkb_context_unref(m_KeymapContext);
 }
 
+
+#ifdef USE_DBUS
+// Portal dialogs identify their parent window by an exported handle. On Wayland
+// that comes from xdg-foreign, which is why the backend exports the surface.
+std::unique_ptr<OpenFileDialog> WaylandDisplayBackend::CreateOpenFileDialog(DisplayWindow* owner)
+{
+	std::string ownerHandle;
+	if (owner)
+		ownerHandle = "wayland:" + static_cast<WaylandDisplayWindow*>(owner)->GetWaylandWindowID();
+	return std::make_unique<DBusOpenFileDialog>(ownerHandle);
+}
+
+std::unique_ptr<SaveFileDialog> WaylandDisplayBackend::CreateSaveFileDialog(DisplayWindow* owner)
+{
+	std::string ownerHandle;
+	if (owner)
+		ownerHandle = "wayland:" + static_cast<WaylandDisplayWindow*>(owner)->GetWaylandWindowID();
+	return std::make_unique<DBusSaveFileDialog>(ownerHandle);
+}
+
+std::unique_ptr<OpenFolderDialog> WaylandDisplayBackend::CreateOpenFolderDialog(DisplayWindow* owner)
+{
+	std::string ownerHandle;
+	if (owner)
+		ownerHandle = "wayland:" + static_cast<WaylandDisplayWindow*>(owner)->GetWaylandWindowID();
+	return std::make_unique<DBusOpenFolderDialog>(ownerHandle);
+}
+#endif
+
 std::unique_ptr<DisplayWindow> WaylandDisplayBackend::Create(DisplayWindowHost* windowHost, WidgetType type, DisplayWindow* owner, RenderAPI renderAPI)
 {
 	return std::make_unique<WaylandDisplayWindow>(this, windowHost, type, (WaylandDisplayWindow*)owner, renderAPI);

@@ -1,6 +1,7 @@
-
+#include "x11_remap.h"
 #include "x11_connection.h"
 #include "x11_display_window.h"
+#include "x11_dynamic.h"
 #include <stdexcept>
 #include <chrono>
 
@@ -98,24 +99,40 @@ Atom X11Connection::GetAtom(const std::string& name)
 void X11Connection::ProcessEvents()
 {
 	CheckNeedsUpdate();
-	while (XPending(display) > 0)
+	
+	// First, process any already-pending events
+	int pending = XPending(display);
+	while (pending > 0)
 	{
 		XEvent event = {};
 		XNextEvent(display, &event);
 		DispatchEvent(&event);
+		pending = XPending(display);
 	}
+	
+	// If no events were pending, wait briefly for new ones
+	if (WaitForEvents(10))
+	{
+		while (XPending(display) > 0)
+		{
+			XEvent event = {};
+			XNextEvent(display, &event);
+			DispatchEvent(&event);
+		}
+	}
+	
 	CheckTimers();
 }
 
 void X11Connection::RunLoop()
 {
 	X11Connection* connection = GetX11Connection();
+	connection->ExitRunLoop = false;
 	while (!connection->ExitRunLoop && !connection->windows.empty())
 	{
 		ProcessEvents();
 		WaitForEvents(GetTimerTimeout());
 	}
-	connection->ExitRunLoop = false; // So that closing a dialog doesn't close everything else
 }
 
 void X11Connection::ExitLoop()
@@ -132,7 +149,7 @@ bool X11Connection::WaitForEvents(int timeout)
 	if (timeout > 0)
 	{
 		tv.tv_sec = timeout / 1000;
-		tv.tv_usec = (timeout % 1000) / 1000;
+		tv.tv_usec = (timeout % 1000) * 1000;
 	}
 
 	fd_set rfds;
@@ -188,8 +205,10 @@ Size X11Connection::GetScreenSize()
 	int disp_width_px = XDisplayWidth(display, screen);
 	int disp_height_px = XDisplayHeight(display, screen);
 	int disp_width_mm = XDisplayWidthMM(display, screen);
-	double ppi = (disp_width_mm < 24) ? 96.0 : (25.4 * static_cast<double>(disp_width_px) / static_cast<double>(disp_width_mm));
-	double dpiScale = ppi / 96.0;
+	double ppi = 96.0;
+	if (disp_width_mm > 0 && disp_width_px > 0)
+		ppi = (25.4 * static_cast<double>(disp_width_px) / static_cast<double>(disp_width_mm));
+	double dpiScale = std::max(0.1, ppi / 96.0);
 
 	return Size(disp_width_px / dpiScale, disp_height_px / dpiScale);
 }
