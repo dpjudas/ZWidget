@@ -1,5 +1,8 @@
 
 #include "core/theme.h"
+#include <cstdlib>
+#include <cstdio>
+#include <fstream>
 #include "core/widget.h"
 #include "core/canvas.h"
 #include "core/font.h"
@@ -409,6 +412,141 @@ SimpleTheme::SimpleTheme(const ThemeColors& colors)
 }
 
 /////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////
+
+class POSIXNativeThemeImpl
+{
+public:
+	static SimpleTheme::ThemeColors DetectColors()
+	{
+		// Start from the dark palette and let the desktop override what it can
+		// tell us about. ThemeColors is immutable, so the values are collected
+		// in locals and the struct is built once at the end.
+		Colorf bgMain   = Colorf::fromRgb(0x2A2A2A);
+		Colorf fgMain   = Colorf::fromRgb(0xE2DFDB);
+		Colorf bgLight  = Colorf::fromRgb(0x212121);
+		Colorf fgLight  = Colorf::fromRgb(0xE2DFDB);
+		Colorf bgAction = Colorf::fromRgb(0x444444);
+		Colorf fgAction = Colorf::fromRgb(0xFFFFFF);
+		Colorf bgHover  = Colorf::fromRgb(0x003C88);
+		Colorf fgHover  = Colorf::fromRgb(0xFFFFFF);
+		Colorf bgActive = Colorf::fromRgb(0x004FB4);
+		Colorf fgActive = Colorf::fromRgb(0xFFFFFF);
+		Colorf border   = Colorf::fromRgb(0x646464);
+		Colorf divider  = Colorf::fromRgb(0x555555);
+
+#if defined(UNIX) && !defined(__APPLE__)
+		bool detected = false;
+		const char* home = std::getenv("HOME");
+
+		// 1. KDE
+		if (home && !detected)
+		{
+			std::ifstream f(std::string(home) + "/.config/kdeglobals");
+			if (f.is_open())
+			{
+				std::string line;
+				bool inColorsWindow = false;
+				while (std::getline(f, line))
+				{
+					if (line == "[Colors:Window]") inColorsWindow = true;
+					else if (!line.empty() && line[0] == '[') inColorsWindow = false;
+
+					if (inColorsWindow)
+					{
+						if (line.compare(0, 17, "BackgroundNormal=") == 0)
+						{
+							bgMain = ParseKDEColor(line.substr(17));
+							detected = true;
+						}
+						else if (line.compare(0, 17, "ForegroundNormal=") == 0)
+						{
+							fgMain = ParseKDEColor(line.substr(17));
+						}
+					}
+				}
+			}
+		}
+
+		// 2. GTK settings.ini (XFCE, MATE, GNOME fallback). Only tells us
+		// light or dark, and dark is already what we started from.
+		if (home && !detected)
+		{
+			std::ifstream f(std::string(home) + "/.config/gtk-3.0/settings.ini");
+			if (f.is_open())
+			{
+				std::string line;
+				while (std::getline(f, line))
+				{
+					if (line.find("gtk-application-prefer-dark-theme=1") != std::string::npos ||
+					    line.find("gtk-application-prefer-dark-theme=true") != std::string::npos)
+					{
+						detected = true;
+						break;
+					}
+				}
+			}
+		}
+
+		// 3. Xresources, for setups with no desktop environment at all
+		if (home && !detected)
+		{
+			std::ifstream f(std::string(home) + "/.Xresources");
+			if (!f.is_open())
+				f.open(std::string(home) + "/.Xdefaults");
+
+			if (f.is_open())
+			{
+				std::string line;
+				while (std::getline(f, line))
+				{
+					if (line.find("background:") != std::string::npos || line.find("*.background:") != std::string::npos)
+						bgMain = ParseXColor(line);
+					else if (line.find("foreground:") != std::string::npos || line.find("*.foreground:") != std::string::npos)
+						fgMain = ParseXColor(line);
+				}
+			}
+		}
+#endif
+
+		return SimpleTheme::ThemeColors {
+			bgMain, fgMain, bgLight, fgLight, bgAction, fgAction,
+			bgHover, fgHover, bgActive, fgActive, border, divider
+		};
+	}
+
+private:
+#if defined(UNIX) && !defined(__APPLE__)
+	static Colorf ParseKDEColor(const std::string& s)
+	{
+		int r, g, b;
+		if (sscanf(s.c_str(), "%d,%d,%d", &r, &g, &b) == 3)
+			return Colorf(r, g, b);
+		return Colorf::white();
+	}
+
+	static Colorf ParseXColor(const std::string& line)
+	{
+		size_t pos = line.find("#");
+		if (pos != std::string::npos)
+		{
+			std::string hex = line.substr(pos + 1);
+			if (hex.length() >= 6)
+			{
+				unsigned int r, g, b;
+				if (sscanf(hex.c_str(), "%02x%02x%02x", &r, &g, &b) == 3)
+					return Colorf((int)r, (int)g, (int)b);
+			}
+		}
+		return Colorf::white();
+	}
+#endif
+};
+
+POSIXNativeTheme::POSIXNativeTheme() : SimpleTheme(POSIXNativeThemeImpl::DetectColors())
+{
+}
 
 DarkWidgetTheme::DarkWidgetTheme() : SimpleTheme({
 	Colorf::fromRgb(0x2A2A2A), // background

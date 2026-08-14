@@ -119,6 +119,16 @@ public:
 };
 #endif
 
+// Derives its colours from the running desktop rather than shipping a fixed
+// palette: KDE's kdeglobals, then GTK's settings.ini, then Xresources. Falls
+// back to the dark palette when none of those say anything useful. On platforms
+// other than Unix it is simply the dark theme.
+class POSIXNativeTheme : public SimpleTheme
+{
+public:
+	POSIXNativeTheme();
+};
+
 class StylesheetTheme : public WidgetTheme
 {
 public:
