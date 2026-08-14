@@ -107,6 +107,10 @@ private:
 	StandardCursor cursor = {};
 	bool isCursorEnabled = true;
 	bool isMapped = false;
+	// Activation requested before the window was mapped; discharged by Show().
+	bool pendingActivate = false;
+
+	bool IsWindowViewable();
 	bool isMinimized = false;
 	bool isFullscreen = false;
 	double dpiScale = 1.0;

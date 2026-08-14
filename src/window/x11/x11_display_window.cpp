@@ -254,6 +254,13 @@ void X11DisplayWindow::Show()
 		XMapRaised(display, window);
 		isMapped = true;
 	}
+
+	// Discharge an activation requested before the window existed on screen.
+	if (pendingActivate)
+	{
+		pendingActivate = false;
+		Activate();
+	}
 }
 
 void X11DisplayWindow::ShowFullscreen()
@@ -304,8 +311,37 @@ void X11DisplayWindow::Hide()
 	}
 }
 
+// XSetInputFocus fails with BadMatch if the focus window is not viewable when
+// the server processes the request, and Xlib's default error handler responds
+// to that by printing and calling exit(1) -- so an unguarded focus of an
+// unmapped window is a hard crash, not a warning.
+//
+// This is also a synchronisation point: XGetWindowAttributes is a round trip,
+// so any map request issued earlier is guaranteed to have been processed by
+// the time it returns.
+bool X11DisplayWindow::IsWindowViewable()
+{
+	XWindowAttributes attr = {};
+	if (!XGetWindowAttributes(display, window, &attr))
+		return false;
+	return attr.map_state == IsViewable;
+}
+
 void X11DisplayWindow::Activate()
 {
+	// Activating a window that has not been mapped yet cannot work at either
+	// site: the EWMH ClientMessage asks the window manager to activate
+	// something it cannot see, and the fallback would fault. Remember the
+	// intent and discharge it from Show().
+	//
+	// This is the normal ordering, not a rare race -- LauncherWindow's
+	// constructor takes focus before ExecModal ever calls Show().
+	if (!isMapped)
+	{
+		pendingActivate = true;
+		return;
+	}
+
 	auto connection = GetX11Connection();
 	Atom activeAtom = connection->GetAtom("_NET_ACTIVE_WINDOW");
 	if (activeAtom != 0L)
@@ -324,7 +360,8 @@ void X11DisplayWindow::Activate()
 	else
 	{
 		XRaiseWindow(display, window);
-		XSetInputFocus(display, window, RevertToParent, CurrentTime);
+		if (IsWindowViewable())
+			XSetInputFocus(display, window, RevertToParent, CurrentTime);
 	}
 }
 
@@ -733,9 +770,13 @@ void X11DisplayWindow::OnClientMessage(XEvent* event)
 		}
 		else if (takeFocusAtom != 0L && protocol == takeFocusAtom)
 		{
-			// ICCCM Locally Active input model: WM asks us to take focus
+			// ICCCM Locally Active input model: WM asks us to take focus.
+			// Keep the timestamp the WM supplied -- replacing it with
+			// CurrentTime changes the input model -- but do not focus a
+			// target that cannot legally take focus.
 			Time timestamp = event->xclient.data.l[1];
-			XSetInputFocus(display, window, RevertToParent, timestamp);
+			if (IsWindowViewable())
+				XSetInputFocus(display, window, RevertToParent, timestamp);
 		}
 		else if (pingAtom != 0L && protocol == pingAtom)
 		{
