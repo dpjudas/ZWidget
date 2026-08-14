@@ -70,7 +70,10 @@ X11Connection::X11Connection()
 		XISetMask(mask, XI_RawKeyPress);
 		XISetMask(mask, XI_RawKeyRelease);
 		XIEventMask eventmask;
-		eventmask.deviceid = MasterPointerID;
+		// Raw events are selected on the root window.  The pointer master is
+		// sufficient for raw motion, but raw keyboard events belong to the
+		// master keyboard (and using the pointer ID silently drops them).
+		eventmask.deviceid = XIAllMasterDevices;
 		eventmask.mask_len = sizeof(mask);
 		eventmask.mask = mask;
 		Window root = XRootWindow(display, XDefaultScreen(display));
