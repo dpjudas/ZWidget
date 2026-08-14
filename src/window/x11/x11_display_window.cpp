@@ -1,6 +1,7 @@
-
+#include "x11_remap.h"
 #include "x11_display_window.h"
 #include "x11_connection.h"
+#include "x11_dynamic.h"
 #include <zwidget/core/image.h>
 #include <stdexcept>
 #include <vector>
@@ -32,7 +33,7 @@ X11DisplayWindow::X11DisplayWindow(DisplayWindowHost* windowHost, WidgetType win
 	}
 
 	XSetWindowAttributes attributes = {};
-	attributes.backing_store = Always;
+	attributes.backing_store = 2;
 	attributes.override_redirect = (windowType == WidgetType::Popup) ? True : False;
 	attributes.save_under = (windowType == WidgetType::Popup) ? True : False;
 	attributes.colormap = colormap;
@@ -49,6 +50,8 @@ X11DisplayWindow::X11DisplayWindow(DisplayWindowHost* windowHost, WidgetType win
 	unsigned long mask = CWBackingStore | CWSaveUnder | CWEventMask | CWOverrideRedirect;
 
 	window = XCreateWindow(display, XRootWindow(display, screen), 0, 0, 100, 100, 0, depth, InputOutput, visual, mask, &attributes);
+	nativeHandle.display = display;
+	nativeHandle.window = window;
 	connection->windows[window] = this;
 
 	if (connection->XInput2Supported)
@@ -70,7 +73,7 @@ X11DisplayWindow::X11DisplayWindow(DisplayWindowHost* windowHost, WidgetType win
 	}
 
 	// Tell window manager which process this window came from
-	if (connection->GetAtom("_NET_WM_PID") != None)
+	if (connection->GetAtom("_NET_WM_PID") != 0L)
 	{
 		int32_t pid = getpid();
 		if (pid != 0)
@@ -80,7 +83,7 @@ X11DisplayWindow::X11DisplayWindow(DisplayWindowHost* windowHost, WidgetType win
 	}
 
 	// Tell window manager which machine this window came from
-	if (connection->GetAtom("WM_CLIENT_MACHINE") != None)
+	if (connection->GetAtom("WM_CLIENT_MACHINE") != 0L)
 	{
 		std::vector<char> hostname(256);
 		if (gethostname(hostname.data(), hostname.size()) >= 0)
@@ -90,29 +93,42 @@ X11DisplayWindow::X11DisplayWindow(DisplayWindowHost* windowHost, WidgetType win
 		}
 	}
 
-	// Tell window manager we want to listen to close events
-	if (connection->GetAtom("WM_DELETE_WINDOW") != None)
+	// Tell window manager we want to listen to close and focus events
 	{
-		Atom protocol = connection->GetAtom("WM_DELETE_WINDOW");
-		XSetWMProtocols(display, window, &protocol, 1);
+		std::vector<Atom> protocols;
+		Atom deleteAtom = connection->GetAtom("WM_DELETE_WINDOW");
+		Atom takeFocusAtom = connection->GetAtom("WM_TAKE_FOCUS");
+		if (deleteAtom != 0L) protocols.push_back(deleteAtom);
+		if (takeFocusAtom != 0L) protocols.push_back(takeFocusAtom);
+		if (!protocols.empty())
+			XSetWMProtocols(display, window, protocols.data(), protocols.size());
+	}
+
+	// Tell window manager we accept keyboard focus (ICCCM required)
+	{
+		XWMHints hints = {};
+		hints.flags = InputHint | StateHint;
+		hints.input = True;
+		hints.initial_state = NormalState;
+		XSetWMHints(display, window, &hints);
 	}
 
 	// Tell window manager what type of window we are
-	if (connection->GetAtom("_NET_WM_WINDOW_TYPE") != None)
+	if (connection->GetAtom("_NET_WM_WINDOW_TYPE") != 0L)
 	{
-		Atom type = None;
+		Atom type = 0L;
 		if (windowType == WidgetType::Popup)
 		{
 			type = connection->GetAtom("_NET_WM_WINDOW_TYPE_DROPDOWN_MENU");
-			if (type == None)
+			if (type == 0L)
 				type =  connection->GetAtom("_NET_WM_WINDOW_TYPE_POPUP_MENU");
-			if (type == None)
+			if (type == 0L)
 				type = connection->GetAtom("_NET_WM_WINDOW_TYPE_COMBO");
 		}
-		if (type == None)
+		if (type == 0L)
 			type = connection->GetAtom("_NET_WM_WINDOW_TYPE_NORMAL");
 
-		if (type != None)
+		if (type != 0L)
 		{
 			XChangeProperty(display, window, connection->GetAtom("_NET_WM_WINDOW_TYPE"), XA_ATOM, 32, PropModeReplace, (unsigned char *)&type, 1);
 		}
@@ -133,7 +149,7 @@ X11DisplayWindow::X11DisplayWindow(DisplayWindowHost* windowHost, WidgetType win
 
 X11DisplayWindow::~X11DisplayWindow()
 {
-	if (hidden_cursor != None)
+	if (hidden_cursor != 0L)
 	{
 		XFreeCursor(display, hidden_cursor);
 		XFreePixmap(display, cursor_bitmap);
@@ -146,7 +162,7 @@ X11DisplayWindow::~X11DisplayWindow()
 
 void X11DisplayWindow::SetWindowTitle(const std::string& text)
 {
-	XSetStandardProperties(display, window, text.c_str(), text.c_str(), None, nullptr, 0, nullptr);
+	XSetStandardProperties(display, window, text.c_str(), text.c_str(), 0L, nullptr, 0, nullptr);
 }
 
 void X11DisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>& images)
@@ -230,6 +246,13 @@ void X11DisplayWindow::SetWindowIcon(const std::vector<std::shared_ptr<Image>>& 
 	XChangeProperty(display, window, property, XA_CARDINAL, 32, PropModeReplace, (unsigned char*)data, size);
 }
 
+void X11DisplayWindow::SetWindowFrame(const Rect& box)
+{
+	// To do: this requires cooperation with the window manager
+
+	SetClientFrame(box);
+}	
+
 void X11DisplayWindow::SetClientFrame(const Rect& box)
 {
 	double dpiscale = GetDpiScale();
@@ -262,7 +285,7 @@ void X11DisplayWindow::ShowFullscreen()
 	Show();
 
 	auto connection = GetX11Connection();
-	if (connection->GetAtom("_NET_WM_STATE") != None && connection->GetAtom("_NET_WM_STATE_FULLSCREEN") != None)
+	if (connection->GetAtom("_NET_WM_STATE") != 0L && connection->GetAtom("_NET_WM_STATE_FULLSCREEN") != 0L)
 	{
 		Atom state = connection->GetAtom("_NET_WM_STATE_FULLSCREEN");
 		XChangeProperty(display, window, connection->GetAtom("_NET_WM_STATE"), XA_ATOM, 32, PropModeReplace, (unsigned char *)&state, 1);
@@ -307,7 +330,26 @@ void X11DisplayWindow::Hide()
 
 void X11DisplayWindow::Activate()
 {
-	XRaiseWindow(display, window);
+	auto connection = GetX11Connection();
+	Atom activeAtom = connection->GetAtom("_NET_ACTIVE_WINDOW");
+	if (activeAtom != 0L)
+	{
+		XEvent xev = {};
+		xev.type = ClientMessage;
+		xev.xclient.window = window;
+		xev.xclient.message_type = activeAtom;
+		xev.xclient.format = 32;
+		xev.xclient.data.l[0] = 1; // source: application
+		xev.xclient.data.l[1] = CurrentTime;
+		xev.xclient.data.l[2] = 0;
+		XSendEvent(display, XRootWindow(display, screen),
+			False, SubstructureRedirectMask | SubstructureNotifyMask, &xev);
+	}
+	else
+	{
+		XRaiseWindow(display, window);
+		XSetInputFocus(display, window, RevertToParent, CurrentTime);
+	}
 }
 
 void X11DisplayWindow::ShowCursor(bool enable)
@@ -326,17 +368,20 @@ void X11DisplayWindow::LockKeyboard()
 
 void X11DisplayWindow::UnlockKeyboard()
 {
-	// Disable raw keyboard scancode events (OnKeyDown/OnKeyUp/OnKeyChar should be called for keyboard input)
 }
 
 void X11DisplayWindow::LockCursor()
 {
 	ShowCursor(false);
+	XGrabPointer(display, window, True, 
+		ButtonPressMask | ButtonReleaseMask | PointerMotionMask, 
+		GrabModeAsync, GrabModeAsync, window, 0L, CurrentTime);
 }
 
 void X11DisplayWindow::UnlockCursor()
 {
 	ShowCursor(true);
+	XUngrabPointer(display, CurrentTime);
 }
 
 void X11DisplayWindow::CaptureMouse()
@@ -360,7 +405,7 @@ bool X11DisplayWindow::GetKeyState(InputKey key)
 	return it != keyState.end() ? it->second : false;
 }
 
-void X11DisplayWindow::SetCursor(StandardCursor newcursor, std::shared_ptr<CustomCursor> newcustom)
+void X11DisplayWindow::SetCursor(StandardCursor newcursor)
 {
 	if (cursor != newcursor)
 	{
@@ -374,7 +419,7 @@ void X11DisplayWindow::UpdateCursor()
 	if (isCursorEnabled)
 	{
 		Cursor& x11cursor = GetX11Connection()->standardCursors[cursor];
-		if (x11cursor == None)
+		if (x11cursor == 0L)
 		{
 			unsigned int index = XC_left_ptr;
 			switch (cursor)
@@ -400,7 +445,7 @@ void X11DisplayWindow::UpdateCursor()
 	}
 	else
 	{
-		if (hidden_cursor == None)
+		if (hidden_cursor == 0L)
 		{
 			char data[64] = {};
 			XColor black_color = {};
@@ -411,8 +456,10 @@ void X11DisplayWindow::UpdateCursor()
 	}
 }
 
-Rect X11DisplayWindow::GetClientFrame() const
+Rect X11DisplayWindow::GetWindowFrame() const
 {
+	// To do: this needs to include the window manager frame
+
 	double dpiscale = GetDpiScale();
 
 	Window root = {};
@@ -471,7 +518,7 @@ int X11DisplayWindow::GetPixelHeight() const
 
 double X11DisplayWindow::GetDpiScale() const
 {
-	return dpiScale;
+	return std::max(0.1, dpiScale);
 }
 
 void X11DisplayWindow::CreateBackbuffer(int width, int height)
@@ -491,7 +538,7 @@ void X11DisplayWindow::DestroyBackbuffer()
 		XFreePixmap(display, backbuffer.pixmap);
 		backbuffer.width = 0;
 		backbuffer.height = 0;
-		backbuffer.pixmap = None;
+		backbuffer.pixmap = 0L;
 		backbuffer.image = nullptr;
 		backbuffer.pixels = nullptr;
 	}
@@ -511,7 +558,7 @@ void X11DisplayWindow::PresentBitmap(int width, int height, const uint32_t* pixe
 		memcpy(backbuffer.pixels, pixels, width * height * sizeof(uint32_t));
 		GC gc = XDefaultGC(display, screen);
 		XPutImage(display, backbuffer.pixmap, gc, backbuffer.image, 0, 0, 0, 0, width, height);
-		XCopyArea(display, backbuffer.pixmap, window, gc, 0, 0, width, height, BlackPixel(display, screen), WhitePixel(display, screen));
+		XCopyArea(display, backbuffer.pixmap, window, gc, 0, 0, width, height, 0, 0);
 	}
 }
 
@@ -541,9 +588,9 @@ std::vector<uint8_t> X11DisplayWindow::GetWindowProperty(Atom property, Atom &ac
 			display, window, property, 0ul, read_bytes,
 			False, AnyPropertyType, &actual_type, &actual_format,
 			&_item_count, &bytes_remaining, &read_data);
-		if (result != Success)
+		if (result != 0)
 		{
-			actual_type = None;
+			actual_type = 0L;
 			actual_format = 0;
 			item_count = 0;
 			return {};
@@ -562,7 +609,7 @@ std::string X11DisplayWindow::GetClipboardText()
 {
 	auto connection = GetX11Connection();
 	Atom clipboard = connection->GetAtom("CLIPBOARD");
-	if (clipboard == None)
+	if (clipboard == 0L)
 		return {};
 
 	XConvertSelection(display, clipboard, XA_STRING, clipboard, window, CurrentTime);
@@ -578,7 +625,7 @@ std::string X11DisplayWindow::GetClipboardText()
 			return {};
 	}
 
-	Atom type = None;
+	Atom type = 0L;
 	int format = 0;
 	unsigned long count = 0;
 	std::vector<uint8_t> data = GetWindowProperty(clipboard, type, format, count);
@@ -595,7 +642,7 @@ void X11DisplayWindow::SetClipboardText(const std::string& text)
 
 	auto connection = GetX11Connection();
 	Atom clipboard = connection->GetAtom("CLIPBOARD");
-	if (clipboard == None)
+	if (clipboard == 0L)
 		return;
 
 	XSetSelectionOwner(display, XA_PRIMARY, window, CurrentTime);
@@ -630,7 +677,7 @@ Point X11DisplayWindow::MapToGlobal(const Point& pos) const
 
 void* X11DisplayWindow::GetNativeHandle()
 {
-	return reinterpret_cast<void*>(window);
+	return &nativeHandle;
 }
 
 void X11DisplayWindow::OnEvent(XEvent* event)
@@ -678,18 +725,26 @@ void X11DisplayWindow::OnClientMessage(XEvent* event)
 {
 	auto connection = GetX11Connection();
 	Atom protocolsAtom = connection->GetAtom("WM_PROTOCOLS");
-	if (protocolsAtom != None && event->xclient.message_type == protocolsAtom)
+	if (protocolsAtom != 0L && event->xclient.message_type == protocolsAtom)
 	{
 		Atom deleteAtom = connection->GetAtom("WM_DELETE_WINDOW");
 		Atom pingAtom = connection->GetAtom("_NET_WM_PING");
+		Atom takeFocusAtom = connection->GetAtom("WM_TAKE_FOCUS");
 
 		Atom protocol = event->xclient.data.l[0];
-		if (deleteAtom != None && protocol == deleteAtom)
+		if (deleteAtom != 0L && protocol == deleteAtom)
 		{
 			windowHost->OnWindowClose();
 		}
-		else if (pingAtom != None && protocol == pingAtom)
+		else if (takeFocusAtom != 0L && protocol == takeFocusAtom)
 		{
+			// ICCCM Locally Active input model: WM asks us to take focus
+			Time timestamp = event->xclient.data.l[1];
+			XSetInputFocus(display, window, RevertToParent, timestamp);
+		}
+		else if (pingAtom != 0L && protocol == pingAtom)
+		{
+			event->xclient.window = RootWindow(display, screen);
 			XSendEvent(display, RootWindow(display, screen), False, SubstructureNotifyMask | SubstructureRedirectMask, event);
 		}
 	}
@@ -702,6 +757,9 @@ void X11DisplayWindow::OnExpose(XEvent* event)
 
 void X11DisplayWindow::OnFocusIn(XEvent* event)
 {
+	fprintf(stderr, "[X11] OnFocusIn called: mode=%d, detail=%d\n", event->xfocus.mode, event->xfocus.detail);
+	if (event->xfocus.detail == NotifyPointer) return;
+
 	if (xic)
 		XSetICFocus(xic);
 
@@ -711,6 +769,9 @@ void X11DisplayWindow::OnFocusIn(XEvent* event)
 
 void X11DisplayWindow::OnFocusOut(XEvent* event)
 {
+	fprintf(stderr, "[X11] OnFocusOut called: mode=%d, detail=%d\n", event->xfocus.mode, event->xfocus.detail);
+	if (event->xfocus.detail == NotifyPointer) return;
+
 	RawInput.Focused = false;
 	windowHost->OnWindowDeactivated();
 }
@@ -839,7 +900,11 @@ InputKey X11DisplayWindow::GetInputKey(XEvent* event)
 		case XK_minus: return InputKey::Minus;
 		case XK_period: return InputKey::Period;
 		case XK_slash: return InputKey::Slash;
-		case XK_dead_tilde: return InputKey::Tilde;
+		// XK_dead_tilde is the composing dead key found on international
+		// layouts, not the key left of "1". On a US layout that key produces
+		// XK_grave, so the console toggle never resolved. Keep dead_tilde for
+		// layouts that do emit it.
+		case XK_grave: case XK_asciitilde: case XK_dead_tilde: return InputKey::Tilde;
 		case XK_bracketleft: return InputKey::LeftBracket;
 		case XK_backslash: return InputKey::Backslash;
 		case XK_bracketright: return InputKey::RightBracket;
@@ -1007,8 +1072,12 @@ bool X11DisplayWindow::OnXInputEvent(XEvent* event)
 
 		if (!isCursorEnabled)
 		{
-			// Raw input gets blocked until we ungrab the pointer. Worst design EVER.
+			// Raw input gets blocked until we ungrab the pointer. 
+			// We ungrab to allow XI2 events, then re-grab to keep the mouse trapped.
 			XUngrabPointer(display, deviceEvent->time);
+			XGrabPointer(display, window, True, 
+				ButtonPressMask | ButtonReleaseMask | PointerMotionMask, 
+				GrabModeAsync, GrabModeAsync, window, 0L, deviceEvent->time);
 		}
 
 		if (event->xcookie.evtype == XI_ButtonPress)
@@ -1058,28 +1127,30 @@ bool X11DisplayWindow::OnXInputEvent(XEvent* event)
 	}
 	else if (!isCursorEnabled && RawInput.Focused && event->xcookie.evtype == XI_RawMotion)
 	{
-		std::vector<double> values;
-		values.reserve(2);
+		double dx = 0.0;
+		double dy = 0.0;
 
 		auto rawEvent = (XIRawEvent*)event->xcookie.data;
 		double *rawValuator = rawEvent->raw_values;
-		for (int i = 0; i < rawEvent->valuators.mask_len * 8; i++)
+		for (int i = 0; i < rawEvent->valuators.mask_len * 32; i++)
 		{
 			if (XIMaskIsSet(rawEvent->valuators.mask, i))
 			{
-				values.push_back(*rawValuator);
+				if (i == 0) dx = *rawValuator;
+				else if (i == 1) dy = *rawValuator;
 				rawValuator++;
 			}
 		}
 
-		if (values.size() >= 2)
-		{
-			// Values seems to be integers for my mouse. Is that always the case?
-			int dx = (int)std::round(values[0]);
-			int dy = (int)std::round(values[1]);
-			if (dx != 0 || dy != 0)
-				windowHost->OnWindowRawMouseMove(dx, dy);
-		}
+		int idx = (int)std::round(dx);
+		int idy = (int)std::round(dy);
+		
+		// Clamp to prevent float overflow SIGFPEs in engine
+		idx = std::max(-10000, std::min(10000, idx));
+		idy = std::max(-10000, std::min(10000, idy));
+
+		if (idx != 0 || idy != 0)
+			windowHost->OnWindowRawMouseMove(idx, idy);
 
 		return true;
 	}
@@ -1116,7 +1187,7 @@ void X11DisplayWindow::OnSelectionRequest(XEvent* event)
 
 	if (event->xselectionrequest.target == multipleAtom)
 	{
-		Atom actualType = None;
+		Atom actualType = 0L;
 		int actualFormat = 0;
 		unsigned long itemCount = 0;
 		std::vector<uint8_t> data = GetWindowProperty(requestor, actualType, actualFormat, itemCount);
@@ -1159,7 +1230,7 @@ void X11DisplayWindow::OnSelectionRequest(XEvent* event)
 		}
 		else
 		{
-			response.xselection.property = None; // Is this correct?
+			response.xselection.property = 0L; // Is this correct?
 		}
 
 		XSendEvent(display, requestor, False, 0, &response);
@@ -1256,4 +1327,14 @@ VkSurfaceKHR X11DisplayWindow::CreateVulkanSurface(VkInstance instance)
 std::vector<std::string> X11DisplayWindow::GetVulkanInstanceExtensions()
 {
 	return { "VK_KHR_surface", "VK_KHR_xlib_surface" };
+}
+
+void* X11DisplayWindow::GetEGLNativeDisplay()
+{
+	return (void*)display;
+}
+
+void* X11DisplayWindow::GetEGLNativeWindow()
+{
+	return (void*)window;
 }

@@ -272,7 +272,8 @@ enum class RenderAPI
 	OpenGL,
 	D3D11,
 	D3D12,
-	Metal
+	Metal,
+	EGL
 };
 
 enum class WidgetType
@@ -367,6 +368,11 @@ public:
 	virtual void SetClipboardText(const std::string& text) = 0;
 
 	virtual void* GetNativeHandle() = 0;
+
+	// EGL context creation needs the platform's display and window handles.
+	// Backends that cannot provide them return null and the caller falls back.
+	virtual void* GetEGLNativeDisplay() { return nullptr; }
+	virtual void* GetEGLNativeWindow() { return nullptr; }
 
 	virtual std::vector<std::string> GetVulkanInstanceExtensions() = 0;
 	virtual VkSurfaceKHR CreateVulkanSurface(VkInstance instance) = 0;
