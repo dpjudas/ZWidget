@@ -26,4 +26,13 @@ public:
     std::unique_ptr<OpenFolderDialog> CreateOpenFolderDialog(DisplayWindow* owner) override;
 
     static std::unique_ptr<DisplayBackend> TryCreateCocoa();
+
+private:
+    // RunLoop() has to cope with being called while the host application is
+    // already inside [NSApp run] -- see the comment on RunLoop(). ExitRunLoop
+    // ends the manual pump used in that case; StartedRunLoop records whether
+    // this backend owns the run loop, so ExitLoop() only stops a loop it
+    // started and never tears down the host's.
+    bool ExitRunLoop = false;
+    bool StartedRunLoop = false;
 };

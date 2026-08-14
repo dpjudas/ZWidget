@@ -81,12 +81,47 @@ void CocoaDisplayBackend::ProcessEvents()
 
 void CocoaDisplayBackend::RunLoop()
 {
+    ExitRunLoop = false;
+
+    // [NSApp run] cannot be nested. An application that starts AppKit itself
+    // and then opens a ZWidget modal window from inside that run loop would
+    // re-enter here. AppKit does not support that: the window is created and
+    // drawn, but events keep going to the outer loop, so the modal window renders
+    // and then ignores all input.
+    //
+    // When someone else already owns the run loop, pump events ourselves
+    // instead. distantFuture blocks rather than spins; ExitLoop()'s wake event
+    // breaks us out.
+    if ([NSApp isRunning])
+    {
+        while (!ExitRunLoop)
+        {
+            @autoreleasepool
+            {
+                NSEvent* event = [NSApp nextEventMatchingMask:NSEventMaskAny
+                                                    untilDate:[NSDate distantFuture]
+                                                       inMode:NSDefaultRunLoopMode
+                                                      dequeue:YES];
+                if (event)
+                    [NSApp sendEvent:event];
+            }
+        }
+        return;
+    }
+
+    StartedRunLoop = true;
     [NSApp run];
+    StartedRunLoop = false;
 }
 
 void CocoaDisplayBackend::ExitLoop()
 {
-    [NSApp stop:nil];
+    ExitRunLoop = true;
+
+    // Only stop a run loop this backend actually started. Calling stop: on a
+    // host application's loop would terminate the host, not the modal window.
+    if (StartedRunLoop)
+        [NSApp stop:nil];
 
     // Post a dummy event to wake up the event loop so stop: takes effect
     NSEvent* event = [NSEvent otherEventWithType:NSEventTypeApplicationDefined

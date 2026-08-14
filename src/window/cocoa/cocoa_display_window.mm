@@ -322,7 +322,15 @@ void CocoaDisplayWindowImpl::stopDisplayLink()
 
     if (impl->renderAPI == RenderAPI::Bitmap || impl->renderAPI == RenderAPI::Unspecified)
     {
-        // Just draw the existing bitmap (Update() handles regeneration asynchronously)
+        // Regenerate the bitmap here rather than in Update(). Update() used to
+        // do it from a dispatch_async main-queue block, which never runs when
+        // the host application is itself executing inside a main-queue block
+        // (the queue is serial) -- see the comment on Update(). Painting on
+        // demand in drawRect: has no such dependency and keeps the bitmap and
+        // the blit in the same place.
+        if (impl->windowHost)
+            impl->windowHost->OnWindowPaint();
+
         if (impl->cgImage)
         {
             CGContextRef context = (CGContextRef)[[NSGraphicsContext currentContext] graphicsPort];
@@ -760,6 +768,40 @@ CocoaDisplayWindow::CocoaDisplayWindow(DisplayWindowHost* windowHost, WidgetType
 
 CocoaDisplayWindow::~CocoaDisplayWindow()
 {
+    if (!impl)
+        return;
+
+    // The NSView outlives this C++ object: AppKit retains it through the window
+    // and its tracking area, so events can still be delivered after impl is
+    // gone. ZWidgetView holds impl as a raw pointer and every handler starts
+    // with `if (impl && impl->windowHost)`, which does not protect against a
+    // dangling impl -- only against a null one.
+    //
+    // A host that pumps the run loop after closing a modal window could dispatch
+    // queued events to this view, causing a use-after-free crash in event handlers
+    // after the window is closed.
+    //
+    // So sever the link before impl dies.
+    if (impl->window)
+    {
+        NSView* content = [impl->window contentView];
+        if ([content isKindOfClass:[ZWidgetView class]])
+        {
+            ZWidgetView* zwidgetView = (ZWidgetView*)content;
+            if (zwidgetView->trackingArea)
+            {
+                [zwidgetView removeTrackingArea:zwidgetView->trackingArea];
+                zwidgetView->trackingArea = nil;
+            }
+            zwidgetView->impl = nullptr;
+        }
+
+        // The delegate also calls back into impl.
+        [impl->window setDelegate:nil];
+        [impl->window orderOut:nil];
+    }
+
+    impl->windowHost = nullptr;
 }
 
 void CocoaDisplayWindow::SetWindowTitle(const std::string& text)
@@ -978,22 +1020,13 @@ void CocoaDisplayWindow::Update()
     if (!impl->window || !impl->windowHost)
         return;
 
-    // Queue paint asynchronously to avoid interfering with event processing
-    // Use weak reference to window to avoid dangling pointer issues
-    __weak NSWindow* weakWindow = impl->window;
-    DisplayWindowHost* hostPtr = impl->windowHost;
-
-    dispatch_async(dispatch_get_main_queue(), ^{
-        NSWindow* strongWindow = weakWindow;
-        if (!strongWindow)
-            return;
-
-        // Regenerate the bitmap
-        hostPtr->OnWindowPaint();
-
-        // Trigger redraw
-        [[strongWindow contentView] setNeedsDisplay:YES];
-    });
+    // Mark dirty and let AppKit call drawRect:, which already calls
+    // OnWindowPaint(). This used to queue the paint with
+    // dispatch_async(dispatch_get_main_queue(), ...) to keep it clear of event
+    // processing, but that starves whenever the host is itself running inside a
+    // main-queue block: the main queue is SERIAL, so nothing queued from within
+    // that block can run until it returns.
+    [[impl->window contentView] setNeedsDisplay:YES];
 }
 
 bool CocoaDisplayWindow::GetKeyState(InputKey key)
