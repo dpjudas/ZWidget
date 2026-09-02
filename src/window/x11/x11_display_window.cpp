@@ -793,7 +793,6 @@ void X11DisplayWindow::OnExpose(XEvent* event)
 
 void X11DisplayWindow::OnFocusIn(XEvent* event)
 {
-	fprintf(stderr, "[X11] OnFocusIn called: mode=%d, detail=%d\n", event->xfocus.mode, event->xfocus.detail);
 	if (event->xfocus.detail == NotifyPointer) return;
 
 	if (xic)
@@ -805,10 +804,29 @@ void X11DisplayWindow::OnFocusIn(XEvent* event)
 
 void X11DisplayWindow::OnFocusOut(XEvent* event)
 {
-	fprintf(stderr, "[X11] OnFocusOut called: mode=%d, detail=%d\n", event->xfocus.mode, event->xfocus.detail);
 	if (event->xfocus.detail == NotifyPointer) return;
 
 	RawInput.Focused = false;
+
+	// Per protocol, focus loss releases every held key -- KeyRelease for a
+	// key released while a different window has focus goes to that window,
+	// not this one, so the server will never deliver it here. Synthesize the
+	// up events now, mirroring Wayland's keyboard_handle_leave, or the stale
+	// keyState entry silently eats the next real keypress on this window
+	// (nativevideo.cpp's isRepeat classification treats a live keyRoutes
+	// entry as an auto-repeat and drops the fresh EV_KeyDown).
+	//
+	// Snapshot and clear before dispatching, matching Wayland's reasoning: a
+	// key-up handler is free to have side effects that would otherwise be
+	// iterating over the same map being mutated.
+	std::map<InputKey, bool> held;
+	held.swap(keyState);
+	for (const auto& entry : held)
+	{
+		if (entry.second)
+			windowHost->OnWindowKeyUp(entry.first);
+	}
+
 	windowHost->OnWindowDeactivated();
 }
 
